@@ -1514,18 +1514,8 @@ window.exportReportData = async function() {
     showToast('📥 Report exported!', 'success');
 };
 
-// Helper to get owner properties (for VIEWING - admin sees all)
-function getOwnerProperties() {
-    const user = auth.currentUser;
-    if (!user) return [];
-    
-    // Master admin sees all properties for management
-    if (TierService.isMasterAdmin(user.email)) {
-        return properties;
-    }
-    
-    return getOwnedProperties();
-}
+// Helper getOwnerProperties is defined in data.js - use that instead
+// This module uses getOwnedProperties for financial calculations
 
 // Helper to get properties user actually OWNS (for FINANCIALS - never all properties)
 // CRITICAL: Uses OwnershipService for consistent ownership across entire application

@@ -865,16 +865,7 @@ window.confirmReassignProperty = async function() {
     }
 };
 
-// Helper to get property owner email (check both sources)
-function getPropertyOwnerEmail(propertyId) {
-    // Check static mapping first
-    if (typeof propertyOwnerEmail !== 'undefined' && propertyOwnerEmail[propertyId]) {
-        return propertyOwnerEmail[propertyId];
-    }
-    // Check property object
-    const prop = properties.find(p => p.id === propertyId);
-    return prop?.ownerEmail || null;
-}
+// Helper getPropertyOwnerEmail is defined in data.js - use that instead
 
 // Helper to completely delete a property
 window.deletePropertyCompletely = async function(propertyId, ownerEmail) {
