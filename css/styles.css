@@ -1,0 +1,506 @@
+/* ==================== PAULY'S PROPERTY PORTAL - STYLES ==================== */
+/* Custom styles for the property portal application */
+
+/* Base font */
+* { 
+    font-family: 'Inter', sans-serif; 
+}
+
+/* ==================== REUSABLE GRADIENTS ==================== */
+.gradient-bg, 
+.badge { 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+}
+
+.gradient-green { 
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+}
+
+.gradient-red { 
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); 
+}
+
+/* ==================== GLASS MORPHISM ==================== */
+.glass-effect {
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ==================== CARD ANIMATIONS ==================== */
+.property-card {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+}
+
+.property-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.review-card {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ==================== LIGHTBOX ==================== */
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox.active { 
+    display: flex; 
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+    from { 
+        transform: scale(0.8); 
+        opacity: 0; 
+    }
+    to { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+}
+
+.lightbox-btn {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    color: white;
+    border: none;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    font-size: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.lightbox-btn:hover { 
+    background: rgba(255, 255, 255, 0.2); 
+    transform: scale(1.1); 
+}
+
+.lightbox-close { 
+    top: 20px; 
+    right: 20px; 
+}
+
+.lightbox-prev { 
+    left: 20px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+}
+
+.lightbox-prev:hover { 
+    transform: translateY(-50%) scale(1.1); 
+}
+
+.lightbox-next { 
+    right: 20px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+}
+
+.lightbox-next:hover { 
+    transform: translateY(-50%) scale(1.1); 
+}
+
+/* ==================== CLICKABLE IMAGES ==================== */
+.img-clickable {
+    cursor: pointer;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.img-clickable:hover { 
+    opacity: 0.9; 
+    transform: scale(1.02); 
+}
+
+/* ==================== UNAVAILABLE OVERLAY ==================== */
+.unavailable-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+
+.unavailable-text {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: white;
+    padding: 12px 24px;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    transform: rotate(-15deg);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 3px solid white;
+}
+
+/* ==================== TOGGLE SWITCH ==================== */
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: #374151;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.3s;
+    border: 2px solid #667eea;
+}
+
+.toggle-switch.active { 
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: left 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.active::after { 
+    left: 27px; 
+}
+
+/* ==================== CUSTOM SCROLLBAR ==================== */
+::-webkit-scrollbar { 
+    width: 10px; 
+}
+
+::-webkit-scrollbar-track { 
+    background: #111827; 
+}
+
+::-webkit-scrollbar-thumb { 
+    background: #4b5563; 
+    border-radius: 5px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+    background: #6b7280; 
+}
+
+/* ==================== ACCESSIBILITY - FOCUS STATES ==================== */
+button:focus, 
+a:focus, 
+input:focus, 
+select:focus, 
+textarea:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* ==================== DROPDOWN STYLING ==================== */
+select option:disabled {
+    color: #a78bfa;
+    font-weight: 600;
+    background: #1f2937;
+}
+
+/* ==================== DASHBOARD - PROPERTY NAME LINK ==================== */
+.property-name-link {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: 8px;
+}
+
+.property-name-link:hover {
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+    text-decoration: underline;
+}
+
+/* ==================== EDITABLE STATS TILES ==================== */
+.stat-tile {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.stat-tile:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.stat-tile::after {
+    content: '✏️';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.stat-tile:hover::after {
+    opacity: 1;
+}
+
+.stat-tile.editing {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px #667eea, 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.stat-tile.editing::after {
+    content: '';
+}
+
+.stat-tile.saving {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.stat-tile.error {
+    animation: shake 0.5s ease-in-out;
+    box-shadow: 0 0 0 3px #ef4444;
+}
+
+.stat-tile.success {
+    animation: pulse-success 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes pulse-success {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ==================== STAT INPUT ==================== */
+.stat-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    font-weight: 900;
+    text-align: center;
+    width: 100%;
+    padding: 8px;
+    font-size: inherit;
+}
+
+.stat-input[type="date"] {
+    color-scheme: dark;
+}
+
+textarea.stat-input {
+    text-align: left;
+    font-weight: 500;
+    resize: vertical;
+}
+
+.stat-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* ==================== SYNC INDICATOR ==================== */
+.sync-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.sync-indicator.synced {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.sync-indicator.syncing {
+    background: rgba(234, 179, 8, 0.2);
+    color: #eab308;
+}
+
+.sync-indicator.error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.sync-indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.sync-indicator.syncing .dot {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* ==================== EDITABLE TABLE CELLS ==================== */
+.editable-cell {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border-left: 1px solid #a78bfa;
+}
+
+.editable-cell:hover {
+    background: rgba(167, 139, 250, 0.15);
+}
+
+.editable-cell:hover::after {
+    content: '✏️';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.cell-input {
+    outline: none;
+    min-width: 60px;
+}
+
+.cell-input:focus {
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
+}
+
+/* ==================== FLIP CARDS ==================== */
+.flip-card {
+    perspective: 1000px;
+    height: 160px;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.flip-card-back {
+    transform: rotateY(180deg);
+}
+
+.flip-card:hover .flip-card-front {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.flip-card:hover .flip-card-back {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== DASHBOARD TABLE ROWS ==================== */
+#dashboardTable {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#dashboardTable tr {
+    transition: background-color 0.15s ease;
+}
+
+#dashboardTable tbody tr:hover {
+    background-color: rgba(75, 85, 99, 0.5) !important;
+}
+
+#dashboardTable thead th {
+    border-bottom: 2px solid #4b5563;
+}
+
+/* Last row should have no bottom border */
+#dashboardTable tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* ==================== ADMIN STAT TILES - FLIP EFFECT ==================== */
+.admin-stat-tile {
+    perspective: 1000px;
+}
+
+.admin-stat-tile > div {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.admin-stat-tile > div > div {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* ==================== PROPERTY NAVIGATION CHEVRONS ==================== */
+#prevPropertyBtn,
+#nextPropertyBtn {
+    opacity: 0.7;
+    backdrop-filter: blur(4px);
+}
+
+#prevPropertyBtn:hover,
+#nextPropertyBtn:hover {
+    opacity: 1;
+}
+
+/* Hide nav buttons when on property detail but not on desktop */
+@media (max-width: 768px) {
+    #prevPropertyBtn {
+        left: 4px;
+        padding: 8px;
+    }
+    #nextPropertyBtn {
+        right: 4px;
+        padding: 8px;
+    }
+}

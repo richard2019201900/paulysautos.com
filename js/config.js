@@ -1,4 +1,8 @@
-// Firebase Configuration for PaulysAutos.com
+// ==================== FIREBASE CONFIG ====================
+// PaulysAutos.com - Elite Luxury Vehicle Marketplace ($1M+)
+// Note: Firebase API keys are safe to expose client-side.
+// Security is enforced via Firestore Security Rules, not the API key.
+
 const firebaseConfig = {
     apiKey: "AIzaSyBplzEAqyKzAVaTYOg5fLohuSZoes274z8",
     authDomain: "paulys-autos-portal.firebaseapp.com",
@@ -8,50 +12,21 @@ const firebaseConfig = {
     appId: "1:189287209218:web:f820dccf723aaf92e2ca1b"
 };
 
+// Site Configuration
+const SITE_NAME = 'PaulysAutos.com';
+const SITE_TYPE = 'vehicles'; // 'properties' or 'vehicles'
+const MIN_LISTING_PRICE = 1000000; // $1M minimum for elite marketplace
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const functions = firebase.functions();
 
-// Master Admin Email
-const MASTER_ADMIN_EMAIL = 'richard2019201900@gmail.com';
-
-// Tier Configuration
-const TIERS = {
-    starter: { 
-        name: 'Starter', 
-        icon: '⭐', 
-        maxListings: 3, 
-        color: 'gray',
-        bgClass: 'tier-starter'
-    },
-    pro: { 
-        name: 'Pro', 
-        icon: '💎', 
-        maxListings: 10, 
-        color: 'blue',
-        bgClass: 'tier-pro'
-    },
-    elite: { 
-        name: 'Elite', 
-        icon: '👑', 
-        maxListings: 25, 
-        color: 'purple',
-        bgClass: 'tier-elite'
-    },
-    owner: { 
-        name: 'Owner', 
-        icon: '🏆', 
-        maxListings: Infinity, 
-        color: 'gold',
-        bgClass: 'tier-owner'
-    }
-};
-
-// Minimum vehicle price
-const MIN_VEHICLE_PRICE = 1000000;
-
-// Premium listing fee (weekly)
-const PREMIUM_FEE = 10000;
-
-console.log('[Config] PaulysAutos.com initialized');
+// Set auth persistence to LOCAL (persists across browser sessions)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+    })
+    .catch((error) => {
+        console.error('[Auth] Persistence error:', error);
+    });

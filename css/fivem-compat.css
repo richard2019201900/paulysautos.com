@@ -1,0 +1,227 @@
+/* ==================== FIVEM / LB-PHONE COMPATIBILITY ==================== */
+/* Fallback styles for Chromium Embedded Framework (CEF) browsers */
+/* CEF (Chromium 103) has limited support for: backdrop-filter, bg-clip-text, complex gradients */
+
+/* ==================== GLASS EFFECT FALLBACK ==================== */
+/* backdrop-filter causes black backgrounds in CEF - use solid dark background instead */
+.fivem-mode .glass-effect {
+    background: rgba(17, 24, 39, 0.98) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ==================== GRADIENT TEXT FALLBACK ==================== */
+/* bg-clip-text doesn't work reliably in CEF - use solid colors */
+.fivem-mode .bg-clip-text,
+.fivem-mode [class*="bg-clip-text"] {
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    color: inherit !important;
+}
+
+/* Specific gradient text elements - apply readable solid colors */
+.fivem-mode .text-transparent {
+    color: #a78bfa !important; /* Purple - primary brand color */
+}
+
+.fivem-mode h1.text-transparent,
+.fivem-mode h2.text-transparent {
+    background: none !important;
+    color: #c4b5fd !important; /* Lighter purple for headings */
+}
+
+/* Gradient text with specific color schemes */
+.fivem-mode .from-purple-600.text-transparent,
+.fivem-mode .from-purple-500.text-transparent {
+    color: #a78bfa !important;
+}
+
+.fivem-mode .from-amber-400.text-transparent,
+.fivem-mode .from-amber-500.text-transparent {
+    color: #fbbf24 !important; /* Amber/gold */
+}
+
+.fivem-mode .from-cyan-500.text-transparent,
+.fivem-mode .from-cyan-600.text-transparent {
+    color: #22d3ee !important; /* Cyan */
+}
+
+.fivem-mode .from-green-500.text-transparent,
+.fivem-mode .from-green-600.text-transparent {
+    color: #4ade80 !important; /* Green */
+}
+
+/* ==================== SHADOW SIMPLIFICATION ==================== */
+/* Complex multi-layer shadows may not render - use simpler shadows */
+.fivem-mode .shadow-2xl {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+.fivem-mode .shadow-xl {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+}
+
+.fivem-mode .shadow-lg {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ==================== CARD BACKGROUNDS ==================== */
+/* Ensure cards have solid, readable backgrounds */
+.fivem-mode .property-card {
+    background: #1f2937 !important;
+    border: 1px solid #374151 !important;
+}
+
+.fivem-mode .property-card:hover {
+    background: #273344 !important;
+    border-color: #4b5563 !important;
+}
+
+/* Review cards */
+.fivem-mode .review-card {
+    background: #1f2937 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ==================== BUTTON GRADIENTS ==================== */
+/* Simplify gradient buttons to solid colors */
+.fivem-mode .gradient-bg {
+    background: #7c3aed !important; /* Purple */
+}
+
+.fivem-mode .gradient-green {
+    background: #10b981 !important; /* Green */
+}
+
+.fivem-mode .gradient-red {
+    background: #dc2626 !important; /* Red */
+}
+
+/* ==================== DASHBOARD TILES ==================== */
+/* Ensure dashboard tiles have solid, visible backgrounds */
+.fivem-mode .flip-card-front,
+.fivem-mode .flip-card-back {
+    border-width: 2px !important;
+}
+
+/* Tile gradient fallbacks - use solid colors with slight variation */
+.fivem-mode .from-cyan-600 {
+    background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+}
+
+.fivem-mode .from-blue-600 {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+.fivem-mode .from-purple-600 {
+    background: linear-gradient(135deg, #9333ea, #7c3aed) !important;
+}
+
+.fivem-mode .from-green-600 {
+    background: linear-gradient(135deg, #16a34a, #15803d) !important;
+}
+
+.fivem-mode .from-amber-500 {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+.fivem-mode .from-slate-600 {
+    background: linear-gradient(135deg, #475569, #334155) !important;
+}
+
+.fivem-mode .from-indigo-600 {
+    background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
+}
+
+.fivem-mode .from-rose-600 {
+    background: linear-gradient(135deg, #e11d48, #be123c) !important;
+}
+
+/* ==================== PREMIUM GLOW EFFECT ==================== */
+/* Animated glow may not work - use static glow */
+.fivem-mode .premium-glow {
+    animation: none !important;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* ==================== NAVIGATION ==================== */
+.fivem-mode nav.glass-effect {
+    background: rgba(17, 24, 39, 0.98) !important;
+}
+
+/* ==================== MODALS ==================== */
+.fivem-mode .modal-overlay,
+.fivem-mode [class*="fixed"][class*="inset-0"][class*="bg-black"] {
+    background: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* ==================== LIGHTBOX ==================== */
+.fivem-mode .lightbox {
+    background: rgba(0, 0, 0, 0.95) !important;
+}
+
+.fivem-mode .lightbox-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: none !important;
+}
+
+/* ==================== NOTIFICATION CARDS ==================== */
+.fivem-mode .admin-notification-new {
+    animation: none !important;
+}
+
+/* ==================== FORM INPUTS ==================== */
+.fivem-mode input,
+.fivem-mode textarea,
+.fivem-mode select {
+    background: #1f2937 !important;
+    border: 1px solid #4b5563 !important;
+    color: #f3f4f6 !important;
+}
+
+.fivem-mode input:focus,
+.fivem-mode textarea:focus,
+.fivem-mode select:focus {
+    border-color: #8b5cf6 !important;
+    outline: none !important;
+}
+
+/* ==================== SCROLLBARS ==================== */
+.fivem-mode ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.fivem-mode ::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+.fivem-mode ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+/* ==================== TEXT READABILITY ==================== */
+/* Ensure all text is readable with good contrast */
+.fivem-mode .text-gray-400 {
+    color: #9ca3af !important;
+}
+
+.fivem-mode .text-gray-500 {
+    color: #9ca3af !important;
+}
+
+.fivem-mode .opacity-70 {
+    opacity: 0.85 !important;
+}
+
+.fivem-mode .opacity-60 {
+    opacity: 0.75 !important;
+}
+
+/* ==================== BODY BACKGROUND ==================== */
+.fivem-mode {
+    background: #111827 !important;
+}

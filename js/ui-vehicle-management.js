@@ -1,0 +1,530 @@
+/**
+ * ============================================================================
+ * UI PROPERTY MANAGEMENT - Property creation, deletion, and management
+ * ============================================================================
+ * 
+ * CONTENTS:
+ * - Create listing modal
+ * - Delete property
+ * - Copy dashboard reminder
+ * 
+ * DEPENDENCIES: TierService, PropertyDataService, OwnershipService
+ * ============================================================================
+ */
+
+// ==================== CREATE LISTING ====================
+window.openCreateListingModal = async function() {
+    hideElement($('mobileMenu'));
+    
+    // Check tier limits before opening
+    const user = auth.currentUser;
+    if (!user) {
+        alert('Please sign in to create a listing.');
+        return;
+    }
+    
+    // Check profile completion first (skip for master owner)
+    if (!TierService.isMasterAdmin(user.email) && !window.isProfileComplete) {
+        showProfileCompletionOverlay();
+        return;
+    }
+    
+    const { canCreate, reason, tierInfo } = await TierService.canCreateListing(user.email);
+    
+    if (!canCreate) {
+        // Show upgrade modal instead
+        openUpgradeModal(reason, tierInfo.tier);
+        return;
+    }
+    
+    // Reset form
+    const form = $('createListingForm');
+    if (form) form.reset();
+    
+    // Explicitly clear all input values to prevent browser autocomplete
+    const inputs = ['newListingTitle', 'newListingLocation', 'newListingBedrooms', 
+                    'newListingBathrooms', 'newListingStorage', 'newListingWeekly', 
+                    'newListingBiweekly', 'newListingMonthly', 'newListingBuyPrice', 'newListingImages'];
+    inputs.forEach(id => {
+        const el = $(id);
+        if (el) el.value = '';
+    });
+    
+    // Reset selects to first option
+    const typeSelect = $('newListingType');
+    if (typeSelect) typeSelect.selectedIndex = 0;
+    const interiorSelect = $('newListingInterior');
+    if (interiorSelect) interiorSelect.selectedIndex = 0;
+    
+    // Reset buy price warning and hint
+    hideElement($('buyPriceWarning'));
+    const hintDiv = $('buyPriceHint');
+    if (hintDiv) hintDiv.textContent = 'Enter a price if this property is available for purchase';
+    
+    // Reset buttons to initial state
+    const createBtn = $('createListingBtn');
+    if (createBtn) {
+        createBtn.disabled = false;
+        createBtn.textContent = '🏠 Create Listing';
+    }
+    const cancelBtn = $('cancelListingBtn');
+    if (cancelBtn) showElement(cancelBtn);
+    
+    hideElement($('createListingError'));
+    hideElement($('createListingSuccess'));
+    hideElement($('priceWarning'));
+    openModal('createListingModal');
+};
+
+// Handle create listing form submission
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for fields that affect buy price validation
+    const buyPriceAffectingFields = ['newListingType', 'newListingInterior', 'newListingStorage', 'newListingTitle'];
+    buyPriceAffectingFields.forEach(id => {
+        const el = $(id);
+        if (el) {
+            el.addEventListener('change', validateBuyPrice);
+            el.addEventListener('input', validateBuyPrice);
+        }
+    });
+    
+    const createForm = $('createListingForm');
+    if (createForm) {
+        createForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorDiv = $('createListingError');
+            const successDiv = $('createListingSuccess');
+            const btn = $('createListingBtn');
+            
+            hideElement(errorDiv);
+            hideElement(successDiv);
+            
+            // Get form values
+            const title = $('newListingTitle').value.trim();
+            const type = $('newListingType').value;
+            const location = $('newListingLocation').value.trim();
+            const bedrooms = parseInt($('newListingBedrooms').value) || 0;
+            const bathrooms = parseInt($('newListingBathrooms').value) || 0;
+            const storage = parseInt($('newListingStorage').value) || 0;
+            const interiorType = $('newListingInterior').value;
+            const weeklyPrice = parseInt($('newListingWeekly').value) || 0;
+            const biweeklyPrice = parseInt($('newListingBiweekly').value) || 0;
+            const monthlyPrice = parseInt($('newListingMonthly').value) || 0;
+            const buyPrice = parseInt($('newListingBuyPrice')?.value) || 0;
+            const imagesText = $('newListingImages').value.trim();
+            const isPremium = $('newListingPremium')?.checked || false;
+            const warningDiv = $('createListingWarning');
+            
+            // Hide warning div if it exists
+            if (warningDiv) hideElement(warningDiv);
+            
+            // Debug logging
+            // Parse images - empty array will trigger the card's built-in placeholder
+            const images = imagesText 
+                ? imagesText.split('\n').map(url => url.trim()).filter(url => url)
+                : [];
+            
+            // Validate required fields: Address, Type, Storage, Interior
+            if (!title || !type || !storage || !interiorType) {
+                errorDiv.textContent = 'Please fill in all required fields (Address, Type, Storage, and Interior).';
+                showElement(errorDiv);
+                return;
+            }
+            
+            // Validate image URLs if provided
+            if (images.length > 0) {
+                // Check for local file paths (block completely)
+                const localFilePaths = images.filter(url => url.startsWith('file:///') || url.match(/^[A-Za-z]:\\/));
+                if (localFilePaths.length > 0) {
+                    errorDiv.innerHTML = `<strong>❌ Local file paths don't work!</strong><br>
+                        Files on your computer (like <code class="text-red-300">C:\\Users\\...</code>) can't be seen by other users.<br>
+                        <span class="text-cyan-400">Please upload to <a href="https://fivemanage.com" target="_blank" class="underline">fivemanage.com</a> first, then paste the link here.</span>`;
+                    showElement(errorDiv);
+                    return;
+                }
+                
+                // Check for invalid URLs
+                const invalidUrls = images.filter(url => !url.startsWith('http://') && !url.startsWith('https://'));
+                if (invalidUrls.length > 0) {
+                    errorDiv.textContent = `Invalid URL(s): ${invalidUrls.slice(0, 2).join(', ')}${invalidUrls.length > 2 ? '...' : ''}. URLs must start with http:// or https://`;
+                    showElement(errorDiv);
+                    return;
+                }
+                
+                // Check for Discord links (warning, not error)
+                const discordUrls = images.filter(url => url.includes('cdn.discordapp.com') || url.includes('media.discordapp.net'));
+                if (discordUrls.length > 0 && warningDiv && !window.createListingDiscordWarningAcknowledged) {
+                    warningDiv.innerHTML = `<div class="flex items-start gap-2">
+                        <span class="text-yellow-400">⚠️</span>
+                        <div>
+                            <strong class="text-yellow-300">Warning: Discord links expire!</strong><br>
+                            <span class="text-gray-300">Discord image links stop working after a few weeks. Your property photos will break.</span><br>
+                            <span class="text-cyan-400">We recommend using <a href="https://fivemanage.com" target="_blank" class="underline font-semibold">fivemanage.com</a> instead (it's free!).</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                        <button type="button" onclick="window.createListingDiscordWarningAcknowledged=true; document.getElementById('createListingWarning').classList.add('hidden'); document.getElementById('createListingBtn').click();" class="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-1 rounded text-sm font-bold">Create Anyway</button>
+                        <button type="button" onclick="document.getElementById('createListingWarning').classList.add('hidden');" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm font-bold">Let Me Fix It</button>
+                    </div>`;
+                    showElement(warningDiv);
+                    return;
+                }
+            }
+            
+            // Reset Discord warning flag for next time
+            window.createListingDiscordWarningAcknowledged = false;
+            
+            // Validate buy price against city minimum (HARD BLOCK)
+            if (buyPrice > 0) {
+                const minInfo = getMinimumBuyPriceForForm();
+                if (buyPrice < minInfo.min) {
+                    errorDiv.innerHTML = `
+                        <strong>🚫 City Minimum Violation</strong><br>
+                        ${minInfo.category} requires minimum <strong>$${minInfo.min.toLocaleString()}</strong>.<br>
+                        Your price: $${buyPrice.toLocaleString()} (Short by $${(minInfo.min - buyPrice).toLocaleString()})
+                    `;
+                    showElement(errorDiv);
+                    // Highlight the buy price field
+                    const buyPriceInput = $('newListingBuyPrice');
+                    if (buyPriceInput) {
+                        buyPriceInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                        buyPriceInput.focus();
+                    }
+                    return;
+                }
+            }
+            
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            
+            // Hide cancel button immediately to prevent accidental clicks
+            const cancelBtn = $('cancelListingBtn');
+            if (cancelBtn) hideElement(cancelBtn);
+            
+            try {
+                // Generate new ID (find max ID + 1)
+                const maxId = properties.reduce((max, p) => Math.max(max, p.id), 0);
+                const newId = maxId + 1;
+                
+                // Get owner email first (lowercase for consistency)
+                const ownerEmail = (auth.currentUser?.email || 'richard2019201900@gmail.com').toLowerCase();
+                
+                // Create new property object
+                const newProperty = {
+                    id: newId,
+                    title: title,
+                    type: type,
+                    location: location,
+                    bedrooms: bedrooms,
+                    bathrooms: bathrooms,
+                    storage: storage,
+                    interiorType: interiorType,
+                    weeklyPrice: weeklyPrice,
+                    biweeklyPrice: biweeklyPrice,
+                    monthlyPrice: monthlyPrice,
+                    buyPrice: buyPrice, // Buy It Now Price (0 if not for sale)
+                    images: images,
+                    videoUrl: null,
+                    features: false,
+                    ownerEmail: ownerEmail,
+                    isPremium: isPremium,
+                    premiumRequestedAt: isPremium ? new Date().toISOString() : null,
+                    createdAt: new Date().toISOString(),
+                    createdAtTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                // Add to local properties array
+                properties.push(newProperty);
+                
+                // Add to owner map
+                if (!ownerPropertyMap[ownerEmail]) {
+                    ownerPropertyMap[ownerEmail] = [];
+                }
+                ownerPropertyMap[ownerEmail].push(newId);
+                propertyOwnerEmail[newId] = ownerEmail;
+                
+                // Set availability to true
+                state.availability[newId] = true;
+                await db.collection('settings').doc('propertyAvailability').set({ [newId]: true }, { merge: true });
+                
+                // Save property to Firestore (ownerEmail field is the source of truth)
+                await db.collection('settings').doc('properties').set({
+                    [newId]: newProperty
+                }, { merge: true });
+                
+                // Track last property posted time for this user
+                try {
+                    const user = auth.currentUser;
+                    if (user) {
+                        await db.collection('users').doc(user.uid).set({
+                            lastPropertyPostedAt: new Date().toISOString(),
+                            lastPropertyPosted: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    }
+                } catch (e) {
+                    console.warn('[CreateListing] Could not update lastPropertyPosted:', e);
+                }
+                
+                // Log premium listing fee if premium was selected
+                if (isPremium && typeof logPayment === 'function') {
+                    try {
+                        await logPayment(newId, {
+                            paymentDate: new Date().toISOString().split('T')[0],
+                            amount: 10000,
+                            frequency: 'premium',
+                            renterName: '👑 Premium Listing Fee',
+                            type: 'premium_fee',
+                            notes: 'Premium listing activation - weekly fee',
+                            recordedAt: new Date().toISOString()
+                        });
+                    } catch (e) {
+                        console.warn('[CreateListing] Could not log premium fee:', e);
+                    }
+                }
+                
+                // Update filtered properties
+                state.filteredProperties = [...properties];
+                
+                // Re-render
+                renderProperties(state.filteredProperties);
+                renderOwnerDashboard();
+                
+                // Update tier badge to reflect new listing count
+                updateTierBadge(state.userTier || 'starter', ownerEmail);
+                
+                successDiv.textContent = '✓ Listing created successfully!';
+                showElement(successDiv);
+                
+                // Award XP for new listing (gamification)
+                if (typeof GamificationService !== 'undefined') {
+                    const user = auth.currentUser;
+                    if (user) {
+                        // Check if this is their first listing
+                        const currentListingCount = OwnershipService.getListingCount(ownerEmail);
+                        if (currentListingCount === 1) {
+                            // First listing - award 500 XP
+                            GamificationService.awardAchievement(user.uid, 'first_listing', 500, {
+                                statUpdate: { propertiesPosted: 1 }
+                            }).then(result => {
+                                if (result && !result.alreadyEarned) {
+                                    console.log('[Gamification] Awarded 500 XP for first listing');
+                                }
+                            }).catch(err => console.error('[Gamification] Error:', err));
+                        } else {
+                            // Additional listing - award 250 XP
+                            GamificationService.awardXP(user.uid, 250, 'additional_listing').then(() => {
+                                console.log('[Gamification] Awarded 250 XP for additional listing');
+                                // Update stats
+                                db.collection('users').doc(user.uid).update({
+                                    'gamification.stats.propertiesPosted': firebase.firestore.FieldValue.increment(1)
+                                }).catch(e => console.warn('[Gamification] Could not update stats:', e));
+                            }).catch(err => console.error('[Gamification] Error:', err));
+                        }
+                        
+                        // If premium was selected, award premium XP
+                        if (isPremium) {
+                            GamificationService.awardAchievement(user.uid, 'premium_listing', 200).then(result => {
+                                if (result && !result.alreadyEarned) {
+                                    console.log('[Gamification] Awarded 200 XP for premium listing');
+                                }
+                            }).catch(err => console.error('[Gamification] Error:', err));
+                        }
+                    }
+                }
+                
+                // Change button to show success
+                btn.textContent = '✓ Created!';
+                btn.classList.remove('from-amber-500', 'to-yellow-500');
+                btn.classList.add('from-green-500', 'to-emerald-500');
+                
+                // Close modal after delay
+                setTimeout(() => {
+                    closeModal('createListingModal');
+                    goToDashboard();
+                    // Reset button state for next time
+                    btn.disabled = false;
+                    btn.textContent = '🏠 Create Listing';
+                    btn.classList.remove('from-green-500', 'to-emerald-500');
+                    btn.classList.add('from-amber-500', 'to-yellow-500');
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error creating listing:', error);
+                errorDiv.textContent = 'Failed to create listing. Please try again.';
+                showElement(errorDiv);
+                // Show cancel button again on error
+                const cancelBtn = $('cancelListingBtn');
+                if (cancelBtn) showElement(cancelBtn);
+                // Reset button on error
+                btn.disabled = false;
+                btn.textContent = '🏠 Create Listing';
+            }
+        });
+    }
+});
+
+// ==================== DELETE PROPERTY ====================
+window.confirmDeleteProperty = function(propertyId, propertyTitle) {
+    // Store the property info for deletion
+    window.pendingDeleteProperty = { id: propertyId, title: propertyTitle };
+    
+    // Update modal content
+    $('deletePropertyName').textContent = propertyTitle;
+    
+    // Show the modal
+    openModal('deleteConfirmModal');
+};
+
+window.cancelDelete = function() {
+    window.pendingDeleteProperty = null;
+    closeModal('deleteConfirmModal');
+};
+
+window.executeDeleteProperty = async function() {
+    if (!window.pendingDeleteProperty) return;
+    
+    const propertyId = window.pendingDeleteProperty.id;
+    const propertyTitle = window.pendingDeleteProperty.title;
+    const btn = $('confirmDeleteBtn');
+    
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+    
+    try {
+        // Get the ACTUAL property owner's email (not the current user - could be admin)
+        const actualOwnerEmail = (propertyOwnerEmail[propertyId] || '').toLowerCase();
+        const currentUserEmail = (auth.currentUser?.email || '').toLowerCase();
+        const isAdminDeleting = currentUserEmail !== actualOwnerEmail && actualOwnerEmail !== '';
+        // Remove from local properties array
+        const propIndex = properties.findIndex(p => p.id === propertyId);
+        if (propIndex !== -1) {
+            properties.splice(propIndex, 1);
+        }
+        
+        // Remove from owner map (use actual owner's email)
+        const ownerForMap = actualOwnerEmail || currentUserEmail;
+        if (ownerPropertyMap[ownerForMap]) {
+            const idx = ownerPropertyMap[ownerForMap].indexOf(propertyId);
+            if (idx !== -1) {
+                ownerPropertyMap[ownerForMap].splice(idx, 1);
+            }
+        }
+        delete propertyOwnerEmail[propertyId];
+        
+        // Remove from availability
+        delete state.availability[propertyId];
+        
+        // Remove from Firestore - properties doc (single source of truth)
+        await db.collection('settings').doc('properties').update({
+            [propertyId]: firebase.firestore.FieldValue.delete()
+        });
+        
+        // Remove availability
+        await db.collection('settings').doc('propertyAvailability').update({
+            [propertyId]: firebase.firestore.FieldValue.delete()
+        });
+        
+        // CREATE DELETION NOTIFICATION for the property owner (if admin is deleting someone else's property)
+        if (isAdminDeleting && actualOwnerEmail) {
+            // Find the owner's user document and set deletedProperty field
+            // This triggers their existing user document listener
+            const ownerSnapshot = await db.collection('users')
+                .where('email', '==', actualOwnerEmail)
+                .get();
+            
+            if (!ownerSnapshot.empty) {
+                const ownerDoc = ownerSnapshot.docs[0];
+                await db.collection('users').doc(ownerDoc.id).update({
+                    deletedProperty: {
+                        propertyId: propertyId,
+                        propertyTitle: propertyTitle,
+                        deletedBy: currentUserEmail,
+                        deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        acknowledged: false
+                    }
+                });
+            }
+        }
+        
+        // Update filtered properties
+        state.filteredProperties = [...properties];
+        
+        // Re-render
+        renderProperties(state.filteredProperties);
+        renderOwnerDashboard();
+        
+        // Update tier badge to reflect new listing count
+        updateTierBadge(state.userTier || 'starter', currentUserEmail);
+        
+        // Close modal and go to dashboard
+        closeModal('deleteConfirmModal');
+        window.pendingDeleteProperty = null;
+        
+        // If we're on the stats page for this property, go back to dashboard
+        if (state.currentPropertyId === propertyId) {
+            goToDashboard();
+        }
+        
+    } catch (error) {
+        console.error('Error deleting property:', error);
+        alert('Failed to delete property. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🗑️ Yes, Delete';
+    }
+};
+
+// ==================== COPY DASHBOARD REMINDER ====================
+window.copyDashboardReminder = function(propertyId, btn) {
+    const reminderText = window.dashboardReminders && window.dashboardReminders[propertyId];
+    if (!reminderText) {
+        alert('No reminder text found.');
+        return;
+    }
+    
+    const originalHtml = btn.innerHTML;
+    
+    navigator.clipboard.writeText(reminderText).then(() => {
+        // Show success feedback
+        btn.innerHTML = `
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            ✓ Copied!
+        `;
+        btn.classList.remove('from-blue-500', 'to-blue-600');
+        btn.classList.add('from-green-500', 'to-emerald-500');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('from-green-500', 'to-emerald-500');
+            btn.classList.add('from-blue-500', 'to-blue-600');
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = reminderText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            btn.innerHTML = `
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                ✓ Copied!
+            `;
+            btn.classList.remove('from-blue-500', 'to-blue-600');
+            btn.classList.add('from-green-500', 'to-emerald-500');
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('from-green-500', 'to-emerald-500');
+                btn.classList.add('from-blue-500', 'to-blue-600');
+            }, 2000);
+        } catch (e) {
+            alert('Failed to copy. Please copy manually.');
+        }
+        document.body.removeChild(textArea);
+    });
+};
+
