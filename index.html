@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaulysAutos.com - Elite Luxury Vehicle Marketplace | $1M+</title>
+    <meta name="description" content="The premier marketplace for luxury vehicles over $1,000,000. Supercars, hypercars, exotic vehicles, and more.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#FFFBEB',
+                            100: '#FEF3C7',
+                            200: '#FDE68A',
+                            300: '#FCD34D',
+                            400: '#FBBF24',
+                            500: '#F59E0B',
+                            600: '#D97706',
+                            700: '#B45309',
+                            800: '#92400E',
+                            900: '#78350F',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * { font-family: 'Inter', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(20, 20, 20, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #D4AF37 0%, #F4E4BA 50%, #D4AF37 100%);
+        }
+        
+        .gold-text {
+            background: linear-gradient(135deg, #D4AF37 0%, #F4E4BA 50%, #D4AF37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .gold-border {
+            border: 2px solid #D4AF37;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .premium-glow {
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4), 0 0 60px rgba(212, 175, 55, 0.2);
+        }
+        
+        .vehicle-card {
+            transition: all 0.3s ease;
+        }
+        
+        .vehicle-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+        }
+        
+        .badge {
+            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+            color: #000;
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+            color: #000;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gold:hover {
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline-gold {
+            border: 2px solid #D4AF37;
+            color: #D4AF37;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-gold:hover {
+            background: #D4AF37;
+            color: #000;
+        }
+        
+        .filter-btn {
+            background: rgba(30, 30, 30, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #999;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            border-color: #D4AF37;
+            color: #D4AF37;
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+            color: #000;
+            border-color: #D4AF37;
+            font-weight: 600;
+        }
+        
+        .unavailable-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .unavailable-text {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            font-weight: 800;
+            font-size: 1.25rem;
+            border-radius: 0.5rem;
+            transform: rotate(-15deg);
+        }
+        
+        .navbar-blur {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        /* Hide scrollbar but allow scrolling */
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Custom scrollbar for main content */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4AF37;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B8860B;
+        }
+        
+        .tier-starter { background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%); }
+        .tier-pro { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); }
+        .tier-elite { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); }
+        .tier-owner { background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Navigation -->
+    <nav class="navbar-blur fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 md:h-20">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="goHome()">
+                    <div class="w-10 h-10 md:w-12 md:h-12 gold-gradient rounded-xl flex items-center justify-center shadow-lg">
+                        <span class="text-xl md:text-2xl">🚗</span>
+                    </div>
+                    <span class="text-xl md:text-2xl font-black gold-text">PaulysAutos.com</span>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" onclick="goHome()" class="text-gray-300 hover:text-gold-400 font-semibold transition">Home</a>
+                    <a href="#vehicles" onclick="scrollToVehicles()" class="text-gray-300 hover:text-gold-400 font-semibold transition">Vehicles</a>
+                    <a href="#about" class="text-gray-300 hover:text-gold-400 font-semibold transition">About</a>
+                    <a href="#contact" class="text-gray-300 hover:text-gold-400 font-semibold transition">Contact</a>
+                    <a href="#leaderboard" onclick="showLeaderboard()" class="text-gray-300 hover:text-gold-400 font-semibold transition">Leaderboard</a>
+                </div>
+                
+                <!-- Auth Buttons -->
+                <div class="flex items-center space-x-3">
+                    <!-- Logged Out State -->
+                    <div id="authButtons">
+                        <button onclick="openModal('loginModal')" class="btn-gold px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-sm md:text-base">
+                            Register / Sign In
+                        </button>
+                    </div>
+                    
+                    <!-- Logged In State -->
+                    <div id="userMenu" class="hidden items-center space-x-3">
+                        <button onclick="openModal('createListingModal')" class="btn-outline-gold px-3 md:px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-1">
+                            <span>+</span>
+                            <span class="hidden sm:inline">New</span>
+                        </button>
+                        <button onclick="showDashboard()" class="bg-gray-800 hover:bg-gray-700 px-3 md:px-4 py-2 rounded-xl text-sm font-bold transition">
+                            Dashboard
+                        </button>
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-500 px-3 md:px-4 py-2 rounded-xl text-sm font-bold transition">
+                            Logout
+                        </button>
+                        <div class="flex items-center space-x-2 pl-2 border-l border-gray-700">
+                            <span id="navUsername" class="text-gold-400 font-bold text-sm hidden sm:block">User</span>
+                            <span id="navUserTier" class="text-xs px-2 py-1 rounded-full tier-starter text-white font-bold">Starter</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-gray-400 hover:text-gold-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-gray-900 border-t border-gray-800">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#" onclick="goHome(); toggleMobileMenu();" class="block text-gray-300 hover:text-gold-400 font-semibold py-2">Home</a>
+                <a href="#vehicles" onclick="scrollToVehicles(); toggleMobileMenu();" class="block text-gray-300 hover:text-gold-400 font-semibold py-2">Vehicles</a>
+                <a href="#about" onclick="toggleMobileMenu();" class="block text-gray-300 hover:text-gold-400 font-semibold py-2">About</a>
+                <a href="#contact" onclick="toggleMobileMenu();" class="block text-gray-300 hover:text-gold-400 font-semibold py-2">Contact</a>
+                <a href="#leaderboard" onclick="showLeaderboard(); toggleMobileMenu();" class="block text-gray-300 hover:text-gold-400 font-semibold py-2">Leaderboard</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="pt-20 md:pt-24">
+        <!-- Hero Section -->
+        <section id="heroSection" class="relative py-16 md:py-24 px-4">
+            <div class="max-w-7xl mx-auto text-center">
+                <div class="inline-block mb-6">
+                    <span class="bg-gradient-to-r from-gold-600 to-gold-400 text-black text-sm md:text-base font-bold px-4 py-2 rounded-full">
+                        💎 Elite Marketplace - Vehicles $1,000,000+
+                    </span>
+                </div>
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-black mb-6">
+                    <span class="gold-text">Luxury Vehicles</span>
+                    <br>
+                    <span class="text-white">For The Elite</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                    The premier marketplace for high-end vehicles. Supercars, hypercars, luxury trucks, and exotic rides valued over $1,000,000.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="scrollToVehicles()" class="btn-gold px-8 py-4 rounded-xl text-lg font-bold">
+                        🚗 Browse Vehicles
+                    </button>
+                    <button onclick="openModal('loginModal')" class="btn-outline-gold px-8 py-4 rounded-xl text-lg font-bold">
+                        📝 List Your Vehicle
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Vehicles Section -->
+        <section id="vehiclesSection" class="py-12 px-4">
+            <div class="max-w-7xl mx-auto">
+                <!-- Section Header -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-black gold-text">Featured Vehicles</h2>
+                        <p class="text-gray-400 mt-2">Discover the finest vehicles on the market</p>
+                    </div>
+                    <div id="vehicleCount" class="text-gray-500 font-semibold">(0)</div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="mb-8 space-y-4">
+                    <!-- Category Filters -->
+                    <div class="flex flex-wrap gap-2" id="categoryFilters">
+                        <button onclick="filterByCategory('all')" class="filter-btn active px-4 py-2 rounded-xl text-sm font-semibold" data-category="all">
+                            All
+                        </button>
+                        <button onclick="filterByCategory('car')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold" data-category="car">
+                            🚗 Cars
+                        </button>
+                        <button onclick="filterByCategory('suv')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold" data-category="suv">
+                            🚙 SUVs
+                        </button>
+                        <button onclick="filterByCategory('truck')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold" data-category="truck">
+                            🚚 Trucks
+                        </button>
+                        <button onclick="filterByCategory('motorcycle')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold" data-category="motorcycle">
+                            🏍️ Motorcycles
+                        </button>
+                        <button onclick="filterByCategory('boat')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold" data-category="boat">
+                            🚤 Boats
+                        </button>
+                    </div>
+                    
+                    <!-- Additional Filters -->
+                    <div class="flex flex-wrap items-center gap-4">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="hideSold" onchange="applyFilters()" class="w-4 h-4 rounded border-gold-500 text-gold-500 focus:ring-gold-500">
+                            <span class="text-gray-400 text-sm font-medium">Hide Sold</span>
+                        </label>
+                        
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="myListings" onchange="applyFilters()" class="w-4 h-4 rounded border-gold-500 text-gold-500 focus:ring-gold-500">
+                            <span class="text-gray-400 text-sm font-medium">My Listings</span>
+                        </label>
+                        
+                        <select id="sortBy" onchange="applyFilters()" class="bg-gray-800 border border-gray-700 text-gray-300 rounded-xl px-4 py-2 text-sm focus:ring-gold-500 focus:border-gold-500">
+                            <option value="newest">Newest First</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="price-low">Price: Low to High</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Vehicle Grid -->
+                <div id="vehiclesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Vehicle cards will be rendered here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-16">
+                    <div class="text-6xl mb-4">🚗</div>
+                    <h3 class="text-2xl font-bold text-gray-400 mb-2">No Vehicles Found</h3>
+                    <p class="text-gray-500">Try adjusting your filters or check back later.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Dashboard Section (Hidden by default) -->
+        <section id="dashboardSection" class="hidden py-12 px-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-black gold-text">Dashboard</h2>
+                        <p class="text-gray-400 mt-2">Manage your listings and account</p>
+                    </div>
+                    <button onclick="goHome()" class="btn-outline-gold px-4 py-2 rounded-xl text-sm font-bold">
+                        ← Back to Vehicles
+                    </button>
+                </div>
+                
+                <!-- Dashboard Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="glass-effect rounded-xl p-4 text-center">
+                        <div class="text-3xl font-black gold-text" id="dashMyListings">0</div>
+                        <div class="text-gray-400 text-sm">My Listings</div>
+                    </div>
+                    <div class="glass-effect rounded-xl p-4 text-center">
+                        <div class="text-3xl font-black text-green-400" id="dashSold">0</div>
+                        <div class="text-gray-400 text-sm">Sold</div>
+                    </div>
+                    <div class="glass-effect rounded-xl p-4 text-center">
+                        <div class="text-3xl font-black text-blue-400" id="dashActive">0</div>
+                        <div class="text-gray-400 text-sm">Active</div>
+                    </div>
+                    <div class="glass-effect rounded-xl p-4 text-center">
+                        <div class="text-3xl font-black text-purple-400" id="dashTotalValue">$0</div>
+                        <div class="text-gray-400 text-sm">Total Value</div>
+                    </div>
+                </div>
+                
+                <!-- My Listings -->
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-xl font-bold text-gold-400 mb-4">My Listings</h3>
+                    <div id="myListingsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- User's listings will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Vehicle Detail Section (Hidden by default) -->
+        <section id="vehicleDetailSection" class="hidden py-12 px-4">
+            <div class="max-w-5xl mx-auto">
+                <button onclick="goHome()" class="flex items-center space-x-2 text-gold-400 hover:text-gold-300 font-semibold mb-6 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    <span>Back to Vehicles</span>
+                </button>
+                
+                <div id="vehicleDetailContent" class="glass-effect rounded-2xl overflow-hidden">
+                    <!-- Vehicle detail will be rendered here -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Leaderboard Section (Hidden by default) -->
+        <section id="leaderboardSection" class="hidden py-12 px-4">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-black gold-text">🏆 Leaderboard</h2>
+                        <p class="text-gray-400 mt-2">Top sellers in the luxury market</p>
+                    </div>
+                    <button onclick="goHome()" class="btn-outline-gold px-4 py-2 rounded-xl text-sm font-bold">
+                        ← Back to Vehicles
+                    </button>
+                </div>
+                
+                <div id="leaderboardContent" class="glass-effect rounded-2xl p-6">
+                    <!-- Leaderboard will be rendered here -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- About Section -->
+        <section id="about" class="py-16 px-4 bg-gradient-to-b from-transparent to-gray-900/50">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl md:text-4xl font-black gold-text mb-6">About PaulysAutos</h2>
+                <p class="text-lg text-gray-400 mb-8">
+                    PaulysAutos.com is the premier marketplace for luxury vehicles valued over $1,000,000. 
+                    We connect elite buyers with exclusive sellers in a secure, trusted environment.
+                    All transactions are conducted in-city with our sale contract protection system.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass-effect rounded-xl p-6">
+                        <div class="text-4xl mb-4">💎</div>
+                        <h3 class="text-lg font-bold text-gold-400 mb-2">Elite Only</h3>
+                        <p class="text-gray-500 text-sm">Vehicles $1M+ only. No lowballers.</p>
+                    </div>
+                    <div class="glass-effect rounded-xl p-6">
+                        <div class="text-4xl mb-4">📝</div>
+                        <h3 class="text-lg font-bold text-gold-400 mb-2">Protected Sales</h3>
+                        <p class="text-gray-500 text-sm">Sale contracts for buyer/seller protection.</p>
+                    </div>
+                    <div class="glass-effect rounded-xl p-6">
+                        <div class="text-4xl mb-4">⭐</div>
+                        <h3 class="text-lg font-bold text-gold-400 mb-2">Premium Listings</h3>
+                        <p class="text-gray-500 text-sm">Featured placement for maximum exposure.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Contact Section -->
+        <section id="contact" class="py-16 px-4">
+            <div class="max-w-4xl mx-auto">
+                <div class="glass-effect rounded-2xl p-8 text-center">
+                    <h2 class="text-3xl font-black gold-text mb-4">Contact Us</h2>
+                    <p class="text-gray-400 mb-6">Questions? Reach out to Pauly directly.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <div class="flex items-center space-x-2 text-gray-300">
+                            <span>📱</span>
+                            <span class="font-mono text-lg">2057028233</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-gray-300">
+                            <span>📷</span>
+                            <span>@pauly</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-gray-300">
+                            <span>💬</span>
+                            <span>@paulys</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="py-8 px-4 border-t border-gray-800">
+            <div class="max-w-7xl mx-auto text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <div class="w-8 h-8 gold-gradient rounded-lg flex items-center justify-center">
+                        <span class="text-lg">🚗</span>
+                    </div>
+                    <span class="text-lg font-bold gold-text">PaulysAutos.com</span>
+                </div>
+                <p class="text-gray-500 text-sm">
+                    &copy; 2025 PaulysAutos.com | Elite Luxury Vehicle Marketplace
+                </p>
+                <p class="text-gray-600 text-xs mt-2">
+                    A sister site of <a href="https://paulysproperties.com" target="_blank" class="text-gold-500 hover:text-gold-400">PaulysProperties.com</a>
+                </p>
+            </div>
+        </footer>
+    </main>
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" onclick="if(event.target === this) closeModal('loginModal')">
+        <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 gold-border">
+            <h2 class="text-2xl font-black gold-text mb-6 text-center">Welcome to PaulysAutos</h2>
+            
+            <div id="loginOptions">
+                <p class="text-gray-400 text-center mb-6">Sign in or create your account</p>
+                <div class="space-y-4">
+                    <button onclick="showAuthForm('login')" class="w-full btn-gold py-3 rounded-xl font-bold">
+                        Sign In
+                    </button>
+                    <button onclick="showAuthForm('register')" class="w-full btn-outline-gold py-3 rounded-xl font-bold">
+                        Create Account
+                    </button>
+                </div>
+            </div>
+            
+            <div id="loginForm" class="hidden">
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Email</label>
+                        <input type="email" id="loginEmail" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Password</label>
+                        <input type="password" id="loginPassword" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                    <div id="loginError" class="hidden text-red-400 text-sm"></div>
+                    <button type="submit" class="w-full btn-gold py-3 rounded-xl font-bold">Sign In</button>
+                    <button type="button" onclick="showAuthForm('options')" class="w-full text-gray-400 hover:text-gold-400 text-sm">← Back</button>
+                </form>
+            </div>
+            
+            <div id="registerForm" class="hidden">
+                <form onsubmit="handleRegister(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Username</label>
+                        <input type="text" id="registerUsername" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Email</label>
+                        <input type="email" id="registerEmail" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Phone Number</label>
+                        <input type="tel" id="registerPhone" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500" placeholder="1234567890">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Password</label>
+                        <input type="password" id="registerPassword" required minlength="6" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                    <div id="registerError" class="hidden text-red-400 text-sm"></div>
+                    <button type="submit" class="w-full btn-gold py-3 rounded-xl font-bold">Create Account</button>
+                    <button type="button" onclick="showAuthForm('options')" class="w-full text-gray-400 hover:text-gold-400 text-sm">← Back</button>
+                </form>
+            </div>
+            
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Create Listing Modal -->
+    <div id="createListingModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden overflow-y-auto" onclick="if(event.target === this) closeModal('createListingModal')">
+        <div class="glass-effect rounded-2xl p-8 max-w-2xl w-full mx-4 my-8 gold-border">
+            <h2 class="text-2xl font-black gold-text mb-6 text-center">🚗 List Your Vehicle</h2>
+            
+            <form onsubmit="handleCreateListing(event)" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Vehicle Make & Model *</label>
+                        <input type="text" id="vehicleMake" required placeholder="e.g., Bugatti Chiron" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Plate Number *</label>
+                        <input type="text" id="vehiclePlate" required placeholder="e.g., ELITE123" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Category *</label>
+                        <select id="vehicleCategory" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                            <option value="">Select category...</option>
+                            <option value="car">🚗 Car</option>
+                            <option value="suv">🚙 SUV</option>
+                            <option value="truck">🚚 Truck</option>
+                            <option value="motorcycle">🏍️ Motorcycle</option>
+                            <option value="boat">🚤 Boat</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Price * (Min $1,000,000)</label>
+                        <input type="number" id="vehiclePrice" required min="1000000" placeholder="1000000" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Storage Capacity</label>
+                        <input type="number" id="vehicleStorage" placeholder="e.g., 100" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Is Upgraded?</label>
+                        <select id="vehicleUpgraded" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                            <option value="no">No - Stock</option>
+                            <option value="yes">Yes - Upgraded</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Description</label>
+                    <textarea id="vehicleDescription" rows="3" placeholder="Describe your vehicle, performance, history, etc." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Vehicle Images (one URL per line)</label>
+                    <div class="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 border border-cyan-600/40 rounded-lg p-3 mb-2">
+                        <div class="flex items-start gap-2">
+                            <span class="text-lg">💡</span>
+                            <div class="text-xs">
+                                <p class="text-cyan-300 font-bold">Recommended: Use a Free Image Host</p>
+                                <p class="text-gray-300">Upload to <a href="https://fivemanage.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">fivemanage.com</a> (free, made for FiveM) and paste the link.</p>
+                                <p class="text-yellow-400 mt-1">⚠️ Discord links expire! Local files won't work.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <textarea id="vehicleImages" rows="3" placeholder="https://fivemanage.com/your-image.jpg" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500"></textarea>
+                </div>
+                
+                <div id="upgradePhotosSection" class="hidden">
+                    <label class="block text-gray-400 text-sm mb-2">Upgrade Photos (one URL per line)</label>
+                    <textarea id="upgradePhotos" rows="3" placeholder="https://fivemanage.com/upgrade-screenshot.jpg" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500"></textarea>
+                    <p class="text-gray-500 text-xs mt-1">Upload screenshots showing your vehicle's upgrades</p>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Video Tour URL (optional)</label>
+                    <input type="url" id="vehicleVideo" placeholder="https://..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500 focus:ring-1 focus:ring-gold-500">
+                </div>
+                
+                <!-- Premium Listing Option -->
+                <div class="bg-gradient-to-r from-gold-900/30 to-yellow-900/30 border border-gold-600/50 rounded-xl p-4">
+                    <label class="flex items-start space-x-3 cursor-pointer">
+                        <input type="checkbox" id="vehiclePremium" class="mt-1 w-5 h-5 rounded border-gold-500 text-gold-500 focus:ring-gold-500">
+                        <div>
+                            <span class="text-gold-400 font-bold">👑 Premium Listing</span>
+                            <span class="text-gold-500 text-sm ml-2">$10,000/week</span>
+                            <p class="text-gray-400 text-sm mt-1">Featured placement at the top with gold styling. Stand out from the crowd!</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <div id="createListingError" class="hidden text-red-400 text-sm"></div>
+                
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 btn-gold py-3 rounded-xl font-bold">
+                        🚗 Create Listing
+                    </button>
+                    <button type="button" onclick="closeModal('createListingModal')" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl font-bold transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+            
+            <button onclick="closeModal('createListingModal')" class="absolute top-4 right-4 text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" onclick="if(event.target === this) closeModal('contactModal')">
+        <div class="glass-effect rounded-2xl p-8 max-w-md w-full mx-4 gold-border">
+            <h2 id="contactModalTitle" class="text-2xl font-black gold-text mb-2 text-center">Contact Seller</h2>
+            <p id="contactModalVehicle" class="text-gray-400 text-center mb-6">Vehicle Name</p>
+            
+            <div class="space-y-4">
+                <p class="text-gray-300 text-center">Text us in city! Copy the number and message below.</p>
+                
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">📱 Seller's Number:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="contactPhone" readonly class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white font-mono text-lg">
+                        <button onclick="copyToClipboard('contactPhone')" class="btn-gold px-4 rounded-xl font-bold">Copy</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">💬 Your Message (edit as needed):</label>
+                    <textarea id="contactMessage" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-gold-500"></textarea>
+                    <button onclick="copyToClipboard('contactMessage')" class="w-full btn-gold py-3 rounded-xl font-bold mt-2">Copy Message</button>
+                </div>
+                
+                <div class="bg-gradient-to-r from-gold-900/30 to-yellow-900/30 border border-gold-600/30 rounded-xl p-4 text-center">
+                    <p class="text-gold-400 font-bold">⚡ Text in city for fastest response!</p>
+                    <p class="text-gray-400 text-sm">Our sellers typically respond within minutes.</p>
+                </div>
+                
+                <button onclick="closeModal('contactModal')" class="w-full bg-gray-700 hover:bg-gray-600 py-3 rounded-xl font-bold transition">Close</button>
+            </div>
+            
+            <button onclick="closeModal('contactModal')" class="absolute top-4 right-4 text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Sale Contract Modal -->
+    <div id="saleContractModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden overflow-y-auto" onclick="if(event.target === this) closeModal('saleContractModal')">
+        <div class="glass-effect rounded-2xl p-8 max-w-2xl w-full mx-4 my-8 gold-border">
+            <h2 class="text-2xl font-black gold-text mb-6 text-center">📝 Sale Contract Generator</h2>
+            
+            <form onsubmit="generateSaleContract(event)" class="space-y-4">
+                <div class="bg-gray-800/50 rounded-xl p-4 mb-4">
+                    <h3 class="text-lg font-bold text-gold-400 mb-2">Vehicle Information</h3>
+                    <p id="contractVehicleInfo" class="text-gray-300"></p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-blue-900/20 border border-blue-600/30 rounded-xl p-4">
+                        <h4 class="text-blue-400 font-bold mb-3">👤 Buyer Information</h4>
+                        <div class="space-y-3">
+                            <input type="text" id="buyerName" required placeholder="Buyer Full Name" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                            <input type="text" id="buyerSSN" required placeholder="Buyer Citizen SSN" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                            <input type="tel" id="buyerPhone" required placeholder="Buyer Phone" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-900/20 border border-green-600/30 rounded-xl p-4">
+                        <h4 class="text-green-400 font-bold mb-3">👤 Seller Information</h4>
+                        <div class="space-y-3">
+                            <input type="text" id="sellerName" required placeholder="Seller Full Name" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                            <input type="text" id="sellerSSN" required placeholder="Seller Citizen SSN" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                            <input type="tel" id="sellerPhone" required placeholder="Seller Phone" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Sale Price *</label>
+                        <input type="number" id="contractPrice" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Date of Sale *</label>
+                        <input type="date" id="contractDate" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white">
+                    </div>
+                </div>
+                
+                <div id="contractUpgradesSection" class="hidden">
+                    <label class="block text-gray-400 text-sm mb-2">Upgrades Included</label>
+                    <div id="contractUpgradesList" class="bg-gray-800/50 rounded-xl p-4 space-y-2">
+                        <!-- Upgrades will be listed here -->
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-900/20 border border-yellow-600/30 rounded-xl p-4">
+                    <p class="text-yellow-400 text-sm">
+                        <strong>⚠️ Legal Notice:</strong> This contract serves as proof of sale agreement between buyer and seller. 
+                        Both parties agree to the terms upon signing. This document can be used for in-city legal proceedings if disputes arise.
+                    </p>
+                </div>
+                
+                <div id="contractError" class="hidden text-red-400 text-sm"></div>
+                
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 btn-gold py-3 rounded-xl font-bold">
+                        📝 Generate Contract
+                    </button>
+                    <button type="button" onclick="closeModal('saleContractModal')" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-xl font-bold transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+            
+            <button onclick="closeModal('saleContractModal')" class="absolute top-4 right-4 text-gray-500 hover:text-white text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Contract Preview Modal -->
+    <div id="contractPreviewModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden overflow-y-auto" onclick="if(event.target === this) closeModal('contractPreviewModal')">
+        <div class="bg-white rounded-2xl p-8 max-w-3xl w-full mx-4 my-8 text-black">
+            <div id="contractPreviewContent">
+                <!-- Contract will be rendered here -->
+            </div>
+            
+            <div class="flex gap-4 mt-6 no-print">
+                <button onclick="printContract()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition">
+                    🖨️ Print Contract
+                </button>
+                <button onclick="closeModal('contractPreviewModal')" class="flex-1 bg-gray-300 hover:bg-gray-400 text-black py-3 rounded-xl font-bold transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
+        <div class="glass-effect gold-border rounded-xl px-6 py-4 flex items-center space-x-3">
+            <span id="toastIcon" class="text-2xl">✅</span>
+            <span id="toastMessage" class="text-white font-medium">Message</span>
+        </div>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
