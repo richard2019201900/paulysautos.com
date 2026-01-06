@@ -30,7 +30,8 @@ const TIERS = {
 };
 
 // Master admin email
-const MASTER_ADMIN_EMAIL = 'richard2019201900@gmail.com';
+// Master admin email - PaulysAutos.com owner
+const MASTER_ADMIN_EMAIL = 'pauly@pma.network';
 
 /**
  * OwnershipService - SINGLE SOURCE OF TRUTH for property ownership

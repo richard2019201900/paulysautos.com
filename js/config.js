@@ -16,6 +16,7 @@ const firebaseConfig = {
 const SITE_NAME = 'PaulysAutos.com';
 const SITE_TYPE = 'vehicles'; // 'properties' or 'vehicles'
 const MIN_LISTING_PRICE = 1000000; // $1M minimum for elite marketplace
+const MASTER_ADMIN_EMAIL = 'pauly@pma.network'; // Site owner/admin
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
