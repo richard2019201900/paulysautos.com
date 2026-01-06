@@ -279,7 +279,13 @@ async function calculateTotalsAsync() {
         console.warn('[Dashboard] Could not fetch vehicle sales:', e);
     }
     
-    return data;
+    // Store globally
+    window.dashboardData = data;
+    
+    return {
+        ownedCount: ownedVehicles.length,
+        data
+    };
 }
 
 // Synchronous version for backward compatibility (uses cached data or basic calculation)
@@ -350,7 +356,14 @@ window.flipCard = function(card) {
 
 // Update all dashboard tiles with vehicle sales data
 function updateDashboardTiles(totals) {
-    const { ownedCount, data } = totals;
+    // Defensive check - totals might be undefined or not in expected format
+    if (!totals) {
+        console.warn('[Dashboard] updateDashboardTiles called with no data');
+        return;
+    }
+    
+    const ownedCount = totals.ownedCount || 0;
+    const data = totals.data || totals || {};
     
     // For backwards compatibility, map new data to old element IDs
     const totalSales = data.totalSalesRevenue || data.houseSalesTotal || 0;

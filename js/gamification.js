@@ -547,7 +547,12 @@ const GamificationService = {
     },
 
     // Check and auto-trigger migration if needed (called from admin panel)
+    // DISABLED: Cloud Function not yet deployed for PaulysAutos
     checkAndTriggerMigration: async function(users) {
+        console.log('[Gamification] Migration check skipped - Cloud Function not deployed');
+        return false;
+        
+        /* ORIGINAL CODE - Enable when Cloud Function is deployed
         // First check the global flag - if migration is complete, never run again
         const alreadyComplete = await this.isMigrationComplete();
         if (alreadyComplete) {
@@ -577,6 +582,7 @@ const GamificationService = {
         }
         
         return false;
+        */
     }
 };
 
