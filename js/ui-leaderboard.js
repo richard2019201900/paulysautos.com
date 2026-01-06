@@ -20,6 +20,32 @@ window.renderLeaderboardPage = async function() {
         return;
     }
     
+    // Show Coming Soon message until Cloud Function is deployed
+    listContainer.innerHTML = `
+        <div class="p-12 text-center">
+            <div class="text-6xl mb-4">🏆</div>
+            <h3 class="text-2xl font-bold text-amber-400 mb-2">Leaderboard Coming Soon!</h3>
+            <p class="text-gray-400 mb-4">We're setting up the competitive rankings system.</p>
+            <p class="text-gray-500 text-sm">Earn XP by listing vehicles and completing sales to climb the ranks!</p>
+            <div class="mt-6 p-4 bg-gray-800/50 rounded-xl inline-block">
+                <p class="text-sm text-gray-400">XP Rewards:</p>
+                <ul class="text-xs text-gray-500 mt-2 space-y-1 text-left">
+                    <li>🚗 +500 XP - List a vehicle</li>
+                    <li>💰 +1000 XP - Complete your first sale</li>
+                    <li>🏆 +500 XP - Each additional sale</li>
+                    <li>👑 +250 XP - Feature a premium listing</li>
+                </ul>
+            </div>
+        </div>
+    `;
+    
+    // Hide user rank card for now
+    if (userRankCard) hideElement(userRankCard);
+    if (loginPrompt) hideElement(loginPrompt);
+    
+    return; // Skip Cloud Function call until it's deployed
+    
+    /* ORIGINAL CODE - UNCOMMENT WHEN CLOUD FUNCTION IS DEPLOYED
     // Show loading
     listContainer.innerHTML = '<div class="p-8 text-center text-gray-400"><div class="animate-pulse">Loading leaderboard...</div></div>';
     

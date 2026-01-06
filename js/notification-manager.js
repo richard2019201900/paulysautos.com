@@ -865,9 +865,9 @@
                     }
                 }
                 
-                // All users get rent checks
-                await checkRentDue();
-                state.listeners.rentInterval = setInterval(checkRentDue, CONFIG.RENT_CHECK_INTERVAL);
+                // Rent checks removed - PaulysAutos is a vehicle sales marketplace, not rentals
+                // await checkRentDue();
+                // state.listeners.rentInterval = setInterval(checkRentDue, CONFIG.RENT_CHECK_INTERVAL);
                 
                 state.initialized = true;
                 refreshUI();

@@ -115,13 +115,13 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
     const accent = $('modalAccent');
     accent.className = `bg-gradient-to-r from-${colors[0]}-900 to-${colors[1]}-900 p-4 rounded-xl mb-6 text-center border border-${colors[0]}-700`;
     
-    // Show appropriate disclaimer
+    // Show vehicle purchase disclaimer
     const disclaimer = $('modalDisclaimer');
     if (disclaimer) {
         disclaimer.innerHTML = `
             <div class="text-xs text-gray-400 mt-2 space-y-1">
                 <div><strong>📋 Note:</strong> All communications, vehicle viewings, and transactions are conducted in-city. This website serves as a listing platform only.</div>
-                <div><strong>💰 City Fee:</strong> A standard <span class="text-amber-400 font-bold">10% PMA Realtor Fee</span> (city requirement) applies to all vehicle purchases. This fee is not charged by PaulysAutos.com.</div>
+                <div><strong>💰 City Fee:</strong> The government charges an additional <span class="text-amber-400 font-bold">$25,000</span> when selling vehicles through the LUX app. This fee goes directly to the city and is not charged by PaulysAutos.com.</div>
             </div>
         `;
     }

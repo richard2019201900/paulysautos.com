@@ -17,17 +17,17 @@ const GamificationService = {
         { level: 8, xp: 50000, title: 'Legendary Owner', icon: '👑' }
     ],
 
-    // XP values for activities
+    // XP values for activities (PaulysAutos - Vehicle Sales)
     xpValues: {
         signup: 100,
         display_name: 50,
         phone_added: 150,
         profile_complete: 100,
-        first_listing: 500,
-        additional_listing: 250,
-        first_rental: 1000,
-        additional_rental: 500,
-        premium_listing: 200
+        first_listing: 500,           // Post first vehicle
+        additional_listing: 250,      // Post additional vehicles
+        first_sale: 1000,             // Complete first vehicle sale
+        additional_sale: 500,         // Additional vehicle sales
+        premium_listing: 250          // Feature a premium listing
     },
 
     // Achievement definitions
@@ -36,11 +36,11 @@ const GamificationService = {
         display_name: { name: 'Identity', description: 'Added display name', icon: '📝' },
         phone_added: { name: 'Connected', description: 'Added phone number', icon: '📱' },
         profile_complete: { name: 'Profile Pro', description: 'Completed profile', icon: '✨' },
-        first_listing: { name: 'First Home', description: 'Posted first listing', icon: '🏠' },
-        first_rental: { name: 'First Deal', description: 'Completed first rental', icon: '🤝' },
-        premium_listing: { name: 'Premium Player', description: 'Used premium listing', icon: '👑' },
-        level_5: { name: 'Tycoon Status', description: 'Reached Level 5', icon: '💼' },
-        level_7: { name: 'Elite Status', description: 'Reached Level 7', icon: '💎' }
+        first_listing: { name: 'First Wheels', description: 'Posted first vehicle listing', icon: '🚗' },
+        first_sale: { name: 'First Sale', description: 'Completed first vehicle sale', icon: '💰' },
+        premium_listing: { name: 'Premium Seller', description: 'Featured a premium listing', icon: '👑' },
+        level_5: { name: 'Dealership Status', description: 'Reached Level 5', icon: '💼' },
+        level_7: { name: 'Elite Dealer', description: 'Reached Level 7', icon: '💎' }
     },
 
     // Get level info from XP
