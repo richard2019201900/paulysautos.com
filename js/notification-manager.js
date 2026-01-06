@@ -50,7 +50,7 @@
         // Icons for each notification type
         ICONS: {
             user: '👤',
-            listing: '🏠',
+            listing: '🚗',
             photo: '📸',
             premium: '👑',
             rent: '💰'
@@ -149,7 +149,7 @@
                 const ownerName = rawData.ownerName || rawData.ownerEmail?.split('@')[0] || 'Unknown';
                 notification.title = isMissed 
                     ? (isPremiumTrial ? '🎁 Premium Trial Listing' : '📬 While You Were Away...')
-                    : (isPremium ? '👑 New Premium Listing!' : isPremiumTrial ? '🎁 New Premium Trial!' : '🏠 New Listing Posted!');
+                    : (isPremium ? '👑 New Premium Listing!' : isPremiumTrial ? '🎁 New Premium Trial!' : '🚗 New Listing Posted!');
                 notification.subtitle = `${rawData.title || 'New Property'} by ${ownerName}`;
                 notification.ownerName = ownerName;
                 notification.urgency = isPremium ? CONFIG.URGENCY.WARNING : CONFIG.URGENCY.INFO;
@@ -406,7 +406,7 @@
             case 'rent':
                 // Navigate to My Properties tab, scroll to rent panel
                 if (typeof window.switchDashboardTab === 'function') {
-                    window.switchDashboardTab('myProperties');
+                    window.switchDashboardTab('myVehicles');
                     await sleep(200);
                 }
                 await scrollToAndHighlight('#rentNotificationsPanel', type);
@@ -584,7 +584,7 @@
                 gradientClass = isMissed 
                     ? 'from-emerald-700 to-green-600 border-emerald-500'
                     : 'from-green-600 to-teal-600 border-green-500';
-                icon = isMissed ? '📬' : '🏠';
+                icon = isMissed ? '📬' : '🚗';
             }
         }
         
@@ -791,14 +791,14 @@
                 message = `Hey ${renterName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
             } else if (rentData.isToday) {
                 // Due today
-                message = `Hey ${renterName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🏠`;
+                message = `Hey ${renterName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🚗`;
             } else {
                 // Due tomorrow
-                message = `Hey ${renterName}, just a heads up - your ${frequency} rent payment of $${rentAmount.toLocaleString()} is due tomorrow (${dueDateFormatted}). Thanks! 🏠`;
+                message = `Hey ${renterName}, just a heads up - your ${frequency} rent payment of $${rentAmount.toLocaleString()} is due tomorrow (${dueDateFormatted}). Thanks! 🚗`;
             }
         } else {
             // Fallback if rent data not found
-            message = `Hey ${renterName}! 👋 Just a friendly reminder that rent for ${propertyTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🏠`;
+            message = `Hey ${renterName}! 👋 Just a friendly reminder that rent for ${propertyTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🚗`;
         }
         
         navigator.clipboard.writeText(message).then(() => {

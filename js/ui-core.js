@@ -113,12 +113,12 @@ window.currentDashboardTab = 'myProperties';
 
 // Switch between My Properties and Admin Panel tabs
 window.switchDashboardTab = function(tabName) {
-    const myPropertiesContent = $('myPropertiesTabContent');
+    const myVehiclesContent = $('myVehiclesTabContent');
     const adminContent = $('adminTabContent');
-    const myPropertiesTab = $('dashboardTab-myProperties');
+    const myVehiclesTab = $('dashboardTab-myVehicles');
     const adminTab = $('dashboardTab-admin');
     
-    if (!myPropertiesContent || !adminContent) return;
+    if (!myVehiclesContent || !adminContent) return;
     
     // Update current tab
     window.currentDashboardTab = tabName;
@@ -128,23 +128,23 @@ window.switchDashboardTab = function(tabName) {
         UserPreferencesService.setDashboardTab(tabName);
     }
     
-    if (tabName === 'myProperties') {
-        // Show My Properties, hide Admin
-        myPropertiesContent.classList.remove('hidden');
+    if (tabName === 'myVehicles') {
+        // Show My Vehicles, hide Admin
+        myVehiclesContent.classList.remove('hidden');
         adminContent.classList.add('hidden');
         
         // Update tab styles
-        if (myPropertiesTab) {
-            myPropertiesTab.classList.remove('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
-            myPropertiesTab.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white');
+        if (myVehiclesTab) {
+            myVehiclesTab.classList.remove('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
+            myVehiclesTab.classList.add('bg-gradient-to-r', 'from-amber-600', 'to-yellow-600', 'text-black');
         }
         if (adminTab) {
             adminTab.classList.remove('bg-gradient-to-r', 'from-red-600', 'to-orange-600', 'text-white');
             adminTab.classList.add('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
         }
     } else if (tabName === 'admin') {
-        // Show Admin, hide My Properties
-        myPropertiesContent.classList.add('hidden');
+        // Show Admin, hide My Vehicles
+        myVehiclesContent.classList.add('hidden');
         adminContent.classList.remove('hidden');
         
         // Update tab styles
@@ -152,9 +152,9 @@ window.switchDashboardTab = function(tabName) {
             adminTab.classList.remove('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
             adminTab.classList.add('bg-gradient-to-r', 'from-red-600', 'to-orange-600', 'text-white');
         }
-        if (myPropertiesTab) {
-            myPropertiesTab.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-blue-600', 'text-white');
-            myPropertiesTab.classList.add('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
+        if (myVehiclesTab) {
+            myVehiclesTab.classList.remove('bg-gradient-to-r', 'from-amber-600', 'to-yellow-600', 'text-black');
+            myVehiclesTab.classList.add('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
         }
     }
 };
@@ -164,16 +164,18 @@ window.initDashboardTabs = function() {
     const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     const dashboardTabs = $('dashboardTabs');
     const adminTabContent = $('adminTabContent');
-    const myPropertiesTabContent = $('myPropertiesTabContent');
+    const myVehiclesTabContent = $('myVehiclesTabContent');
     
     if (isAdmin && dashboardTabs) {
         // Show tabs for admin
         dashboardTabs.classList.remove('hidden');
         
-        // Restore last used tab from Firestore via UserPreferencesService, default to myProperties
-        const savedTab = window.UserPreferencesService 
+        // Restore last used tab from Firestore via UserPreferencesService, default to myVehicles
+        let savedTab = window.UserPreferencesService 
             ? UserPreferencesService.getDashboardTab() 
-            : 'myProperties';
+            : 'myVehicles';
+        // Convert old myProperties to myVehicles
+        if (savedTab === 'myProperties') savedTab = 'myVehicles';
         switchDashboardTab(savedTab);
         
         // Show admin content container (the inner adminSection visibility is handled separately)
@@ -184,7 +186,7 @@ window.initDashboardTabs = function() {
         // Not admin - hide tabs and admin content
         if (dashboardTabs) dashboardTabs.classList.add('hidden');
         if (adminTabContent) adminTabContent.classList.add('hidden');
-        if (myPropertiesTabContent) myPropertiesTabContent.classList.remove('hidden');
+        if (myVehiclesTabContent) myVehiclesTabContent.classList.remove('hidden');
     }
 };
 

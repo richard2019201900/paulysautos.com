@@ -8,7 +8,7 @@ const GamificationService = {
     // Level definitions
     levels: [
         { level: 1, xp: 0, title: 'Newcomer', icon: '🌱' },
-        { level: 2, xp: 300, title: 'Resident', icon: '🏠' },
+        { level: 2, xp: 300, title: 'Resident', icon: '🚗' },
         { level: 3, xp: 1000, title: 'Landlord', icon: '🔑' },
         { level: 4, xp: 3000, title: 'Property Mogul', icon: '🏢' },
         { level: 5, xp: 7500, title: 'Real Estate Tycoon', icon: '💼' },

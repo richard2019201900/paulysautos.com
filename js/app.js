@@ -85,14 +85,14 @@ window.viewProperty = function(id) {
     // Image placeholder HTML
     const imagePlaceholder = `
         <div class="w-full h-60 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
-            <span class="text-7xl mb-4">🏠</span>
+            <span class="text-7xl mb-4">🚗</span>
             <span class="text-gray-400 font-semibold text-lg">Photos Coming Soon</span>
             <span class="text-gray-500 text-sm mt-1">Check back later for property images</span>
         </div>
     `;
     
     // Image error handler
-    const imgErrorHandler = "this.onerror=null; this.style.display='none'; this.insertAdjacentHTML('afterend', `<div class='w-full h-60 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600'><span class='text-7xl mb-4'>🏠</span><span class='text-gray-400 font-semibold text-lg'>Photo Unavailable</span></div>`);";
+    const imgErrorHandler = "this.onerror=null; this.style.display='none'; this.insertAdjacentHTML('afterend', `<div class='w-full h-60 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600'><span class='text-7xl mb-4'>🚗</span><span class='text-gray-400 font-semibold text-lg'>Photo Unavailable</span></div>`);";
     
     hideElement($('renterSection'));
     hideElement($('ownerDashboard'));
@@ -171,7 +171,7 @@ window.viewProperty = function(id) {
         : `<div class="relative p-4 md:p-6">
             ${premiumImageBadge}
             <div class="md:col-span-2 w-full h-72 md:h-96 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
-                <span class="text-8xl mb-4">🏠</span>
+                <span class="text-8xl mb-4">🚗</span>
                 <span class="text-gray-400 font-semibold text-xl">Photos Coming Soon</span>
                 <span class="text-gray-500 text-sm mt-2">Check back later for property images</span>
             </div>
@@ -226,7 +226,7 @@ window.viewProperty = function(id) {
                     {icon:'🛏️', val:PropertyDataService.getValue(id, 'bedrooms', p.bedrooms), label:'Bedrooms'},
                     {icon:'🛁', val:PropertyDataService.getValue(id, 'bathrooms', p.bathrooms), label:'Bathrooms'},
                     {icon:'📦', val:PropertyDataService.getValue(id, 'storage', p.storage).toLocaleString(), label:'Storage Space'},
-                    {icon:'🏠', val:PropertyDataService.getValue(id, 'interiorType', p.interiorType), label:'Interior'}
+                    {icon:'🚗', val:PropertyDataService.getValue(id, 'interiorType', p.interiorType), label:'Interior'}
                 ].map(s => `
                     <div class="text-center p-3 md:p-4 bg-gray-700 rounded-xl border border-gray-600">
                         <div class="text-2xl md:text-3xl mb-2">${s.icon}</div>
@@ -320,7 +320,7 @@ window.viewProperty = function(id) {
                     if (buyPrice > 0) {
                         const feeAmount = Math.round(buyPrice * 0.1);
                         html += '<div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 border-2 border-amber-500 rounded-xl p-4 text-center overflow-hidden">';
-                        html += '<div class="text-amber-400 text-xs font-bold mb-1">🏠 OWN IT</div>';
+                        html += '<div class="text-amber-400 text-xs font-bold mb-1">🚗 OWN IT</div>';
                         html += '<div class="text-amber-400 ' + getLargePriceTextSize(buyPrice) + ' font-black truncate">$' + buyPrice.toLocaleString() + '</div>';
                         html += '<div class="text-amber-300/70 text-[10px] mt-1 truncate">+10% PMA Realtor Fee ($' + feeAmount.toLocaleString() + ')</div>';
                         html += '</div>';
@@ -679,9 +679,9 @@ function renderPropertyStatsContent(id) {
         <div class="relative">
             ${p.images && p.images.length > 0 && p.images[0] 
                 ? `<img src="${p.images[0]}" alt="${sanitize(p.title)}" class="w-full h-64 md:h-80 object-cover cursor-pointer hover:opacity-90 transition" onclick="scrollToImagesSection(${id})" title="Click to view all images" onerror="this.onerror=null; this.parentElement.querySelector('.stats-img-container').innerHTML=this.parentElement.querySelector('.stats-img-container').dataset.placeholder;" >
-                   <div class="stats-img-container hidden" data-placeholder="<div class='w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-8xl mb-4'>🏠</span><span class='text-gray-400 font-semibold text-xl'>Photos Coming Soon</span><span class='text-gray-500 text-sm mt-2'>Check back later for property images</span></div>"></div>`
+                   <div class="stats-img-container hidden" data-placeholder="<div class='w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-8xl mb-4'>🚗</span><span class='text-gray-400 font-semibold text-xl'>Photos Coming Soon</span><span class='text-gray-500 text-sm mt-2'>Check back later for property images</span></div>"></div>`
                 : `<div class="w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center">
-                       <span class="text-8xl mb-4">🏠</span>
+                       <span class="text-8xl mb-4">🚗</span>
                        <span class="text-gray-400 font-semibold text-xl">Photos Coming Soon</span>
                        <span class="text-gray-500 text-sm mt-2">Check back later for property images</span>
                    </div>`}
@@ -782,7 +782,7 @@ function renderPropertyStatsContent(id) {
                          onclick="startEditTile('interiorType', ${id}, 'select')"
                          data-field="interiorType"
                          data-original-value="${interiorType}">
-                        <div class="text-2xl mb-2">🏠</div>
+                        <div class="text-2xl mb-2">🚗</div>
                         <div id="value-interiorType-${id}" class="text-xl font-bold text-white">${interiorType}</div>
                         <div class="text-sm text-rose-200">Interior</div>
                         <div class="text-xs text-rose-300 mt-1 opacity-70">Click to edit</div>
@@ -2553,7 +2553,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
         <div class="bg-gradient-to-r from-gray-800/80 to-gray-900/80 border border-gray-600 rounded-xl p-4 mb-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="text-3xl">🏠</div>
+                    <div class="text-3xl">🚗</div>
                     <div>
                         <div class="text-gray-200 font-bold">Currently Vacant</div>
                         <div class="text-gray-400 text-sm">Since ${currentVacancy.startDate} • ${currentVacancy.days} day${currentVacancy.days !== 1 ? 's' : ''}</div>
@@ -4481,7 +4481,7 @@ window.showLeaseCompletionMessage = function(renterName, propertyTitle, totalCol
     const existing = document.getElementById('leaseCompletionMessageModal');
     if (existing) existing.remove();
     
-    const thankYouMessage = `Hey ${renterName}, thank you so much for renting ${propertyTitle} with us! It was a pleasure having you as a tenant. Your total payments of $${totalCollected.toLocaleString()} have all been recorded. If you ever need a place again, hit me up anytime - you're always welcome back! 🏠`;
+    const thankYouMessage = `Hey ${renterName}, thank you so much for renting ${propertyTitle} with us! It was a pleasure having you as a tenant. Your total payments of $${totalCollected.toLocaleString()} have all been recorded. If you ever need a place again, hit me up anytime - you're always welcome back! 🚗`;
     
     const modalHTML = `
         <div id="leaseCompletionMessageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeLeaseCompletionMessageModal()">
@@ -5040,7 +5040,7 @@ function renderRTOWizardStep(step) {
                 <!-- Property Info -->
                 <div class="bg-gray-800 rounded-xl p-4">
                     <h4 class="text-amber-400 font-bold mb-2 flex items-center gap-2">
-                        <span>🏠</span> Property
+                        <span>🚗</span> Property
                     </h4>
                     <div class="text-white font-semibold">${state.property.title}</div>
                     <div class="text-gray-400 text-sm mt-1">${state.property.description || 'No description available'}</div>

@@ -196,7 +196,7 @@ window.openSubscriptionReminderModal = function(userId, email, displayName, tier
     let paymentScript = '';
     if (daysUntilDue === null || daysUntilDue === undefined) {
         // Never paid
-        paymentScript = `Hey ${displayName}! 👋 Welcome to PaulysAutos.com ${tierName}! We're excited to have you on board. Just a quick note - we haven't received your first subscription payment yet. 💰 ${price} for the ${tierName} plan which gives you ${benefits}. Let's meet up whenever you're free to get this sorted out. Looking forward to helping you grow your rental business! 🏠✨`;
+        paymentScript = `Hey ${displayName}! 👋 Welcome to PaulysAutos.com ${tierName}! We're excited to have you on board. Just a quick note - we haven't received your first subscription payment yet. 💰 ${price} for the ${tierName} plan which gives you ${benefits}. Let's meet up whenever you're free to get this sorted out. Looking forward to helping you grow your rental business! 🚗✨`;
     } else if (daysUntilDue < 0) {
         // Overdue
         paymentScript = `Hey ${displayName}, hope you're doing well! Just wanted to reach out - your PaulysAutos.com subscription is ${Math.abs(daysUntilDue)} days past due. 💰 Amount: ${price} for your ${tierName} plan. I want to make sure your listings stay active and visible to renters. Can we meet up soon to get this sorted? Let me know what works for you! 🙏`;
@@ -208,7 +208,7 @@ window.openSubscriptionReminderModal = function(userId, email, displayName, tier
         paymentScript = `Hey ${displayName}! 👋 Just a friendly heads up - your PaulysAutos.com ${tierName} subscription payment is coming up in ${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}! 💰 ${price} for the month. No rush - just wanted to give you a heads up so we can plan to meet up. Let me know when you're available! 😊`;
     } else {
         // Not due yet (8+ days)
-        paymentScript = `Hey ${displayName}! 👋 Just checking in! Your PaulysAutos.com ${tierName} subscription is all good - next payment isn't due for another ${daysUntilDue} days. 💰 ${price} | ${tierEmoji} ${tierName} | 📅 ${daysUntilDue} days left. No action needed right now. Just wanted to say thanks for being part of the platform! 🏠✨`;
+        paymentScript = `Hey ${displayName}! 👋 Just checking in! Your PaulysAutos.com ${tierName} subscription is all good - next payment isn't due for another ${daysUntilDue} days. 💰 ${price} | ${tierEmoji} ${tierName} | 📅 ${daysUntilDue} days left. No action needed right now. Just wanted to say thanks for being part of the platform! 🚗✨`;
     }
     
     // Generate upsell script - TEXT MESSAGE FRIENDLY
@@ -217,11 +217,11 @@ window.openSubscriptionReminderModal = function(userId, email, displayName, tier
         upsellScript = `Hey ${displayName}! 🌟 I wanted to share something with you - I've noticed you're doing great with your ${benefits} on the Pro plan! Have you considered upgrading to Elite? Here's what you'd get: 👑 ELITE TIER - $50,000/month ✨ UNLIMITED property listings (no cap!) 🎯 Priority placement in search results 🏆 Elite badge on all your listings 💼 Perfect for scaling your rental empire. You're already at 2/3 listings on Pro. With Elite, you could list ALL your properties and really dominate the market here. The extra $25k/month pays for itself when you think about the additional rental income from more listings! Want to chat about upgrading? I can switch you over anytime. 🚀`;
     } else {
         // Already Elite - thank them instead
-        upsellScript = `Hey ${displayName}! 👑 Just wanted to say THANK YOU for being an Elite member! You're one of our top property owners on PaulysAutos.com, and we really appreciate your business. 🏆 Elite Status with Unlimited Listings and Priority Placement - your properties are getting maximum visibility, and renters love what you're offering. If there's anything we can do to help you succeed even more, just let me know. We're here for you! Keep crushing it! 💪🏠`;
+        upsellScript = `Hey ${displayName}! 👑 Just wanted to say THANK YOU for being an Elite member! You're one of our top property owners on PaulysAutos.com, and we really appreciate your business. 🏆 Elite Status with Unlimited Listings and Priority Placement - your properties are getting maximum visibility, and renters love what you're offering. If there's anything we can do to help you succeed even more, just let me know. We're here for you! Keep crushing it! 💪🚗`;
     }
     
     // Generate referral script - TEXT MESSAGE FRIENDLY
-    const referralScript = `Hey ${displayName}! 🤝 Quick question - do you know any other property owners who might benefit from PaulysAutos.com? Here's the deal: 🎁 For every owner you refer who signs up for Pro or Elite, I'll give you a $5,000 credit toward your next subscription payment! It's a win-win - your friend gets a great platform for their rentals, you save money on your subscription, and more properties means more options for renters. Just have them mention your name when they sign up, and I'll apply the credit to your account. Know anyone who might be interested? 🏠💰`;
+    const referralScript = `Hey ${displayName}! 🤝 Quick question - do you know any other property owners who might benefit from PaulysAutos.com? Here's the deal: 🎁 For every owner you refer who signs up for Pro or Elite, I'll give you a $5,000 credit toward your next subscription payment! It's a win-win - your friend gets a great platform for their rentals, you save money on your subscription, and more properties means more options for renters. Just have them mention your name when they sign up, and I'll apply the credit to your account. Know anyone who might be interested? 🚗💰`;
     
     // Create modal HTML with larger text areas
     const modalHTML = `
@@ -1618,7 +1618,7 @@ window.copyPremiumReminder = function(title, weeklyFee, nextDue) {
     
     let message;
     if (nextDue === 'today' || nextDue === 'tomorrow' || nextDue.includes('overdue')) {
-        message = `Hey! Your premium listing for "${decodedTitle}" is due ${nextDue}! Premium keeps you at the top of search results & featured section. $${weeklyFee.toLocaleString()} to keep the spotlight on your property! 👑🏠`;
+        message = `Hey! Your premium listing for "${decodedTitle}" is due ${nextDue}! Premium keeps you at the top of search results & featured section. $${weeklyFee.toLocaleString()} to keep the spotlight on your property! 👑🚗`;
     } else if (nextDue === 'not yet set') {
         message = `Hey! Just checking in on your premium listing for "${decodedTitle}". Premium listings get 3x more views and stay at the top! $${weeklyFee.toLocaleString()}/week to keep the momentum going! 👑`;
     } else {

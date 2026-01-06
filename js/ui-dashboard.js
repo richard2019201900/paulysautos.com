@@ -943,13 +943,13 @@ async function renderProperties(list) {
     // Placeholder for properties with no/broken images
     const imagePlaceholder = `
         <div class="w-full h-64 md:h-72 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center">
-            <span class="text-6xl mb-3">🏠</span>
+            <span class="text-6xl mb-3">🚗</span>
             <span class="text-gray-400 font-semibold text-sm">Photos Coming Soon</span>
         </div>
     `;
     
     // Image error handler function name
-    const imgErrorHandler = "this.onerror=null; this.parentElement.innerHTML=`<div class='w-full h-64 md:h-72 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-6xl mb-3'>🏠</span><span class='text-gray-400 font-semibold text-sm'>Photos Coming Soon</span></div>`;";
+    const imgErrorHandler = "this.onerror=null; this.parentElement.innerHTML=`<div class='w-full h-64 md:h-72 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-6xl mb-3'>🚗</span><span class='text-gray-400 font-semibold text-sm'>Photos Coming Soon</span></div>`;";
     
     // First render with placeholder owner - include ALL properties, even those without images
     $('vehiclesGrid').innerHTML = sortedList.filter(p => p).map(p => {
