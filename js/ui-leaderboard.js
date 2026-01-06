@@ -31,11 +31,11 @@ window.renderLeaderboardPage = async function() {
         const getLeaderboard = firebase.functions().httpsCallable('getLeaderboard');
         const result = await getLeaderboard({ limit: 10 });
         
-        if (!result.data.success) {
+        if (!result.data || !result.data.success) {
             throw new Error('Failed to fetch leaderboard');
         }
         
-        const leaderboard = result.data.leaderboard;
+        const leaderboard = result.data.leaderboard || [];
         
         if (leaderboard.length === 0) {
             listContainer.innerHTML = '<div class="p-8 text-center text-gray-400">No rankings yet. Be the first to compete!</div>';
@@ -44,46 +44,57 @@ window.renderLeaderboardPage = async function() {
         
         // Render leaderboard with expandable profiles
         listContainer.innerHTML = leaderboard.map((entry, index) => {
+            // Ensure all values have defaults
+            const xp = entry.xp || 0;
+            const level = entry.level || 1;
+            const username = entry.username || 'Anonymous';
+            const title = entry.title || 'Newcomer';
+            const icon = entry.icon || '🚗';
+            const tier = entry.tier || 'starter';
+            const rank = entry.rank || (index + 1);
+            const odbc = entry.odbc || `user-${index}`;
+            const activityLog = entry.activityLog || [];
+            
             const isTop3 = index < 3;
             const medalIcons = ['🥇', '🥈', '🥉'];
             const medal = isTop3 ? medalIcons[index] : '';
             const bgClass = isTop3 ? 'bg-gradient-to-r from-amber-900/20 to-yellow-900/20' : '';
             
             // Check if this is the current user by document ID
-            const isCurrentUser = entry.odbc === auth.currentUser?.uid;
+            const isCurrentUser = odbc === auth.currentUser?.uid;
             const highlightClass = isCurrentUser ? 'ring-2 ring-amber-500/50' : '';
-            const isExpanded = window.expandedLeaderboardProfiles[entry.odbc];
+            const isExpanded = window.expandedLeaderboardProfiles[odbc];
             
             // Calculate XP breakdown from activity log
-            const xpBreakdown = calculateXPBreakdown(entry.activityLog);
+            const xpBreakdown = calculateXPBreakdown(activityLog);
             
             // Format member since date
             const memberSince = entry.createdAt ? formatMemberSince(entry.createdAt) : 'Unknown';
             
             // Get last 10 activities
-            const recentActivities = (entry.activityLog || []).slice(0, 10);
+            const recentActivities = activityLog.slice(0, 10);
             
             return `
                 <div class="border-b border-gray-700/50 last:border-b-0">
                     <!-- Main Row (clickable) -->
                     <div class="flex items-center justify-between p-4 ${bgClass} ${highlightClass} hover:bg-gray-700/30 transition cursor-pointer"
-                         onclick="toggleLeaderboardProfile('${entry.odbc}')">
+                         onclick="toggleLeaderboardProfile('${odbc}')">
                         <div class="flex items-center gap-4">
                             <div class="w-10 text-center">
-                                ${medal ? `<span class="text-2xl">${medal}</span>` : `<span class="text-gray-500 font-bold">#${entry.rank}</span>`}
+                                ${medal ? `<span class="text-2xl">${medal}</span>` : `<span class="text-gray-500 font-bold">#${rank}</span>`}
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="text-2xl">${entry.icon}</span>
+                                <span class="text-2xl">${icon}</span>
                                 <div>
-                                    <div class="text-white font-bold">${escapeHtmlSafe(entry.username)}${isCurrentUser ? ' <span class="text-amber-400 text-xs">(You)</span>' : ''}</div>
-                                    <div class="text-gray-400 text-sm">${entry.title}</div>
+                                    <div class="text-white font-bold">${escapeHtmlSafe(username)}${isCurrentUser ? ' <span class="text-amber-400 text-xs">(You)</span>' : ''}</div>
+                                    <div class="text-gray-400 text-sm">${title}</div>
                                 </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
                             <div class="text-right">
-                                <div class="text-amber-400 font-bold">${entry.xp.toLocaleString()} XP</div>
-                                <div class="text-gray-500 text-sm">Level ${entry.level}</div>
+                                <div class="text-amber-400 font-bold">${xp.toLocaleString()} XP</div>
+                                <div class="text-gray-500 text-sm">Level ${level}</div>
                             </div>
                             <svg class="w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -92,7 +103,7 @@ window.renderLeaderboardPage = async function() {
                     </div>
                     
                     <!-- Expanded Details (accordion) -->
-                    <div id="leaderboardProfile-${entry.odbc}" class="${isExpanded ? '' : 'hidden'} bg-gray-800/50 border-t border-gray-700/50 p-4">
+                    <div id="leaderboardProfile-${odbc}" class="${isExpanded ? '' : 'hidden'} bg-gray-800/50 border-t border-gray-700/50 p-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Left Column: Stats -->
                             <div class="space-y-4">
@@ -109,11 +120,11 @@ window.renderLeaderboardPage = async function() {
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-400">Tier</span>
-                                            <span class="text-${getTierColor(entry.tier)}">${getTierDisplay(entry.tier)}</span>
+                                            <span class="text-${getTierColor(tier)}">${getTierDisplay(tier)}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-400">Rank</span>
-                                            <span class="text-amber-400 font-bold">#${entry.rank} of all users</span>
+                                            <span class="text-amber-400 font-bold">#${rank} of all users</span>
                                         </div>
                                     </div>
                                 </div>
@@ -128,7 +139,7 @@ window.renderLeaderboardPage = async function() {
                                         ${xpBreakdown.length > 0 ? xpBreakdown.map(cat => `
                                             <div class="flex justify-between">
                                                 <span class="text-gray-400">${cat.name}</span>
-                                                <span class="text-amber-400 font-medium">+${cat.xp.toLocaleString()} XP</span>
+                                                <span class="text-amber-400 font-medium">+${(cat.xp || 0).toLocaleString()} XP</span>
                                             </div>
                                         `).join('') : '<div class="text-gray-500 italic">No activities recorded</div>'}
                                     </div>
@@ -143,13 +154,15 @@ window.renderLeaderboardPage = async function() {
                                 </h4>
                                 <div class="space-y-2 text-sm max-h-64 overflow-y-auto">
                                     ${recentActivities.length > 0 ? recentActivities.map((act, idx) => {
+                                        const actXp = act.xp || 0;
+                                        const actReason = act.reason || 'Activity';
                                         const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
-                                        const deleteBtn = isAdmin ? `<button onclick="event.stopPropagation(); deleteActivityEntry('${entry.odbc}', ${idx})" class="text-red-400 hover:text-red-300 text-xs ml-2" title="Delete this entry">🗑️</button>` : '';
+                                        const deleteBtn = isAdmin ? `<button onclick="event.stopPropagation(); deleteActivityEntry('${odbc}', ${idx})" class="text-red-400 hover:text-red-300 text-xs ml-2" title="Delete this entry">🗑️</button>` : '';
                                         return `
                                             <div class="flex justify-between items-start py-1 border-b border-gray-700/50">
                                                 <div class="flex-1">
-                                                    <span class="text-white">${escapeHtmlSafe(act.reason || 'Activity')}</span>
-                                                    <span class="text-amber-400 ml-2">+${(act.xp || 0).toLocaleString()}</span>
+                                                    <span class="text-white">${escapeHtmlSafe(actReason)}</span>
+                                                    <span class="text-amber-400 ml-2">+${actXp.toLocaleString()}</span>
                                                     ${deleteBtn}
                                                 </div>
                                                 <span class="text-gray-500 text-xs">${formatActivityTime(act.timestamp)}</span>
