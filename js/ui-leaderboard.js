@@ -20,30 +20,161 @@ window.renderLeaderboardPage = async function() {
         return;
     }
     
-    // Show Coming Soon message until Cloud Function is deployed
-    listContainer.innerHTML = `
-        <div class="p-12 text-center">
-            <div class="text-6xl mb-4">🏆</div>
-            <h3 class="text-2xl font-bold text-amber-400 mb-2">Leaderboard Coming Soon!</h3>
-            <p class="text-gray-400 mb-4">We're setting up the competitive rankings system.</p>
-            <p class="text-gray-500 text-sm">Earn XP by listing vehicles and completing sales to climb the ranks!</p>
-            <div class="mt-6 p-4 bg-gray-800/50 rounded-xl inline-block">
-                <p class="text-sm text-gray-400">XP Rewards:</p>
-                <ul class="text-xs text-gray-500 mt-2 space-y-1 text-left">
-                    <li>🚗 +500 XP - List a vehicle</li>
-                    <li>💰 +1000 XP - Complete your first sale</li>
-                    <li>🏆 +500 XP - Each additional sale</li>
-                    <li>👑 +250 XP - Feature a premium listing</li>
-                </ul>
-            </div>
-        </div>
-    `;
+    // Show loading
+    listContainer.innerHTML = '<div class="p-8 text-center text-gray-400"><div class="animate-pulse">Loading leaderboard...</div></div>';
     
-    // Hide user rank card for now
-    if (userRankCard) hideElement(userRankCard);
-    if (loginPrompt) hideElement(loginPrompt);
+    // Track expanded state
+    window.expandedLeaderboardProfiles = window.expandedLeaderboardProfiles || {};
     
-    return; // Skip Cloud Function call until it's deployed
+    try {
+        // Call Cloud Function for secure leaderboard data (no emails exposed)
+        const getLeaderboard = firebase.functions().httpsCallable('getLeaderboard');
+        const result = await getLeaderboard({ limit: 10 });
+        
+        if (!result.data.success) {
+            throw new Error('Failed to fetch leaderboard');
+        }
+        
+        const leaderboard = result.data.leaderboard;
+        
+        if (leaderboard.length === 0) {
+            listContainer.innerHTML = '<div class="p-8 text-center text-gray-400">No rankings yet. Be the first to compete!</div>';
+            return;
+        }
+        
+        // Render leaderboard with expandable profiles
+        listContainer.innerHTML = leaderboard.map((entry, index) => {
+            const isTop3 = index < 3;
+            const medalIcons = ['🥇', '🥈', '🥉'];
+            const medal = isTop3 ? medalIcons[index] : '';
+            const bgClass = isTop3 ? 'bg-gradient-to-r from-amber-900/20 to-yellow-900/20' : '';
+            
+            // Check if this is the current user by document ID
+            const isCurrentUser = entry.odbc === auth.currentUser?.uid;
+            const highlightClass = isCurrentUser ? 'ring-2 ring-amber-500/50' : '';
+            const isExpanded = window.expandedLeaderboardProfiles[entry.odbc];
+            
+            // Calculate XP breakdown from activity log
+            const xpBreakdown = calculateXPBreakdown(entry.activityLog);
+            
+            // Format member since date
+            const memberSince = entry.createdAt ? formatMemberSince(entry.createdAt) : 'Unknown';
+            
+            // Get last 10 activities
+            const recentActivities = (entry.activityLog || []).slice(0, 10);
+            
+            return `
+                <div class="border-b border-gray-700/50 last:border-b-0">
+                    <!-- Main Row (clickable) -->
+                    <div class="flex items-center justify-between p-4 ${bgClass} ${highlightClass} hover:bg-gray-700/30 transition cursor-pointer"
+                         onclick="toggleLeaderboardProfile('${entry.odbc}')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 text-center">
+                                ${medal ? `<span class="text-2xl">${medal}</span>` : `<span class="text-gray-500 font-bold">#${entry.rank}</span>`}
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">${entry.icon}</span>
+                                <div>
+                                    <div class="text-white font-bold">${escapeHtmlSafe(entry.username)}${isCurrentUser ? ' <span class="text-amber-400 text-xs">(You)</span>' : ''}</div>
+                                    <div class="text-gray-400 text-sm">${entry.title}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <div class="text-amber-400 font-bold">${entry.xp.toLocaleString()} XP</div>
+                                <div class="text-gray-500 text-sm">Level ${entry.level}</div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Expanded Details (accordion) -->
+                    <div id="leaderboardProfile-${entry.odbc}" class="${isExpanded ? '' : 'hidden'} bg-gray-800/50 border-t border-gray-700/50 p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Left Column: Stats -->
+                            <div class="space-y-4">
+                                <!-- Member Info -->
+                                <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                                    <h4 class="text-sm font-bold text-gray-400 mb-3 flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                        Profile
+                                    </h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Member Since</span>
+                                            <span class="text-white">${memberSince}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Tier</span>
+                                            <span class="text-${getTierColor(entry.tier)}">${getTierDisplay(entry.tier)}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Rank</span>
+                                            <span class="text-amber-400 font-bold">#${entry.rank} of all users</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- XP Breakdown -->
+                                <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                                    <h4 class="text-sm font-bold text-gray-400 mb-3 flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        XP Breakdown
+                                    </h4>
+                                    <div class="space-y-2 text-sm">
+                                        ${xpBreakdown.length > 0 ? xpBreakdown.map(cat => `
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-400">${cat.name}</span>
+                                                <span class="text-amber-400 font-medium">+${cat.xp.toLocaleString()} XP</span>
+                                            </div>
+                                        `).join('') : '<div class="text-gray-500 italic">No activities recorded</div>'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column: Recent Activity -->
+                            <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700 h-fit">
+                                <h4 class="text-sm font-bold text-gray-400 mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Recent Activity
+                                </h4>
+                                <div class="space-y-2 text-sm max-h-64 overflow-y-auto">
+                                    ${recentActivities.length > 0 ? recentActivities.map((act, idx) => {
+                                        const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
+                                        const deleteBtn = isAdmin ? `<button onclick="event.stopPropagation(); deleteActivityEntry('${entry.odbc}', ${idx})" class="text-red-400 hover:text-red-300 text-xs ml-2" title="Delete this entry">🗑️</button>` : '';
+                                        return `
+                                            <div class="flex justify-between items-start py-1 border-b border-gray-700/50">
+                                                <div class="flex-1">
+                                                    <span class="text-white">${escapeHtmlSafe(act.reason || 'Activity')}</span>
+                                                    <span class="text-amber-400 ml-2">+${(act.xp || 0).toLocaleString()}</span>
+                                                    ${deleteBtn}
+                                                </div>
+                                                <span class="text-gray-500 text-xs">${formatActivityTime(act.timestamp)}</span>
+                                            </div>
+                                        `;
+                                    }).join('') : '<div class="text-gray-500 italic">No recent activities</div>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Show user rank card if logged in
+        showElement(userRankCard);
+        
+        // Update user rank card
+        await updateUserRankCard();
+        hideElement(loginPrompt);
+        
+    } catch (error) {
+        console.error('[Leaderboard] Error:', error);
+        listContainer.innerHTML = '<div class="p-8 text-center text-red-400">Error loading leaderboard. Please try again later.</div>';
+    }
 }
 
 
