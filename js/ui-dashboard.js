@@ -782,11 +782,10 @@ function renderPremiumList(properties) {
 
 // ==================== RENDER FUNCTIONS ====================
 function renderOwnerDashboard() {
-    // Load user notifications
-    loadUserNotifications();
+    // loadUserNotifications() - removed, not needed for vehicle sales marketplace
     
-    // Initialize NotificationManager (handles rent alerts, badges, etc.)
-    // Only init once - the init function handles all setup including rent checks
+    // Initialize NotificationManager (handles alerts, badges, etc.)
+    // Only init once - the init function handles all setup
     if (typeof NotificationManager !== 'undefined' && auth?.currentUser) {
         NotificationManager.init(); // Safe to call - has internal guard against duplicates
     }
@@ -1299,8 +1298,11 @@ window.cancelCellEdit = function(input) {
 };
 
 async function renderProperties(list) {
-    // Update property count
-    $('propertyCount').textContent = `(${list.length})`;
+    // Update vehicle count
+    const countEl = $('vehicleCount') || $('propertyCount');
+    if (countEl) {
+        countEl.textContent = `(${list.length})`;
+    }
     
     // Sort premium listings to the top
     const sortedList = [...list].sort((a, b) => {

@@ -145,7 +145,7 @@ const GamificationService = {
             
             // Handle level up
             if (result.leveledUp) {
-                await this.handleLevelUp(userId, result.newLevelInfo, userData);
+                await this.handleLevelUp(userId, result.newLevelInfo, null);
             }
             
             return result;
