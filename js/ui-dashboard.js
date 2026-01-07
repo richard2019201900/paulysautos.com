@@ -685,13 +685,13 @@ window.startCellEdit = function(propertyId, field, cell, type) {
     
     let inputHTML = '';
     
-    if (type === 'select' && field === 'interiorType') {
+    if (type === 'select' && field === 'upgraded') {
         inputHTML = `
             <select class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm w-full" 
                     onchange="saveCellEdit(this, ${propertyId}, '${field}', '${type}')"
                     onblur="setTimeout(() => cancelCellEdit(this), 150)">
-                <option value="Instance" ${currentValue === 'Instance' ? 'selected' : ''}>Instance</option>
-                <option value="Walk-in" ${currentValue === 'Walk-in' ? 'selected' : ''}>Walk-in</option>
+                <option value="Yes" ${currentValue === 'Yes' ? 'selected' : ''}>Yes</option>
+                <option value="No" ${currentValue === 'No' ? 'selected' : ''}>No</option>
             </select>
         `;
     } else if (type === 'propertyType') {

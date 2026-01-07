@@ -223,10 +223,10 @@ window.viewProperty = function(id) {
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
                 ${[
-                    {icon:'🛏️', val:PropertyDataService.getValue(id, 'bedrooms', p.bedrooms), label:'Bedrooms'},
-                    {icon:'🛁', val:PropertyDataService.getValue(id, 'bathrooms', p.bathrooms), label:'Bathrooms'},
-                    {icon:'📦', val:PropertyDataService.getValue(id, 'storage', p.storage).toLocaleString(), label:'Storage Space'},
-                    {icon:'🚗', val:PropertyDataService.getValue(id, 'interiorType', p.interiorType), label:'Interior'}
+                    {icon:'🚗', val:PropertyDataService.getValue(id, 'model', p.model) || 'N/A', label:'Model'},
+                    {icon:'📦', val:PropertyDataService.getValue(id, 'storage', p.storage)?.toLocaleString() || '0', label:'Storage'},
+                    {icon:'⚡', val:PropertyDataService.getValue(id, 'upgraded', p.upgraded) || 'No', label:'Fully Upgraded'},
+                    {icon:'💰', val:'$' + (PropertyDataService.getValue(id, 'buyPrice', p.buyPrice) || 0).toLocaleString(), label:'Price'}
                 ].map(s => `
                     <div class="text-center p-3 md:p-4 bg-gray-700 rounded-xl border border-gray-600">
                         <div class="text-2xl md:text-3xl mb-2">${s.icon}</div>
@@ -237,101 +237,26 @@ window.viewProperty = function(id) {
             </div>
             ${luxuryFeatures}
             <div class="bg-gray-800 p-5 md:p-8 rounded-2xl mb-8 border border-gray-700">
-                <h3 class="text-xl font-bold text-white mb-4">💰 Pricing Options</h3>
+                <h3 class="text-xl font-bold text-white mb-4">💰 Price</h3>
                 ${(() => {
-                    const dailyPrice = PropertyDataService.getValue(id, 'dailyPrice', p.dailyPrice || 0);
-                    const weeklyPrice = PropertyDataService.getValue(id, 'weeklyPrice', p.weeklyPrice || 0);
-                    const biweeklyPrice = PropertyDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
-                    const monthlyPrice = PropertyDataService.getValue(id, 'monthlyPrice', p.monthlyPrice || 0);
                     const buyPrice = PropertyDataService.getValue(id, 'buyPrice', p.buyPrice || 0);
                     
-                    // Calculate discounts based on daily rate (or weekly/7 if no daily)
-                    const baseDaily = dailyPrice > 0 ? dailyPrice : Math.round(weeklyPrice / 7);
+                    let html = '<div class="flex justify-center">';
                     
-                    const calcDiscount = (actualPrice, equivalentDays) => {
-                        if (baseDaily <= 0 || actualPrice <= 0) return 0;
-                        const fullPrice = baseDaily * equivalentDays;
-                        const discount = Math.round(((fullPrice - actualPrice) / fullPrice) * 100);
-                        return discount > 0 ? discount : 0;
-                    };
-                    
-                    const weeklyDiscount = calcDiscount(weeklyPrice, 7);
-                    const biweeklyDiscount = calcDiscount(biweeklyPrice, 14);
-                    const monthlyDiscount = calcDiscount(monthlyPrice, 30);
-                    
-                    // Helper function to get dynamic text size based on price
-                    const getPriceTextSize = (price) => {
-                        if (price >= 10000000) return 'text-base md:text-lg'; // 10M+
-                        if (price >= 1000000) return 'text-lg md:text-xl';   // 1M+
-                        return 'text-xl md:text-2xl';                         // Under 1M
-                    };
-                    
-                    const getLargePriceTextSize = (price) => {
-                        if (price >= 10000000) return 'text-lg md:text-xl'; // 10M+
-                        if (price >= 1000000) return 'text-xl md:text-2xl';   // 1M+
-                        return 'text-2xl md:text-3xl';                         // Under 1M
-                    };
-                    
-                    let html = '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">';
-                    
-                    // Daily
-                    if (dailyPrice > 0) {
-                        html += '<div class="bg-gradient-to-br from-cyan-600/20 to-teal-700/20 border border-cyan-500/50 rounded-xl p-4 text-center">';
-                        html += '<div class="text-cyan-400 text-xs font-bold mb-1">DAILY</div>';
-                        html += '<div class="text-white ' + getPriceTextSize(dailyPrice) + ' font-black truncate">$' + dailyPrice.toLocaleString() + '</div>';
-                        html += '</div>';
-                    }
-                    
-                    // Weekly
-                    if (weeklyPrice > 0) {
-                        html += '<div class="bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/50 rounded-xl p-4 text-center relative">';
-                        if (weeklyDiscount > 0) {
-                            html += '<div class="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SAVE ' + weeklyDiscount + '%</div>';
-                        }
-                        html += '<div class="text-blue-400 text-xs font-bold mb-1">WEEKLY</div>';
-                        html += '<div class="text-white ' + getPriceTextSize(weeklyPrice) + ' font-black truncate">$' + weeklyPrice.toLocaleString() + '</div>';
-                        html += '</div>';
-                    }
-                    
-                    // Biweekly
-                    if (biweeklyPrice > 0) {
-                        html += '<div class="bg-gradient-to-br from-purple-600/20 to-violet-700/20 border border-purple-500/50 rounded-xl p-4 text-center relative">';
-                        if (biweeklyDiscount > 0) {
-                            html += '<div class="absolute -top-2 -right-2 bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SAVE ' + biweeklyDiscount + '%</div>';
-                        }
-                        html += '<div class="text-purple-400 text-xs font-bold mb-1">BIWEEKLY</div>';
-                        html += '<div class="text-white ' + getPriceTextSize(biweeklyPrice) + ' font-black truncate">$' + biweeklyPrice.toLocaleString() + '</div>';
-                        html += '</div>';
-                    }
-                    
-                    // Monthly (featured)
-                    if (monthlyPrice > 0) {
-                        html += '<div class="bg-gradient-to-br from-green-600/20 to-emerald-700/20 border-2 border-green-500 rounded-xl p-4 text-center relative">';
-                        if (monthlyDiscount > 0) {
-                            html += '<div class="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SAVE ' + monthlyDiscount + '%</div>';
-                        }
-                        html += '<div class="text-green-400 text-xs font-bold mb-1">⭐ MONTHLY</div>';
-                        html += '<div class="text-green-400 ' + getLargePriceTextSize(monthlyPrice) + ' font-black truncate">$' + monthlyPrice.toLocaleString() + '</div>';
-                        html += '<div class="text-green-300/70 text-[10px] mt-1">Best Value</div>';
-                        html += '</div>';
-                    }
-                    
-                    // Buy Price
                     if (buyPrice > 0) {
-                        const feeAmount = Math.round(buyPrice * 0.1);
-                        html += '<div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 border-2 border-amber-500 rounded-xl p-4 text-center overflow-hidden">';
-                        html += '<div class="text-amber-400 text-xs font-bold mb-1">🚗 OWN IT</div>';
-                        html += '<div class="text-amber-400 ' + getLargePriceTextSize(buyPrice) + ' font-black truncate">$' + buyPrice.toLocaleString() + '</div>';
-                        html += '<div class="text-amber-300/70 text-[10px] mt-1 truncate">+10% PMA Realtor Fee ($' + feeAmount.toLocaleString() + ')</div>';
+                        html += '<div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 border-2 border-amber-500 rounded-xl p-6 text-center max-w-md w-full">';
+                        html += '<div class="text-amber-400 text-sm font-bold mb-2">🚗 VEHICLE PRICE</div>';
+                        html += '<div class="text-amber-400 text-3xl md:text-4xl font-black">$' + buyPrice.toLocaleString() + '</div>';
                         html += '</div>';
+                    } else {
+                        html += '<div class="text-gray-400 text-center p-4">Price not set</div>';
                     }
                     
                     html += '</div>';
                     return html;
                 })()}
             </div>
-            <button id="offerRentBtn" onclick="openContactModal('rent', '${sanitize(p.title)}', ${id})" class="w-full gradient-bg text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-black text-lg md:text-xl hover:opacity-90 transition shadow-lg mb-4">📞 Contact Owner to Rent</button>
-            <button id="offerPurchaseBtn" onclick="openContactModal('offer', '${sanitize(p.title)}', ${id})" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-black text-lg md:text-xl hover:opacity-90 transition shadow-lg">📞 Contact Owner to Purchase</button>
+            <button id="offerPurchaseBtn" onclick="openContactModal('offer', '${sanitize(p.title)}', ${id})" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-black text-lg md:text-xl hover:opacity-90 transition shadow-lg">📞 Contact Seller</button>
         </div>`;
     
     // Load and display owner username with tier badge
@@ -362,36 +287,33 @@ window.viewProperty = function(id) {
     window.scrollTo(0, 0);
 };
 
-// Navigate to property page and highlight the offer buttons
+// Navigate to property page and highlight the offer button
 window.viewPropertyAndHighlightOffers = function(id) {
     viewProperty(id);
     
-    // Wait for DOM to update, then highlight the offer buttons
+    // Wait for DOM to update, then highlight the offer button
     setTimeout(() => {
-        const rentBtn = $('offerRentBtn');
         const purchaseBtn = $('offerPurchaseBtn');
         
-        if (rentBtn && purchaseBtn) {
+        if (purchaseBtn) {
             // Add highlight animation class
             const highlightClass = 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900 animate-pulse';
             
-            rentBtn.className += ' ' + highlightClass;
             purchaseBtn.className += ' ' + highlightClass;
             
-            // Scroll to buttons
-            rentBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Scroll to button
+            purchaseBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
             // Add a tooltip/label
             const tipHtml = `
                 <div id="offerTip" class="bg-yellow-500 text-gray-900 font-bold px-4 py-2 rounded-lg mb-4 text-center animate-bounce shadow-lg">
-                    👇 Choose your offer type below 👇
+                    👇 Contact the seller below 👇
                 </div>
             `;
-            rentBtn.insertAdjacentHTML('beforebegin', tipHtml);
+            purchaseBtn.insertAdjacentHTML('beforebegin', tipHtml);
             
             // Remove highlight after 5 seconds
             setTimeout(() => {
-                rentBtn.className = rentBtn.className.replace(/ ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900 animate-pulse/g, '');
                 purchaseBtn.className = purchaseBtn.className.replace(/ ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900 animate-pulse/g, '');
                 const tip = $('offerTip');
                 if (tip) tip.remove();
@@ -524,15 +446,10 @@ function renderPropertyStatsContent(id) {
     }
     
     // Get effective values (overrides or defaults)
-    const bedrooms = PropertyDataService.getValue(id, 'bedrooms', p.bedrooms);
-    const bathrooms = PropertyDataService.getValue(id, 'bathrooms', p.bathrooms);
+    const model = PropertyDataService.getValue(id, 'model', p.model || '');
+    const upgraded = PropertyDataService.getValue(id, 'upgraded', p.upgraded || 'No');
     const storage = PropertyDataService.getValue(id, 'storage', p.storage);
-    const interiorType = PropertyDataService.getValue(id, 'interiorType', p.interiorType);
     const propertyType = PropertyDataService.getValue(id, 'type', p.type);
-    const dailyPrice = PropertyDataService.getValue(id, 'dailyPrice', p.dailyPrice || 0);
-    const weeklyPrice = PropertyDataService.getValue(id, 'weeklyPrice', p.weeklyPrice);
-    const biweeklyPrice = PropertyDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
-    const monthlyPrice = PropertyDataService.getValue(id, 'monthlyPrice', p.monthlyPrice);
     const buyPrice = PropertyDataService.getValue(id, 'buyPrice', p.buyPrice || 0);
     
     // Renter & Payment info
@@ -738,30 +655,18 @@ function renderPropertyStatsContent(id) {
                 </div>
                 
                 <!-- EDITABLE Quick Stats Grid -->
-                <h3 class="text-xl font-bold text-gray-200 mb-4">Property Details <span class="text-sm text-purple-400">(Click to edit)</span></h3>
+                <h3 class="text-xl font-bold text-gray-200 mb-4">Vehicle Details <span class="text-sm text-purple-400">(Click to edit)</span></h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="editableStatsGrid">
-                    <!-- Bedrooms Tile -->
-                    <div id="tile-bedrooms-${id}" 
+                    <!-- Model Tile -->
+                    <div id="tile-model-${id}" 
                          class="stat-tile text-center p-4 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-xl border border-indigo-500 cursor-pointer"
-                         onclick="startEditTile('bedrooms', ${id}, 'number')"
-                         data-field="bedrooms"
-                         data-original-value="${bedrooms}">
-                        <div class="text-2xl mb-2">🛏️</div>
-                        <div id="value-bedrooms-${id}" class="text-xl font-bold text-white">${bedrooms}</div>
-                        <div class="text-sm text-indigo-200">Bedrooms</div>
+                         onclick="startEditTile('model', ${id}, 'text')"
+                         data-field="model"
+                         data-original-value="${sanitize(model)}">
+                        <div class="text-2xl mb-2">🚗</div>
+                        <div id="value-model-${id}" class="text-xl font-bold text-white">${model || 'N/A'}</div>
+                        <div class="text-sm text-indigo-200">Model</div>
                         <div class="text-xs text-indigo-300 mt-1 opacity-70">Click to edit</div>
-                    </div>
-                    
-                    <!-- Bathrooms Tile -->
-                    <div id="tile-bathrooms-${id}" 
-                         class="stat-tile text-center p-4 bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-xl border border-cyan-500 cursor-pointer"
-                         onclick="startEditTile('bathrooms', ${id}, 'number')"
-                         data-field="bathrooms"
-                         data-original-value="${bathrooms}">
-                        <div class="text-2xl mb-2">🛁</div>
-                        <div id="value-bathrooms-${id}" class="text-xl font-bold text-white">${bathrooms}</div>
-                        <div class="text-sm text-cyan-200">Bathrooms</div>
-                        <div class="text-xs text-cyan-300 mt-1 opacity-70">Click to edit</div>
                     </div>
                     
                     <!-- Storage Tile -->
@@ -771,21 +676,33 @@ function renderPropertyStatsContent(id) {
                          data-field="storage"
                          data-original-value="${storage}">
                         <div class="text-2xl mb-2">📦</div>
-                        <div id="value-storage-${id}" class="text-xl font-bold text-white">${storage.toLocaleString()}</div>
-                        <div class="text-sm text-amber-200">Storage Space</div>
+                        <div id="value-storage-${id}" class="text-xl font-bold text-white">${storage?.toLocaleString() || '0'}</div>
+                        <div class="text-sm text-amber-200">Storage</div>
                         <div class="text-xs text-amber-300 mt-1 opacity-70">Click to edit</div>
                     </div>
                     
-                    <!-- Interior Type Tile -->
-                    <div id="tile-interiorType-${id}" 
-                         class="stat-tile text-center p-4 bg-gradient-to-br from-rose-600 to-rose-800 rounded-xl border border-rose-500 cursor-pointer"
-                         onclick="startEditTile('interiorType', ${id}, 'select')"
-                         data-field="interiorType"
-                         data-original-value="${interiorType}">
-                        <div class="text-2xl mb-2">🚗</div>
-                        <div id="value-interiorType-${id}" class="text-xl font-bold text-white">${interiorType}</div>
-                        <div class="text-sm text-rose-200">Interior</div>
-                        <div class="text-xs text-rose-300 mt-1 opacity-70">Click to edit</div>
+                    <!-- Upgraded Tile -->
+                    <div id="tile-upgraded-${id}" 
+                         class="stat-tile text-center p-4 bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-xl border border-cyan-500 cursor-pointer"
+                         onclick="startEditTile('upgraded', ${id}, 'select')"
+                         data-field="upgraded"
+                         data-original-value="${upgraded}">
+                        <div class="text-2xl mb-2">⚡</div>
+                        <div id="value-upgraded-${id}" class="text-xl font-bold text-white">${upgraded}</div>
+                        <div class="text-sm text-cyan-200">Fully Upgraded</div>
+                        <div class="text-xs text-cyan-300 mt-1 opacity-70">Click to edit</div>
+                    </div>
+                    
+                    <!-- Price Tile -->
+                    <div id="tile-buyPrice-${id}" 
+                         class="stat-tile text-center p-4 bg-gradient-to-br from-green-600 to-green-800 rounded-xl border border-green-500 cursor-pointer"
+                         onclick="startEditTile('buyPrice', ${id}, 'number')"
+                         data-field="buyPrice"
+                         data-original-value="${buyPrice}">
+                        <div class="text-2xl mb-2">💰</div>
+                        <div id="value-buyPrice-${id}" class="text-xl font-bold text-white">$${buyPrice?.toLocaleString() || '0'}</div>
+                        <div class="text-sm text-green-200">Price</div>
+                        <div class="text-xs text-green-300 mt-1 opacity-70">Click to edit</div>
                     </div>
                 </div>
                 
@@ -1384,11 +1301,11 @@ window.startEditTile = function(field, propertyId, type) {
     const currentValue = PropertyDataService.getValue(propertyId, field, tile.dataset.originalValue);
     
     let inputHtml;
-    if (type === 'select' && field === 'interiorType') {
+    if (type === 'select' && field === 'upgraded') {
         inputHtml = `
             <select id="input-${field}-${propertyId}" class="stat-input text-lg w-full">
-                <option value="Instance" ${currentValue === 'Instance' ? 'selected' : ''}>Instance</option>
-                <option value="Walk-in" ${currentValue === 'Walk-in' ? 'selected' : ''}>Walk-in</option>
+                <option value="Yes" ${currentValue === 'Yes' ? 'selected' : ''}>Yes</option>
+                <option value="No" ${currentValue === 'No' ? 'selected' : ''}>No</option>
             </select>
         `;
     } else if (type === 'frequency') {
@@ -1524,7 +1441,7 @@ window.saveTileEdit = async function(field, propertyId, type) {
         newValue = input.value; // Keep as YYYY-MM-DD format
     } else {
         newValue = input.value.trim();
-        if (!newValue && field !== 'interiorType') {
+        if (!newValue && field !== 'upgraded') {
             tile.classList.add('error');
             setTimeout(() => tile.classList.remove('error'), 500);
             return;
