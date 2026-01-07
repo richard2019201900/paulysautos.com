@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PaulysAutos.com - Elite Luxury Vehicle Marketplace in Los Santos</title>
-    <meta name="description" content="Browse 14+ premium vehicles in Los Santos. Luxury apartments, houses, condos & villas. Instance and Walk-in interiors. Weekly & monthly rentals available. Find your dream home today!">
+    <meta name="description" content="Premium vehicle marketplace in Los Santos. Browse free - cars, trucks, SUVs, boats & motorcycles. Sign up only to list your vehicle for sale.">
     <meta name="robots" content="index, follow">
     
     <!-- Canonical URL -->
@@ -15,16 +15,16 @@
     <meta name="theme-color" content="#D4AF37">
     
     <!-- Open Graph / Facebook -->
-    <meta vehicle="og:type" content="website">
-    <meta vehicle="og:url" content="https://paulysautos.com/">
-    <meta vehicle="og:title" content="PaulysAutos.com - Elite Luxury Vehicle Marketplace">
-    <meta vehicle="og:description" content="Browse luxury vehicles in Los Santos. Apartments, houses, condos & villas available for rent. Instance and Walk-in interiors.">
-    <meta vehicle="og:site_name" content="PaulysAutos.com">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://paulysautos.com/">
+    <meta property="og:title" content="PaulysAutos.com - Premium Vehicle Marketplace">
+    <meta property="og:description" content="Premium vehicle marketplace. Browse free - cars, trucks, SUVs, boats & motorcycles. Sign up only to list.">
+    <meta property="og:site_name" content="PaulysAutos.com">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="PaulysAutos.com - Elite Luxury Vehicle Marketplace">
-    <meta name="twitter:description" content="Browse luxury vehicles in Los Santos. Apartments, houses, condos & villas available for rent.">
+    <meta name="twitter:description" content="Premium vehicle marketplace. Browse free - cars, trucks, SUVs, boats & motorcycles.">
     
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +49,7 @@
       "@context": "https://schema.org",
       "@type": "AutoDealer",
       "name": "PaulysAutos.com",
-      "description": "Premium luxury vehicles in Los Santos. Apartments, houses, condos and villas available for weekly and monthly rent.",
+      "description": "Premium vehicle marketplace in Los Santos. Browse free - cars, trucks, SUVs, boats & motorcycles.",
       "url": "https://yoursite.com",
       "telephone": "2057028233",
       "priceRange": "$$",
@@ -382,14 +382,12 @@
                         <label class="block text-gray-300 font-semibold mb-2">Vehicle Type *</label>
                         <select id="newListingType" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
                             <option value="">Select type...</option>
-                            <option value="apartment">Apartment</option>
-                            <option value="house">House</option>
-                            <option value="condo">Condo</option>
-                            <option value="villa">Villa</option>
-                            <option value="hotel">Hotel</option>
-                            <option value="office">Office</option>
-                            <option value="warehouse">Warehouse</option>
-                            <option value="hideout">Hideout</option>
+                            <option value="car">Car</option>
+                            <option value="truck">Truck</option>
+                            <option value="suv">SUV</option>
+                            <option value="boat">Boat</option>
+                            <option value="motorcycle">Motorcycle</option>
+                            <option value="other">Other</option>
                         </select>
                     </div>
                 </div>
@@ -1994,8 +1992,8 @@
         
         <section id="home" class="gradient-bg text-white py-12 md:py-16">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-4xl md:text-5xl font-black mb-4 text-black">Drive Your Dreams.</h2>
-                <p class="text-lg md:text-xl mb-6 font-light max-w-3xl mx-auto text-gray-900">Pauly's exclusive collection. Premium vehicles. Professionally curated.</p>
+                <h2 class="text-4xl md:text-5xl font-black mb-4 text-black">Browse Free. Sell Easy.</h2>
+                <p class="text-lg md:text-xl mb-6 font-light max-w-3xl mx-auto text-gray-900">Premium vehicle marketplace. Free to browse. Sign up only to list.</p>
                 <!-- Compact CTAs -->
                 <div class="flex flex-wrap justify-center gap-3">
                     <button onclick="browseVehicles()" class="bg-gray-900 hover:bg-gray-800 text-amber-400 px-5 py-2 rounded-full font-semibold transition text-sm flex items-center gap-2 border border-amber-500">
@@ -2017,23 +2015,14 @@
                     
                     <!-- Scrollable button container -->
                     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="filterButtons" style="-webkit-overflow-scrolling: touch;">
-                        <!-- Interior Type Filters (Cyan accent) -->
-                        <button onclick="filterByInterior('Walk-in', this)" data-filter="Walk-in" class="interior-filter-btn flex-shrink-0 px-4 py-2 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Walk-in</button>
-                        <button onclick="filterByInterior('Instance', this)" data-filter="Instance" class="interior-filter-btn flex-shrink-0 px-4 py-2 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Instance</button>
-                        
-                        <!-- Separator -->
-                        <div class="flex-shrink-0 w-px bg-gray-600 mx-1"></div>
-                        
-                        <!-- Vehicle Type Filters (Purple/gradient) -->
+                        <!-- Vehicle Type Filters -->
                         <button onclick="filterByType('all', this)" data-filter="all" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg gradient-bg text-white font-bold shadow-lg text-sm active">All</button>
-                        <button onclick="filterByType('house', this)" data-filter="house" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Houses</button>
-                        <button onclick="filterByType('apartment', this)" data-filter="apartment" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Apartments</button>
-                        <button onclick="filterByType('condo', this)" data-filter="condo" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Condos</button>
-                        <button onclick="filterByType('villa', this)" data-filter="villa" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Villas</button>
-                        <button onclick="filterByType('hotel', this)" data-filter="hotel" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Hotels</button>
-                        <button onclick="filterByType('office', this)" data-filter="office" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Offices</button>
-                        <button onclick="filterByType('warehouse', this)" data-filter="warehouse" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Warehouses</button>
-                        <button onclick="filterByType('hideout', this)" data-filter="hideout" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Hideouts</button>
+                        <button onclick="filterByType('car', this)" data-filter="car" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Cars</button>
+                        <button onclick="filterByType('truck', this)" data-filter="truck" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Trucks</button>
+                        <button onclick="filterByType('suv', this)" data-filter="suv" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">SUVs</button>
+                        <button onclick="filterByType('boat', this)" data-filter="boat" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Boats</button>
+                        <button onclick="filterByType('motorcycle', this)" data-filter="motorcycle" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Motorcycles</button>
+                        <button onclick="filterByType('other', this)" data-filter="other" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Other</button>
                     </div>
                 </div>
                 
