@@ -45,6 +45,9 @@ window.navigateProperty = function(direction) {
     }
 };
 
+// Alias for vehicle navigation
+window.navigateVehicle = window.navigateProperty;
+
 // Get list of currently visible properties (respecting filters)
 window.getVisibleProperties = function() {
     // If we have filtered properties, use those, otherwise use all

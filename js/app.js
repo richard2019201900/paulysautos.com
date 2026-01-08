@@ -87,7 +87,7 @@ window.viewProperty = function(id) {
         <div class="w-full h-60 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
             <span class="text-7xl mb-4">🚗</span>
             <span class="text-gray-400 font-semibold text-lg">Photos Coming Soon</span>
-            <span class="text-gray-500 text-sm mt-1">Check back later for property images</span>
+            <span class="text-gray-500 text-sm mt-1">Check back later for vehicle images</span>
         </div>
     `;
     
@@ -136,7 +136,7 @@ window.viewProperty = function(id) {
         <div class="flex border-b border-gray-700">
             <button onclick="viewProperty(${id})" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 border-b-2 border-purple-400">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-                Property View
+                Vehicle View
             </button>
             <button onclick="viewPropertyStats(${id})" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
@@ -173,7 +173,7 @@ window.viewProperty = function(id) {
             <div class="md:col-span-2 w-full h-72 md:h-96 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
                 <span class="text-8xl mb-4">🚗</span>
                 <span class="text-gray-400 font-semibold text-xl">Photos Coming Soon</span>
-                <span class="text-gray-500 text-sm mt-2">Check back later for property images</span>
+                <span class="text-gray-500 text-sm mt-2">Check back later for vehicle images</span>
             </div>
            </div>`;
     
@@ -425,7 +425,7 @@ function renderPropertyStatsContent(id) {
     
     const isAvailable = state.availability[id] !== false;
     const statusClass = isAvailable ? 'from-green-600 to-emerald-600' : 'from-red-600 to-pink-600';
-    const statusText = isAvailable ? 'Available' : 'Rented';
+    const statusText = isAvailable ? 'Available' : 'Sold';
     
     // Get premium status
     const isPremium = PropertyDataService.getValue(id, 'isPremium', p.isPremium || false);
@@ -456,6 +456,12 @@ function renderPropertyStatsContent(id) {
     const seats = PropertyDataService.getValue(id, 'seats', p.seats || '');
     const propertyType = PropertyDataService.getValue(id, 'type', p.type);
     const buyPrice = PropertyDataService.getValue(id, 'buyPrice', p.buyPrice || 0);
+    
+    // Legacy price variables (for backwards compatibility with existing code)
+    const dailyPrice = PropertyDataService.getValue(id, 'dailyPrice', p.dailyPrice || 0);
+    const weeklyPrice = PropertyDataService.getValue(id, 'weeklyPrice', p.weeklyPrice || 0);
+    const biweeklyPrice = PropertyDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
+    const monthlyPrice = PropertyDataService.getValue(id, 'monthlyPrice', p.monthlyPrice || 0);
     
     // Renter & Payment info
     const renterName = PropertyDataService.getValue(id, 'renterName', p.renterName || '');
@@ -550,7 +556,7 @@ function renderPropertyStatsContent(id) {
     
     const showReminderSection = renterName && (daysUntilDue !== null && daysUntilDue <= 1);
     
-    // Premium styling - apply to container (same approach as Property View)
+    // Premium styling - apply to container (same approach as Vehicle View)
     const statsContainer = $('propertyStatsContent');
     if (statsContainer) {
         if (isPremium) {
@@ -560,7 +566,7 @@ function renderPropertyStatsContent(id) {
         }
     }
     
-    // Premium banner inside container (same as Property View)
+    // Premium banner inside container (same as Vehicle View)
     const premiumBanner = isPremium 
         ? `<div class="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-gray-900 text-center py-2 font-black text-sm tracking-wider flex items-center justify-center gap-2">
             <span>👑</span> PREMIUM LISTING <span>👑</span>
@@ -589,7 +595,7 @@ function renderPropertyStatsContent(id) {
         <div class="flex border-b border-gray-700">
             <button onclick="viewProperty(${id})" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-                Property View
+                Vehicle View
             </button>
             <button onclick="viewPropertyStats(${id})" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 border-b-2 border-amber-400">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
@@ -601,11 +607,11 @@ function renderPropertyStatsContent(id) {
         <div class="relative">
             ${p.images && p.images.length > 0 && p.images[0] 
                 ? `<img src="${p.images[0]}" alt="${sanitize(p.title)}" class="w-full h-64 md:h-80 object-cover cursor-pointer hover:opacity-90 transition" onclick="scrollToImagesSection(${id})" title="Click to view all images" onerror="this.onerror=null; this.parentElement.querySelector('.stats-img-container').innerHTML=this.parentElement.querySelector('.stats-img-container').dataset.placeholder;" >
-                   <div class="stats-img-container hidden" data-placeholder="<div class='w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-8xl mb-4'>🚗</span><span class='text-gray-400 font-semibold text-xl'>Photos Coming Soon</span><span class='text-gray-500 text-sm mt-2'>Check back later for property images</span></div>"></div>`
+                   <div class="stats-img-container hidden" data-placeholder="<div class='w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-8xl mb-4'>🚗</span><span class='text-gray-400 font-semibold text-xl'>Photos Coming Soon</span><span class='text-gray-500 text-sm mt-2'>Check back later for vehicle images</span></div>"></div>`
                 : `<div class="w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center">
                        <span class="text-8xl mb-4">🚗</span>
                        <span class="text-gray-400 font-semibold text-xl">Photos Coming Soon</span>
-                       <span class="text-gray-500 text-sm mt-2">Check back later for property images</span>
+                       <span class="text-gray-500 text-sm mt-2">Check back later for vehicle images</span>
                    </div>`}
             <div class="absolute top-4 right-4 bg-gradient-to-r ${statusClass} text-white px-4 py-2 rounded-xl font-bold shadow-lg">
                 ${statusText}
@@ -1052,89 +1058,34 @@ function renderPropertyStatsContent(id) {
         <!-- Wrapper for remaining sections with proper padding -->
         <div class="px-6 md:px-8 pb-8">
         
-        <!-- EDITABLE Income Stats -->
+        <!-- EDITABLE Pricing & Status -->
         <h3 class="text-xl font-bold text-gray-200 mb-4">Pricing & Status <span class="text-sm text-purple-400">(Click to edit)</span></h3>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-            <!-- Daily Rate Tile -->
-            <div id="tile-dailyPrice-${id}" 
-                 class="stat-tile bg-gradient-to-br from-cyan-600 to-teal-800 rounded-2xl shadow-xl p-4 text-white border border-cyan-500 cursor-pointer"
-                 onclick="startEditTile('dailyPrice', ${id}, 'number')"
-                 data-field="dailyPrice"
-                 data-original-value="${dailyPrice}">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs font-bold opacity-90">Daily</h3>
-                    <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                </div>
-                <div id="value-dailyPrice-${id}" class="text-xl font-black">${dailyPrice > 0 ? dailyPrice.toLocaleString() : 'Not set'}</div>
-                <div class="text-xs text-cyan-200 mt-1 opacity-70">Click to edit</div>
-            </div>
-            
-            <!-- Weekly Rate Tile -->
-            <div id="tile-weeklyPrice-${id}" 
-                 class="stat-tile bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-xl p-4 text-white border border-blue-500 cursor-pointer"
-                 onclick="startEditTile('weeklyPrice', ${id}, 'number')"
-                 data-field="weeklyPrice"
-                 data-original-value="${weeklyPrice}">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs font-bold opacity-90">Weekly</h3>
-                    <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div id="value-weeklyPrice-${id}" class="text-xl font-black">${weeklyPrice > 0 ? weeklyPrice.toLocaleString() : 'Not set'}</div>
-                <div class="text-xs text-blue-200 mt-1 opacity-70">Click to edit</div>
-            </div>
-            
-            <!-- Biweekly Rate Tile -->
-            <div id="tile-biweeklyPrice-${id}" 
-                 class="stat-tile bg-gradient-to-br from-purple-600 to-violet-800 rounded-2xl shadow-xl p-4 text-white border border-purple-500 cursor-pointer"
-                 onclick="startEditTile('biweeklyPrice', ${id}, 'number')"
-                 data-field="biweeklyPrice"
-                 data-original-value="${biweeklyPrice}">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs font-bold opacity-90">Biweekly</h3>
-                    <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                </div>
-                <div id="value-biweeklyPrice-${id}" class="text-xl font-black">${biweeklyPrice > 0 ? biweeklyPrice.toLocaleString() : 'Not set'}</div>
-                <div class="text-xs text-purple-200 mt-1 opacity-70">Click to edit</div>
-            </div>
-            
-            <!-- Monthly Rate Tile -->
-            <div id="tile-monthlyPrice-${id}" 
-                 class="stat-tile bg-gradient-to-br from-green-600 to-emerald-800 rounded-2xl shadow-xl p-4 text-white border border-green-500 cursor-pointer"
-                 onclick="startEditTile('monthlyPrice', ${id}, 'number')"
-                 data-field="monthlyPrice"
-                 data-original-value="${monthlyPrice}">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs font-bold opacity-90">Monthly</h3>
-                    <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                </div>
-                <div id="value-monthlyPrice-${id}" class="text-xl font-black">${monthlyPrice > 0 ? monthlyPrice.toLocaleString() : 'Not set'}</div>
-                <div class="text-xs text-green-200 mt-1 opacity-70">Click to edit</div>
-            </div>
-            
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <!-- Buy Price Tile -->
             <div id="tile-buyPrice-${id}" 
-                 class="stat-tile bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl p-4 text-white border border-amber-400 cursor-pointer"
+                 class="stat-tile bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl p-6 text-white border border-amber-400 cursor-pointer"
                  onclick="startEditTile('buyPrice', ${id}, 'number')"
                  data-field="buyPrice"
                  data-original-value="${buyPrice}">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs font-bold opacity-90">Buy Price</h3>
-                    <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold opacity-90">💰 Vehicle Price</h3>
+                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <div id="value-buyPrice-${id}" class="text-xl font-black">${buyPrice > 0 ? buyPrice.toLocaleString() : 'Not set'}</div>
-                <div class="text-xs text-amber-200 mt-1 opacity-70">Own it forever</div>
+                <div id="value-buyPrice-${id}" class="text-3xl font-black">$${buyPrice > 0 ? buyPrice.toLocaleString() : '0'}</div>
+                <div class="text-xs text-amber-200 mt-2 opacity-80">+$25k city sales fee</div>
+                <div class="text-xs mt-1 opacity-70">Click to edit</div>
             </div>
             
             <!-- Status Tile (toggles availability) -->
             <div id="tile-status-${id}" 
-                 class="stat-tile bg-gradient-to-br ${isAvailable ? 'from-emerald-600 to-teal-800 border-emerald-500' : 'from-red-600 to-pink-800 border-red-500'} rounded-2xl shadow-xl p-4 text-white border cursor-pointer"
+                 class="stat-tile bg-gradient-to-br ${isAvailable ? 'from-emerald-600 to-teal-800 border-emerald-500' : 'from-red-600 to-pink-800 border-red-500'} rounded-2xl shadow-xl p-6 text-white border cursor-pointer"
                  onclick="togglePropertyStatus(${id})">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xs font-bold opacity-90">Status</h3>
-                    <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold opacity-90">📊 Status</h3>
+                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <div class="text-lg font-black">${statusText}</div>
-                <div class="text-xs opacity-80">${isAvailable ? 'Accepting inquiries' : 'Reserved'}</div>
+                <div class="text-3xl font-black">${isAvailable ? 'Available' : 'SOLD'}</div>
+                <div class="text-xs opacity-80 mt-2">${isAvailable ? 'Accepting inquiries' : 'No longer for sale'}</div>
                 <div class="text-xs mt-1 opacity-70">Click to toggle</div>
             </div>
         </div>
@@ -1218,7 +1169,7 @@ function renderPropertyStatsContent(id) {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button onclick="toggleAvailability(${id}); setTimeout(() => renderPropertyStatsContent(${id}), 100);" class="flex items-center justify-center space-x-3 ${isAvailable ? 'bg-gradient-to-r from-red-500 to-pink-600' : 'bg-gradient-to-r from-green-500 to-emerald-600'} text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                    <span>${isAvailable ? 'Mark as Rented' : 'Mark as Available'}</span>
+                    <span>${isAvailable ? 'Mark as Sold' : 'Mark as Available'}</span>
                 </button>
                 <button onclick="togglePremiumStatus(${id})" class="flex items-center justify-center space-x-3 ${isPremium ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900' : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-amber-600 hover:to-yellow-600 text-white'} px-6 py-4 rounded-xl font-bold transition shadow-lg">
                     <span class="text-xl">👑</span>
@@ -1230,7 +1181,7 @@ function renderPropertyStatsContent(id) {
                 </button>
                 <button onclick="confirmDeleteProperty(${id}, '${sanitize(p.title).replace(/'/g, "\\'")}')" class="flex items-center justify-center space-x-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-red-600 hover:to-red-700 text-white px-6 py-4 rounded-xl font-bold transition shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    <span>Delete Property</span>
+                    <span>Delete Vehicle</span>
                 </button>
             </div>
         </div>

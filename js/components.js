@@ -107,12 +107,24 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
     const defaultPhone = '2057028233'; // Pauly's number as fallback
     let usedFallback = false; // Track if we had to use fallback
     
-    $('modalTitle').textContent = 'Purchase This Vehicle';
-    $('modalTitle').className = `text-3xl font-black bg-gradient-to-r from-${colors[0]}-500 to-${colors[1]}-600 bg-clip-text text-transparent mb-4 text-center`;
-    $('modalPropertyName').textContent = 'Vehicle: ' + vehicleTitle;
-    $('modalMessage').value = `Hello! I came across your listing for ${vehicleTitle} on PaulysAutos.com and I'm interested in purchasing it. Please contact me ASAP to discuss further.`;
-    
+    const modalTitle = $('modalTitle');
+    const modalVehicleName = $('modalVehicleName');
+    const modalMessage = $('modalMessage');
+    const modalPhone = $('modalPhone');
     const accent = $('modalAccent');
+    
+    // Safety check - ensure modal elements exist
+    if (!modalTitle || !modalVehicleName || !modalMessage || !modalPhone || !accent) {
+        console.error('[Contact] Modal elements not found in DOM');
+        alert('Unable to open contact modal. Please refresh the page.');
+        return;
+    }
+    
+    modalTitle.textContent = 'Purchase This Vehicle';
+    modalTitle.className = `text-3xl font-black bg-gradient-to-r from-${colors[0]}-500 to-${colors[1]}-600 bg-clip-text text-transparent mb-4 text-center`;
+    modalVehicleName.textContent = 'Vehicle: ' + vehicleTitle;
+    modalMessage.value = `Hello! I came across your listing for ${vehicleTitle} on PaulysAutos.com and I'm interested in purchasing it. Please contact me ASAP to discuss further.`;
+    
     accent.className = `bg-gradient-to-r from-${colors[0]}-900 to-${colors[1]}-900 p-4 rounded-xl mb-6 text-center border border-${colors[0]}-700`;
     
     // Show vehicle purchase disclaimer
@@ -127,7 +139,7 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
     }
     
     // Reset to default phone first
-    $('modalPhone').value = defaultPhone;
+    modalPhone.value = defaultPhone;
     usedFallback = true; // Assume fallback until we find a better contact
     
     // Check for assigned agents first
@@ -145,7 +157,7 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
         usedFallback = false;
         if (agentContacts.length === 1) {
             // Single agent
-            $('modalPhone').value = agentContacts[0].phone.replace(/\D/g, '');
+            modalPhone.value = agentContacts[0].phone.replace(/\D/g, '');
             console.log('[Contact] Using agent phone:', agentContacts[0].username);
         } else {
             // Multiple agents - show all phones
@@ -168,29 +180,29 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
             `;
             
             // Set the first agent's phone in the input
-            $('modalPhone').value = agentContacts[0].phone.replace(/\D/g, '');
+            modalPhone.value = agentContacts[0].phone.replace(/\D/g, '');
             console.log('[Contact] Using multiple agents, first:', agentContacts[0].username);
         }
     } else {
         // No agents - use owner contact (existing behavior)
         try {
-            if (propertyId && typeof db !== 'undefined') {
+            if (vehicleId && typeof db !== 'undefined') {
                 // Get property data to find owner contact info
                 const propsDoc = await db.collection('settings').doc('properties').get();
                 if (propsDoc.exists) {
                     const properties = propsDoc.data();
-                    const property = properties[propertyId] || properties[String(propertyId)];
+                    const property = properties[vehicleId] || properties[String(vehicleId)];
                     
                     if (property) {
                         // Check ownerContactPhone first (synced from user profile)
                         if (property.ownerContactPhone) {
-                            $('modalPhone').value = property.ownerContactPhone.replace(/\D/g, '');
+                            modalPhone.value = property.ownerContactPhone.replace(/\D/g, '');
                             usedFallback = false;
                             console.log('[Contact] Using property ownerContactPhone');
                         }
                         // Then check legacy ownerPhone field
                         else if (property.ownerPhone) {
-                            $('modalPhone').value = property.ownerPhone.replace(/\D/g, '');
+                            modalPhone.value = property.ownerPhone.replace(/\D/g, '');
                             usedFallback = false;
                             console.log('[Contact] Using property ownerPhone');
                         }
@@ -205,7 +217,7 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
                                 if (!usersSnapshot.empty) {
                                     const userData = usersSnapshot.docs[0].data();
                                     if (userData.phone) {
-                                        $('modalPhone').value = userData.phone.replace(/\D/g, '');
+                                        modalPhone.value = userData.phone.replace(/\D/g, '');
                                         usedFallback = false;
                                         console.log('[Contact] Using phone from user doc');
                                     }
@@ -225,11 +237,11 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
     
     // If we used the fallback, notify admin via activity log
     if (usedFallback) {
-        console.warn('[Contact] FALLBACK USED: Property', propertyId, '(' + propertyTitle + ') - Missing owner contact info');
+        console.warn('[Contact] FALLBACK USED: Vehicle', vehicleId, '(' + vehicleTitle + ') - Missing owner contact info');
         
         // Log to activity log if admin is logged in
         if (typeof logActivity === 'function' && auth.currentUser) {
-            logActivity('contact_fallback', 'Fallback phone used for: ' + propertyTitle + ' (ID: ' + propertyId + ') - Owner contact info missing');
+            logActivity('contact_fallback', 'Fallback phone used for: ' + vehicleTitle + ' (ID: ' + vehicleId + ') - Owner contact info missing');
         }
         
         // Also create an admin notification in Firestore
@@ -237,9 +249,9 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
             if (typeof db !== 'undefined') {
                 await db.collection('adminNotifications').add({
                     type: 'missing_contact',
-                    propertyId: propertyId,
-                    propertyTitle: propertyTitle,
-                    message: 'Property is using fallback contact number - owner phone/agent not configured',
+                    vehicleId: vehicleId,
+                    vehicleTitle: vehicleTitle,
+                    message: 'Vehicle is using fallback contact number - owner phone/agent not configured',
                     timestamp: new Date().toISOString(),
                     resolved: false
                 });
@@ -261,7 +273,7 @@ window.openRegisterContactModal = function() {
     
     $('modalTitle').textContent = 'Request New Account';
     $('modalTitle').className = 'text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent mb-4 text-center';
-    $('modalPropertyName').innerHTML = `
+    $('modalVehicleName').innerHTML = `
         <label class="block text-gray-300 font-bold mb-2 text-left text-base">Account Type:</label>
         <select id="accountTypeSelect" onchange="updateRegisterMessage()" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-cyan-500 font-medium transition">
             <option value="Seller">Seller (List Vehicles)</option>
