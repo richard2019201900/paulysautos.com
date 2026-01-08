@@ -96,7 +96,7 @@ window.viewProperty = function(id) {
     
     hideElement($('renterSection'));
     hideElement($('ownerDashboard'));
-    hideElement($('propertyStatsPage'));
+    hideElement($('vehicleStatsPage'));
     hideElement($('leaderboardPage'));
     hideElement($('blogPage'));
     showElement($('vehicleDetailPage'));
@@ -385,7 +385,7 @@ window.viewPropertyStats = async function(id) {
     hideElement($('vehicleDetailPage'));
     hideElement($('leaderboardPage'));
     hideElement($('blogPage'));
-    showElement($('propertyStatsPage'));
+    showElement($('vehicleStatsPage'));
     window.scrollTo(0, 0);
     
     // Update stats navigation counter
@@ -557,7 +557,7 @@ function renderPropertyStatsContent(id) {
     const showReminderSection = renterName && (daysUntilDue !== null && daysUntilDue <= 1);
     
     // Premium styling - apply to container (same approach as Vehicle View)
-    const statsContainer = $('propertyStatsContent');
+    const statsContainer = $('vehicleStatsContent');
     if (statsContainer) {
         if (isPremium) {
             statsContainer.className = 'glass-effect rounded-2xl shadow-2xl overflow-hidden border-2 border-amber-500 ring-2 ring-amber-500/50 shadow-amber-500/30';
@@ -588,7 +588,7 @@ function renderPropertyStatsContent(id) {
            </div>` 
         : '';
 
-    $('propertyStatsContent').innerHTML = `
+    $('vehicleStatsContent').innerHTML = `
         ${soldBanner}
         ${premiumBanner}
         <!-- View Toggle Tabs - full width, no padding needed -->
@@ -2879,7 +2879,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     hideOwnerLoginForm();
                     hideElement($('renterSection'));
                     hideElement($('vehicleDetailPage'));
-                    hideElement($('propertyStatsPage'));
+                    hideElement($('vehicleStatsPage'));
                     showElement($('ownerDashboard'));
                     updateAuthButton(true);
                     renderOwnerDashboard();

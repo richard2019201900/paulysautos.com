@@ -666,7 +666,7 @@ window.goToDashboard = function() {
     if (state.currentUser === 'owner') {
         hideElement($('renterSection'));
         hideElement($('propertyDetailPage'));
-        hideElement($('propertyStatsPage'));
+        hideElement($('vehicleStatsPage'));
         hideElement($('blogPage'));
         hideElement($('leaderboardPage'));
         showElement($('ownerDashboard'));
@@ -797,7 +797,7 @@ window.goToAdminNotifications = async function(type) {
 };
 
 window.backToDashboard = function() {
-    hideElement($('propertyStatsPage'));
+    hideElement($('vehicleStatsPage'));
     hideElement($('blogPage'));
     showElement($('ownerDashboard'));
     window.scrollTo(0, 0);
@@ -811,7 +811,7 @@ window.goHome = function() {
     }
     hideElement($('ownerDashboard'));
     hideElement($('propertyDetailPage'));
-    hideElement($('propertyStatsPage'));
+    hideElement($('vehicleStatsPage'));
     hideElement($('blogPage'));
     showElement($('renterSection'));
     window.scrollTo(0, 0);
@@ -826,7 +826,7 @@ window.navigateTo = function(section) {
     hideElement($('mobileMenu'));
     hideElement($('ownerDashboard'));
     hideElement($('propertyDetailPage'));
-    hideElement($('propertyStatsPage'));
+    hideElement($('vehicleStatsPage'));
     hideElement($('blogPage'));
     hideElement($('leaderboardPage'));
     
@@ -861,7 +861,7 @@ window.navigateTo = function(section) {
 
 window.goBack = function() {
     hideElement($('propertyDetailPage'));
-    hideElement($('propertyStatsPage'));
+    hideElement($('vehicleStatsPage'));
     hideElement($('leaderboardPage'));
     hideElement($('blogPage'));
     hideElement($('ownerDashboard'));

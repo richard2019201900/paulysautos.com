@@ -85,7 +85,7 @@ window.updatePropertyNavCounter = function() {
 // Keyboard navigation for properties
 document.addEventListener('keydown', function(e) {
     const detailPage = $('propertyDetailPage');
-    const statsPage = $('propertyStatsPage');
+    const statsPage = $('vehicleStatsPage');
     
     // Don't navigate if user is typing in an input
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
