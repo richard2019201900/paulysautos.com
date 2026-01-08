@@ -549,14 +549,14 @@ window.renderAgentsTab = async function() {
                             '</div>' +
                         '</div>' +
                         '<div class="text-right">' +
-                            '<div class="text-cyan-400 font-bold">' + assignedProps.length + ' properties</div>' +
+                            '<div class="text-cyan-400 font-bold">' + assignedProps.length + ' vehicles</div>' +
                             '<div class="text-green-400 text-sm">$' + totalCommission.toLocaleString() + ' potential</div>' +
                             (isMasterAdmin ? '' : '<button onclick="confirmDemoteAgent(\'' + agent.odId + '\', \'' + agent.email + '\')" class="mt-2 text-red-400 hover:text-red-300 text-xs">Remove Role</button>') +
                         '</div>' +
                     '</div>' +
                     (assignedProps.length > 0 ? 
                         '<div class="mt-3 pt-3 border-t border-gray-700">' +
-                            '<div class="text-gray-400 text-xs mb-2">Assigned Properties:</div>' +
+                            '<div class="text-gray-400 text-xs mb-2">Assigned Vehicles:</div>' +
                             '<div class="flex flex-wrap gap-2">' +
                                 assignedProps.map(function(p) {
                                     return '<span class="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded">' + p.title + '</span>';
@@ -667,7 +667,7 @@ window.searchUsersForAgent = async function(query) {
  * Confirm promote agent dialog
  */
 window.confirmPromoteAgent = function(odId, email, username) {
-    if (confirm('Promote ' + username + ' (' + email + ') to Agent role?\n\nThis will allow them to be assigned to properties and receive offer inquiries.')) {
+    if (confirm('Promote ' + username + ' (' + email + ') to Agent role?\n\nThis will allow them to be assigned to vehicles and receive offer inquiries.')) {
         promoteToAgent(odId, email).then(function(success) {
             if (success) {
                 renderAgentsTab();
@@ -680,7 +680,7 @@ window.confirmPromoteAgent = function(odId, email, username) {
  * Confirm demote agent dialog
  */
 window.confirmDemoteAgent = function(odId, email) {
-    if (confirm('Remove Agent role from ' + email + '?\n\nThis will also remove them from all assigned properties.')) {
+    if (confirm('Remove Agent role from ' + email + '?\n\nThis will also remove them from all assigned vehicles.')) {
         demoteFromAgent(odId, email).then(function(success) {
             if (success) {
                 renderAgentsTab();
@@ -704,7 +704,7 @@ window.renderPropertyAgentSection = async function(propertyId) {
     
     // Current agents list
     if (currentAgents.length === 0) {
-        html += '<p class="text-gray-500 italic mb-4">No agents assigned. Contact info will default to property owner.</p>';
+        html += '<p class="text-gray-500 italic mb-4">No agents assigned. Contact info will default to vehicle owner.</p>';
     } else {
         html += '<div class="space-y-2 mb-4">';
         currentAgents.forEach(function(agentEmail) {

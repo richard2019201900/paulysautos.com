@@ -706,11 +706,11 @@ function renderPropertyStatsContent(id) {
                     </div>
                 </div>
                 
-                <!-- Property Images Gallery with Drag & Drop -->
+                <!-- Vehicle Images Gallery with Drag & Drop -->
                 <div id="property-images-section-${id}" class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8 transition-all duration-500">
                     <div class="flex justify-between items-center mb-4">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-200">📸 Property Images</h3>
+                            <h3 class="text-2xl font-bold text-gray-200">📸 Vehicle Images</h3>
                             <p class="text-gray-400 text-sm mt-1">Drag to reorder • First image is the main photo</p>
                         </div>
                         <button onclick="openAddImageModal(${id})" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:opacity-90 transition shadow-lg flex items-center gap-2">
@@ -1105,7 +1105,7 @@ function renderPropertyStatsContent(id) {
                     <svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div class="text-lg font-black">${statusText}</div>
-                <div class="text-xs opacity-80">${isAvailable ? 'Accepting inquiries' : 'Currently rented'}</div>
+                <div class="text-xs opacity-80">${isAvailable ? 'Accepting inquiries' : 'Reserved'}</div>
                 <div class="text-xs mt-1 opacity-70">Click to toggle</div>
             </div>
         </div>
@@ -1885,7 +1885,7 @@ window.showPremiumEnableModal = function(propertyId, propertyTitle) {
                 <div class="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4">
                     <div class="text-amber-300 font-bold mb-2">✨ Premium Benefits:</div>
                     <ul class="text-amber-200/80 text-sm space-y-1">
-                        <li>✓ Top placement on Properties page</li>
+                        <li>✓ Top placement on Vehicles page</li>
                         <li>✓ Gold border and FEATURED badge</li>
                         <li>✓ Stand out from other listings</li>
                     </ul>

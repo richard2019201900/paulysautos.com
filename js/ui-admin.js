@@ -2479,7 +2479,7 @@ window.updateAdminStats = async function(users) {
     // ==================== TOTAL LISTINGS STAT ====================
     const totalListings = properties.length;
     const availableListings = properties.filter(p => state.availability[p.id] !== false).length;
-    const rentedListings = totalListings - availableListings;
+    const soldListings = totalListings - availableListings;
     
     const statListings = $('adminStatListings');
     const statListingsAvailable = $('adminStatListingsAvailable');
@@ -2488,7 +2488,7 @@ window.updateAdminStats = async function(users) {
         statListings.textContent = totalListings;
     }
     if (statListingsAvailable) {
-        statListingsAvailable.textContent = `(${availableListings} available, ${rentedListings} rented)`;
+        statListingsAvailable.textContent = `(${availableListings} available, ${soldListings} sold)`;
     }
 };
 
@@ -2684,7 +2684,7 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                     </div>
                 `;
             }).join('')
-            : '<p class="text-gray-500 text-xs italic">No properties listed</p>';
+            : '<p class="text-gray-500 text-xs italic">No vehicles listed</p>';
         
         // Build premium listings tracking section
         let premiumTrackingHTML = '';
@@ -3030,7 +3030,7 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                             </span>` : ''}
                             <span class="text-gray-400">${listingCount}/${maxListings} listings</span>
                             <button onclick="toggleUserProperties('${escapedId}')" class="text-cyan-400 hover:underline flex items-center gap-1">
-                                <span id="propToggle_${escapedId}">▶</span> Properties (${listingCount})
+                                <span id="propToggle_${escapedId}">▶</span> Vehicles (${listingCount})
                             </button>
                         </div>
                         <!-- Row 3: Activity Info (compact) -->

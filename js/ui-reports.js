@@ -24,7 +24,7 @@ window.openReportsModal = async function() {
     // Use OWNED properties for reports (not all viewable)
     const ownedProps = getOwnedProperties();
     if (ownedProps.length === 0) {
-        showToast('No properties owned by this account to generate reports for', 'error');
+        showToast('No vehicles owned by this account to generate reports for', 'error');
         return;
     }
     
@@ -67,7 +67,7 @@ function renderReportsModal(reportData) {
                         <span class="text-3xl">📊</span>
                         <div>
                             <h2 class="text-xl font-bold text-white">Elite Portfolio Reports</h2>
-                            <p class="text-yellow-200 text-sm">Analyze your rental performance</p>
+                            <p class="text-yellow-200 text-sm">Analyze your sales performance</p>
                         </div>
                     </div>
                     <button onclick="closeReportsModal()" class="text-white/80 hover:text-white transition text-2xl">&times;</button>
@@ -1117,7 +1117,7 @@ function generateTopPerformersPreview(ownerProps) {
     const top3 = sorted.slice(0, 3);
     
     if (top3.length === 0) {
-        return '<p class="text-gray-500 text-center py-4">No properties to analyze</p>';
+        return '<p class="text-gray-500 text-center py-4">No vehicles to analyze</p>';
     }
     
     return `

@@ -292,7 +292,7 @@ window.renderBlogPage = function() {
             category: 'Major Update',
             categoryColor: 'bg-purple-500',
             content: `
-                <p class="mb-4"><strong>PaulysAutos.com now works directly in your phone browser while you're in the city.</strong> No more alt-tabbing to Chrome — browse listings, manage your properties, and check your dashboard right from your phone. Just type paulysautos.com and you're in.</p>
+                <p class="mb-4"><strong>PaulysAutos.com now works directly in your phone browser while you're in the city.</strong> No more alt-tabbing to Chrome — browse listings, manage your vehicles, and check your dashboard right from your phone. Just type paulysautos.com and you're in.</p>
                 
                 <p class="mb-4">Over the past two weeks, we've pushed <strong>26 major updates</strong> and completely transformed the platform. Here's what's new:</p>
                 
@@ -370,27 +370,25 @@ window.renderBlogPage = function() {
             category: 'Milestone',
             categoryColor: 'bg-amber-500',
             content: `
-                <p class="mb-4">Two weeks ago, PaulysAutos.com was just an idea. Today, we're a fully operational property management platform with nearly <strong>15 registered users</strong> and <strong>30+ active listings</strong> across Los Santos.</p>
+                <p class="mb-4">Two weeks ago, PaulysAutos.com was just an idea. Today, we're a fully operational vehicle marketplace with a growing community of sellers and buyers across Los Santos.</p>
                 
-                <p class="mb-4">Here's everything we've built since December 2nd:</p>
+                <p class="mb-4">Here's everything we've built:</p>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">For Property Owners:</h4>
+                <h4 class="font-bold text-white mb-2 mt-6">For Sellers:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Create and manage unlimited listings with full image galleries</li>
-                    <li>7 property types supported: Apartments, Houses, Condos, Villas, Hotels, Warehouses, and Hideouts</li>
-                    <li>Flexible pricing options: Daily, Weekly, Biweekly, Monthly rates plus Buy Price</li>
-                    <li>Automatic discount badges that calculate savings for longer-term rentals</li>
-                    <li>One-click property status toggling between Available and Rented</li>
+                    <li>Create and manage vehicle listings with full image galleries</li>
+                    <li>6 vehicle types supported: Cars, Trucks, SUVs, Boats, Motorcycles, and Other</li>
+                    <li>Simple pricing - just set your sale price</li>
+                    <li>Premium listings to feature your vehicle at the top</li>
+                    <li>One-click status toggling between Available and Sold</li>
                 </ul>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">Tenant & Payment Management:</h4>
+                <h4 class="font-bold text-white mb-2 mt-6">For Buyers:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Track renter names, phone numbers, and private notes for each property</li>
-                    <li>Set payment frequency and log payment dates</li>
-                    <li>Auto-calculated due dates so you never miss a collection</li>
-                    <li>Full payment ledger with history tracking</li>
-                    <li>One-click reminder script generation for late payments</li>
-                    <li>Overdue alerts that show exactly who owes you money</li>
+                    <li>Browse vehicles for free - no account required</li>
+                    <li>Filter by type, sort by price or storage</li>
+                    <li>Contact sellers directly through the platform</li>
+                    <li>View detailed vehicle specs and photos</li>
                 </ul>
                 
                 <h4 class="font-bold text-white mb-2 mt-6">Elite Portfolio Reports <span class="text-amber-400">(Elite Members)</span>:</h4>

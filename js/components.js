@@ -264,11 +264,11 @@ window.openRegisterContactModal = function() {
     $('modalPropertyName').innerHTML = `
         <label class="block text-gray-300 font-bold mb-2 text-left text-base">Account Type:</label>
         <select id="accountTypeSelect" onchange="updateRegisterMessage()" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-cyan-500 font-medium transition">
-            <option value="Property Owner">Property Owner</option>
-            <option value="Property Renter">Property Renter</option>
+            <option value="Seller">Seller (List Vehicles)</option>
+            <option value="Buyer">Buyer (Browse Only)</option>
         </select>
     `;
-    $('modalMessage').value = "Hi! I'm interested in creating a new account as a Property Owner. Please contact me to get started. Thank you!";
+    $('modalMessage').value = "Hi! I'm interested in creating a new account as a Seller. Please contact me to get started. Thank you!";
     $('modalPhone').value = defaultPhone;
     
     // Clear disclaimer for registration
@@ -426,7 +426,7 @@ window.updateManagedServicesOptIn = async function() {
         container.innerHTML = `
             <div class="text-center">
                 <p class="text-gray-300 text-sm mb-3">🔒 Log in to get notified when managed services launch!</p>
-                <button onclick="closeModal('photoServicesModal'); openModal('loginModal');" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition">
+                <button onclick="closeModal('photoServicesModal'); openModal('loginModal');" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition">
                     Log In to Opt-In
                 </button>
             </div>
@@ -457,7 +457,7 @@ window.updateManagedServicesOptIn = async function() {
             container.innerHTML = `
                 <div class="text-center">
                     <p class="text-gray-300 text-sm mb-3">🔔 Want to be notified when this launches?</p>
-                    <button onclick="optInManagedServices()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white px-6 py-3 rounded-lg font-bold transition shadow-lg flex items-center gap-2 mx-auto">
+                    <button onclick="optInManagedServices()" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:opacity-90 text-gray-900 px-6 py-3 rounded-lg font-bold transition shadow-lg flex items-center gap-2 mx-auto">
                         <span>🚀</span> Yes, I'm Interested!
                     </button>
                 </div>
@@ -631,7 +631,7 @@ window.copyPhotoServicePhone = function() {
 };
 
 window.updateRegisterMessage = function() {
-    const accountType = $('accountTypeSelect')?.value || 'Property Owner';
+    const accountType = $('accountTypeSelect')?.value || 'Seller';
     $('modalMessage').value = `Hi! I'm interested in creating a new account as a ${accountType}. Please contact me to get started. Thank you!`;
 };
 
