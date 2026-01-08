@@ -312,8 +312,8 @@ window.renderPricingTiers = function(p, isPremium) {
     // Buy Price
     if (buyPrice > 0) {
         html += '<div class="flex items-center justify-between border-t border-gray-700 pt-1.5 mt-1.5">';
-        html += '<span class="text-amber-400 text-xs font-semibold" title="+10% PMA Realtor Fee (city fee)">🏠 Own It:</span>';
-        html += '<div class="text-right"><span class="text-amber-400 font-black text-lg">$' + buyPrice.toLocaleString() + '</span><span class="text-amber-400/60 text-[9px] block">+10% PMA Fee</span></div>';
+        html += '<span class="text-amber-400 text-xs font-semibold" title="$25k one-time city sales fee">🚗 Price:</span>';
+        html += '<div class="text-right"><span class="text-amber-400 font-black text-lg">$' + buyPrice.toLocaleString() + '</span><span class="text-amber-400/60 text-[9px] block">+$25k city fee</span></div>';
         html += '</div>';
     }
     

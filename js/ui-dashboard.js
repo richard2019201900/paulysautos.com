@@ -980,30 +980,48 @@ async function renderProperties(list) {
         <article class="property-card bg-gray-800 rounded-2xl shadow-xl overflow-hidden cursor-pointer ${cardBorder} ${premiumGlow} relative" onclick="viewProperty(${p.id})">
             ${premiumBadge}
             <div class="relative ${imageMargin}">
-                ${!available ? '<div class="unavailable-overlay"><div class="unavailable-text">UNAVAILABLE</div></div>' : ''}
+                ${!available ? '<div class="unavailable-overlay"><div class="unavailable-text">SOLD</div></div>' : ''}
                 ${imageElement}
                 ${p.videoUrl ? '<div class="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold text-xs md:text-sm shadow-lg flex items-center space-x-1 md:space-x-2"><svg class="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path></svg><span>Video Tour</span></div>' : ''}
                 ${isPremium ? '<div class="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-3 py-1 rounded-full font-bold text-xs shadow-lg">⭐ FEATURED</div>' : ''}
             </div>
             <div class="p-5 md:p-6">
                 <div class="flex justify-between items-start gap-2 mb-3">
-                    <h4 class="text-xl md:text-2xl font-bold ${isPremium ? 'text-amber-300' : 'text-white'} min-h-[3.5rem] md:min-h-[4rem] line-clamp-2">${sanitize(p.title)}</h4>
+                    <h4 class="text-xl md:text-2xl font-bold ${isPremium ? 'text-amber-300' : 'text-white'} min-h-[2rem] line-clamp-2">${sanitize(p.title)}</h4>
                     <span class="badge text-white text-xs font-bold px-2 md:px-3 py-1 rounded-full uppercase shrink-0">${PropertyDataService.getValue(p.id, 'type', p.type)}</span>
                 </div>
-                <p class="text-gray-300 mb-2 font-medium text-sm md:text-base">📝 ${sanitize(p.location)}</p>
-                <p class="text-xs md:text-sm text-gray-400 mb-2 font-semibold">Interior: ${PropertyDataService.getValue(p.id, 'interiorType', p.interiorType)}</p>
-                <p id="owner-${p.id}" class="text-xs md:text-sm text-blue-400 mb-4 font-semibold">👤 Owner: Loading...</p>
-                <div class="grid grid-cols-3 gap-2 mb-3 text-xs md:text-sm text-gray-300 font-semibold">
-                    <div>${PropertyDataService.getValue(p.id, 'bedrooms', p.bedrooms)} Beds</div>
-                    <div>${PropertyDataService.getValue(p.id, 'bathrooms', p.bathrooms)} Baths</div>
-                    <div>${PropertyDataService.getValue(p.id, 'storage', p.storage).toLocaleString()}</div>
+                <p class="text-gray-300 mb-2 font-medium text-sm">🔖 Plate: <span class="text-white">${PropertyDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span></p>
+                ${p.location ? `<p class="text-gray-400 mb-2 text-xs">📝 ${sanitize(p.location)}</p>` : ''}
+                <p id="owner-${p.id}" class="text-xs text-blue-400 mb-3 font-semibold">👤 Owner: Loading...</p>
+                
+                <!-- Vehicle Specs Grid - Benny's Style -->
+                <div class="grid grid-cols-4 gap-2 mb-3 text-xs text-gray-300 font-semibold bg-gray-900/50 rounded-lg p-2">
+                    <div class="text-center">
+                        <div class="text-amber-400">🔧</div>
+                        <div>${PropertyDataService.getValue(p.id, 'upgrades', p.upgrades) || 'N/A'}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-cyan-400">⚡</div>
+                        <div>${PropertyDataService.getValue(p.id, 'speed', p.speed) || 'N/A'}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-amber-400">📦</div>
+                        <div>${PropertyDataService.getValue(p.id, 'storage', p.storage) || 'N/A'}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-purple-400">💺</div>
+                        <div>${PropertyDataService.getValue(p.id, 'seats', p.seats) || 'N/A'}</div>
+                    </div>
                 </div>
                 
-                <!-- Pricing Tiers with Discount Badges -->
-                ${renderPricingTiers(p, isPremium)}
+                <!-- Price Display -->
+                <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 border border-green-500/50 rounded-lg p-3 mb-3 text-center">
+                    <div class="text-green-400 text-2xl font-black">$${(PropertyDataService.getValue(p.id, 'buyPrice', p.buyPrice) || 0).toLocaleString()}</div>
+                    <div class="text-green-400/60 text-xs">+$25k city sales fee</div>
+                </div>
                 
                 <button onclick="viewProperty(${p.id})" class="w-full ${isPremium ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900' : 'gradient-bg text-white'} px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg mb-2 text-sm md:text-base">View Details</button>
-                <button onclick="event.stopPropagation(); viewPropertyAndHighlightOffers(${p.id})" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm md:text-base">📞 Contact Owner</button>
+                <button onclick="event.stopPropagation(); viewPropertyAndHighlightOffers(${p.id})" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm md:text-base">📞 Contact Seller</button>
             </div>
         </article>`;
     }).join('');

@@ -170,7 +170,7 @@ window.toggleMyProperties = function() {
 };
 
 /**
- * Sort properties
+ * Sort vehicles
  */
 window.sortProperties = function() {
     var sortBy = $('sortBy');
@@ -180,21 +180,23 @@ window.sortProperties = function() {
     
     state.filteredProperties.sort(function(a, b) {
         if (sortValue === 'price-low') {
-            return (getPropertyValue(a, 'weeklyPrice') || 0) - (getPropertyValue(b, 'weeklyPrice') || 0);
+            return (getPropertyValue(a, 'buyPrice') || 0) - (getPropertyValue(b, 'buyPrice') || 0);
         } else if (sortValue === 'price-high') {
-            return (getPropertyValue(b, 'weeklyPrice') || 0) - (getPropertyValue(a, 'weeklyPrice') || 0);
-        } else if (sortValue === 'bedrooms') {
-            return (getPropertyValue(b, 'bedrooms') || 0) - (getPropertyValue(a, 'bedrooms') || 0);
-        } else if (sortValue === 'interior') {
-            return (getPropertyValue(a, 'interiorType') || '').localeCompare(getPropertyValue(b, 'interiorType') || '');
-        } else if (sortValue === 'storage') {
-            return (getPropertyValue(b, 'storage') || 0) - (getPropertyValue(a, 'storage') || 0);
+            return (getPropertyValue(b, 'buyPrice') || 0) - (getPropertyValue(a, 'buyPrice') || 0);
+        } else if (sortValue === 'newest') {
+            // Sort by createdAt timestamp, newest first
+            var dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+            var dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+            return dateB - dateA;
         }
         return 0;
     });
     
     renderProperties(state.filteredProperties);
 };
+
+// Alias for HTML compatibility
+window.sortVehicles = window.sortProperties;
 
 /**
  * Clear all filters
