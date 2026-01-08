@@ -42,30 +42,25 @@ window.openCreateListingModal = async function() {
     if (form) form.reset();
     
     // Explicitly clear all input values to prevent browser autocomplete
-    const inputs = ['newListingTitle', 'newListingLocation', 'newListingBedrooms', 
-                    'newListingBathrooms', 'newListingStorage', 'newListingWeekly', 
-                    'newListingBiweekly', 'newListingMonthly', 'newListingBuyPrice', 'newListingImages'];
+    const inputs = ['newListingTitle', 'newListingPlate', 'newListingLocation', 
+                    'newListingBuyPrice', 'newListingImages'];
     inputs.forEach(id => {
         const el = $(id);
         if (el) el.value = '';
     });
     
     // Reset selects to first option
-    const typeSelect = $('newListingType');
-    if (typeSelect) typeSelect.selectedIndex = 0;
-    const interiorSelect = $('newListingInterior');
-    if (interiorSelect) interiorSelect.selectedIndex = 0;
-    
-    // Reset buy price warning and hint
-    hideElement($('buyPriceWarning'));
-    const hintDiv = $('buyPriceHint');
-    if (hintDiv) hintDiv.textContent = 'Enter a price if this property is available for purchase';
+    const selects = ['newListingType', 'newListingUpgrades', 'newListingSpeed', 'newListingStorage', 'newListingSeats'];
+    selects.forEach(id => {
+        const el = $(id);
+        if (el) el.selectedIndex = 0;
+    });
     
     // Reset buttons to initial state
     const createBtn = $('createListingBtn');
     if (createBtn) {
         createBtn.disabled = false;
-        createBtn.textContent = '🏠 Create Listing';
+        createBtn.textContent = '🚗 Create Listing';
     }
     const cancelBtn = $('cancelListingBtn');
     if (cancelBtn) showElement(cancelBtn);
@@ -78,16 +73,6 @@ window.openCreateListingModal = async function() {
 
 // Handle create listing form submission
 document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners for fields that affect buy price validation
-    const buyPriceAffectingFields = ['newListingType', 'newListingInterior', 'newListingStorage', 'newListingTitle'];
-    buyPriceAffectingFields.forEach(id => {
-        const el = $(id);
-        if (el) {
-            el.addEventListener('change', validateBuyPrice);
-            el.addEventListener('input', validateBuyPrice);
-        }
-    });
-    
     const createForm = $('createListingForm');
     if (createForm) {
         createForm.addEventListener('submit', async function(e) {
@@ -100,17 +85,15 @@ document.addEventListener('DOMContentLoaded', function() {
             hideElement(errorDiv);
             hideElement(successDiv);
             
-            // Get form values
-            const title = $('newListingTitle').value.trim();
+            // Get form values - Benny's app style
+            const title = $('newListingTitle').value.trim(); // Model name
+            const plate = $('newListingPlate')?.value.trim().toUpperCase() || '';
             const type = $('newListingType').value;
-            const location = $('newListingLocation').value.trim();
-            const bedrooms = parseInt($('newListingBedrooms').value) || 0;
-            const bathrooms = parseInt($('newListingBathrooms').value) || 0;
-            const storage = parseInt($('newListingStorage').value) || 0;
-            const interiorType = $('newListingInterior').value;
-            const weeklyPrice = parseInt($('newListingWeekly').value) || 0;
-            const biweeklyPrice = parseInt($('newListingBiweekly').value) || 0;
-            const monthlyPrice = parseInt($('newListingMonthly').value) || 0;
+            const location = $('newListingLocation').value.trim(); // Additional info
+            const upgrades = $('newListingUpgrades')?.value || '';
+            const speed = $('newListingSpeed')?.value || '';
+            const storage = $('newListingStorage')?.value || '';
+            const seats = $('newListingSeats')?.value || '';
             const buyPrice = parseInt($('newListingBuyPrice')?.value) || 0;
             const imagesText = $('newListingImages').value.trim();
             const isPremium = $('newListingPremium')?.checked || false;
@@ -119,15 +102,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Hide warning div if it exists
             if (warningDiv) hideElement(warningDiv);
             
-            // Debug logging
             // Parse images - empty array will trigger the card's built-in placeholder
             const images = imagesText 
                 ? imagesText.split('\n').map(url => url.trim()).filter(url => url)
                 : [];
             
-            // Validate required fields: Address, Type, Storage, Interior
-            if (!title || !type || !storage || !interiorType) {
-                errorDiv.textContent = 'Please fill in all required fields (Address, Type, Storage, and Interior).';
+            // Validate required fields
+            if (!title || !type || !plate || !upgrades || !speed || !storage || !seats || !buyPrice) {
+                errorDiv.textContent = 'Please fill in all required fields.';
                 showElement(errorDiv);
                 return;
             }
@@ -159,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span class="text-yellow-400">⚠️</span>
                         <div>
                             <strong class="text-yellow-300">Warning: Discord links expire!</strong><br>
-                            <span class="text-gray-300">Discord image links stop working after a few weeks. Your property photos will break.</span><br>
+                            <span class="text-gray-300">Discord image links stop working after a few weeks. Your vehicle photos will break.</span><br>
                             <span class="text-cyan-400">We recommend using <a href="https://fivemanage.com" target="_blank" class="underline font-semibold">fivemanage.com</a> instead (it's free!).</span>
                         </div>
                     </div>
@@ -174,26 +156,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Reset Discord warning flag for next time
             window.createListingDiscordWarningAcknowledged = false;
-            
-            // Validate buy price against city minimum (HARD BLOCK)
-            if (buyPrice > 0) {
-                const minInfo = getMinimumBuyPriceForForm();
-                if (buyPrice < minInfo.min) {
-                    errorDiv.innerHTML = `
-                        <strong>🚫 City Minimum Violation</strong><br>
-                        ${minInfo.category} requires minimum <strong>$${minInfo.min.toLocaleString()}</strong>.<br>
-                        Your price: $${buyPrice.toLocaleString()} (Short by $${(minInfo.min - buyPrice).toLocaleString()})
-                    `;
-                    showElement(errorDiv);
-                    // Highlight the buy price field
-                    const buyPriceInput = $('newListingBuyPrice');
-                    if (buyPriceInput) {
-                        buyPriceInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
-                        buyPriceInput.focus();
-                    }
-                    return;
-                }
-            }
             
             btn.disabled = true;
             btn.textContent = 'Creating...';
@@ -210,20 +172,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Get owner email first (lowercase for consistency)
                 const ownerEmail = (auth.currentUser?.email || 'richard2019201900@gmail.com').toLowerCase();
                 
-                // Create new property object
+                // Create new vehicle object - Benny's app style
                 const newProperty = {
                     id: newId,
-                    title: title,
+                    title: title, // Model name
+                    plate: plate, // License plate
                     type: type,
-                    location: location,
-                    bedrooms: bedrooms,
-                    bathrooms: bathrooms,
+                    location: location, // Additional info
+                    upgrades: upgrades,
+                    speed: speed,
                     storage: storage,
-                    interiorType: interiorType,
-                    weeklyPrice: weeklyPrice,
-                    biweeklyPrice: biweeklyPrice,
-                    monthlyPrice: monthlyPrice,
-                    buyPrice: buyPrice, // Buy It Now Price (0 if not for sale)
+                    seats: seats,
+                    buyPrice: buyPrice,
                     images: images,
                     videoUrl: null,
                     features: false,

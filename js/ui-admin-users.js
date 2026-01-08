@@ -1034,7 +1034,7 @@ window.adminCreateUser = async function(email, password, displayName, tier) {
             upgradedAt: firebase.firestore.FieldValue.serverTimestamp(),
             upgradedBy: auth.currentUser?.email || 'admin',
             paymentNote: 'Account created by admin',
-            price: tier === 'pro' ? 25000 : (tier === 'elite' ? 50000 : 0)
+            price: tier === 'elite' ? 25000 : 0
         });
     }
     

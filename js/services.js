@@ -1,9 +1,8 @@
 // ==================== TIER SYSTEM ====================
 /**
- * User Tiers Configuration
+ * User Tiers Configuration - PaulysAutos.com
  * - Starter (free): 1 listing
- * - Pro: 3 listings  
- * - Elite: Unlimited listings
+ * - Elite ($25k/month): Unlimited listings
  */
 const TIERS = {
     starter: { 
@@ -11,21 +10,16 @@ const TIERS = {
         icon: '🌱', 
         name: 'Starter',
         color: 'text-gray-400',
-        bgColor: 'bg-gray-600'
-    },
-    pro: { 
-        maxListings: 3, 
-        icon: '⭐', 
-        name: 'Pro',
-        color: 'text-yellow-400',
-        bgColor: 'bg-yellow-600'
+        bgColor: 'bg-gray-600',
+        price: 0
     },
     elite: { 
         maxListings: Infinity, 
         icon: '👑', 
         name: 'Elite',
-        color: 'text-purple-400',
-        bgColor: 'bg-purple-600'
+        color: 'text-amber-400',
+        bgColor: 'bg-amber-600',
+        price: 25000
     }
 };
 

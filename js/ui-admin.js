@@ -2956,32 +2956,14 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
         if (!isUserMasterAdmin) {
             const buttons = [];
             
-            if (user.tier === 'starter') {
-                // Starter can upgrade to Pro or Elite
-                buttons.push(`<button onclick="adminUpgradeUser('${escapedEmail}', 'pro', '${user.tier}')" 
-                    class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
-                    ⭐ Upgrade to Pro
-                </button>`);
+            if (user.tier === 'starter' || user.tier === 'pro') {
+                // Starter (or legacy Pro) can upgrade to Elite
                 buttons.push(`<button onclick="adminUpgradeUser('${escapedEmail}', 'elite', '${user.tier}')" 
-                    class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
+                    class="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
                     👑 Upgrade to Elite
-                </button>`);
-            } else if (user.tier === 'pro') {
-                // Pro can upgrade to Elite or downgrade to Starter
-                buttons.push(`<button onclick="adminUpgradeUser('${escapedEmail}', 'elite', '${user.tier}')" 
-                    class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
-                    👑 Upgrade to Elite
-                </button>`);
-                buttons.push(`<button onclick="adminDowngradeUser('${escapedEmail}', '${user.tier}', 'starter')" 
-                    class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
-                    🌱 Downgrade
                 </button>`);
             } else if (user.tier === 'elite') {
-                // Elite can downgrade to Pro or Starter
-                buttons.push(`<button onclick="adminDowngradeUser('${escapedEmail}', '${user.tier}', 'pro')" 
-                    class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
-                    ⭐ Downgrade to Pro
-                </button>`);
+                // Elite can downgrade to Starter
                 buttons.push(`<button onclick="adminDowngradeUser('${escapedEmail}', '${user.tier}', 'starter')" 
                     class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
                     🌱 Downgrade to Starter

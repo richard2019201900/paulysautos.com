@@ -373,10 +373,25 @@
             <h2 class="text-3xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent mb-6 text-center">✨ Create New Listing</h2>
             
             <form id="createListingForm" class="space-y-4" autocomplete="off">
+                <!-- Model (Title) with Benny's tip -->
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-2 flex items-center gap-2">
+                        Model *
+                        <span class="relative group">
+                            <span class="text-amber-400 cursor-help text-sm">💡</span>
+                            <span class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-amber-300 text-xs px-3 py-2 rounded-lg shadow-lg border border-amber-500/50 w-64 z-50">
+                                Copy & paste from Benny's app for best results! The model name helps buyers find your vehicle.
+                            </span>
+                        </span>
+                    </label>
+                    <input type="text" id="newListingTitle" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. rmodbacalar, sultanrs, elegy2">
+                </div>
+                
+                <!-- License Plate & Vehicle Type -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">Vehicle Title *</label>
-                        <input type="text" id="newListingTitle" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. 2019 Sultan RS Classic">
+                        <label class="block text-gray-300 font-semibold mb-2">License Plate *</label>
+                        <input type="text" id="newListingPlate" required autocomplete="off" maxlength="8" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition uppercase" placeholder="e.g. 1L4XG8EM">
                     </div>
                     <div>
                         <label class="block text-gray-300 font-semibold mb-2">Vehicle Type *</label>
@@ -392,56 +407,57 @@
                     </div>
                 </div>
                 
+                <!-- Price -->
                 <div>
-                    <label class="block text-gray-300 font-semibold mb-2">Description</label>
-                    <input type="text" id="newListingLocation" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. Fully modded, low miles, garage kept (optional)">
+                    <label class="block text-gray-300 font-semibold mb-2">Price *</label>
+                    <input type="number" id="newListingBuyPrice" required min="1" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. 200000">
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Vehicle Specs - Benny's Style Dropdowns -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">Model *</label>
-                        <input type="text" id="newListingModel" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. Sultan RS, Elegy RH8">
+                        <label class="block text-gray-300 font-semibold mb-2">Upgrades *</label>
+                        <select id="newListingUpgrades" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <option value="">Select...</option>
+                            <option value="None">None</option>
+                            <option value="Some">Some</option>
+                            <option value="Max">Max</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-2">Speed *</label>
+                        <select id="newListingSpeed" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <option value="">Select...</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Fast">Fast</option>
+                            <option value="Ludicrous">Ludicrous</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-gray-300 font-semibold mb-2">Storage *</label>
-                        <input type="number" id="newListingStorage" required min="1" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="600">
+                        <select id="newListingStorage" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <option value="">Select...</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">Fully Upgraded? *</label>
-                        <select id="newListingUpgraded" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                        <label class="block text-gray-300 font-semibold mb-2">Seats *</label>
+                        <select id="newListingSeats" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
                             <option value="">Select...</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
+                            <option value="Two">Two</option>
+                            <option value="Four">Four</option>
+                            <option value="Five">Five</option>
+                            <option value="Six">Six</option>
                         </select>
                     </div>
                 </div>
                 
-                <!-- Price -->
+                <!-- Additional Info / Description -->
                 <div>
-                    <label class="block text-gray-300 font-semibold mb-2">Price *</label>
-                    <input type="number" id="newListingBuyPrice" required min="1" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. 500000" oninput="validateBuyPrice()">
-                </div>
-                
-                <!-- Buy Price Warning/Error -->
-                <div id="buyPriceWarning" class="hidden bg-gradient-to-r from-red-900/50 to-orange-900/50 border border-red-500 rounded-xl p-4">
-                    <div class="flex items-center gap-3">
-                        <span class="text-2xl">🚫</span>
-                        <div>
-                            <p class="text-red-300 font-bold">City Minimum Violation</p>
-                            <p id="buyPriceWarningText" class="text-red-200 text-sm">Your price is below the PMA Government minimum for this vehicle type.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Price Warning -->
-                <div id="priceWarning" class="hidden bg-gradient-to-r from-orange-900/50 to-red-900/50 border border-orange-500 rounded-xl p-4">
-                    <div class="flex items-center gap-3">
-                        <span class="text-2xl">⚠️</span>
-                        <div>
-                            <p class="text-orange-300 font-bold">Pricing Warning</p>
-                            <p id="priceWarningText" class="text-orange-200 text-sm">Your biweekly/monthly price is lower than expected. Usually longer terms cost more, not less.</p>
-                        </div>
-                    </div>
+                    <label class="block text-gray-300 font-semibold mb-2">Additional Information</label>
+                    <input type="text" id="newListingLocation" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. Custom livery, rare color, clean title (optional)">
                 </div>
                 
                 <!-- Premium Listing Option -->
@@ -465,6 +481,7 @@
                     </label>
                 </div>
                 
+                <!-- Image URLs -->
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2">Image URLs (one per line)</label>
                     <!-- Hosting Recommendation -->
