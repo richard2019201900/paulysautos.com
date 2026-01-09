@@ -220,6 +220,124 @@
         </div>
     </div>
 
+    <!-- Start Sale Modal -->
+    <div id="startSaleModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-emerald-500/50">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-3xl font-black bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">📝 Start Vehicle Sale</h2>
+                    <p class="text-gray-400 mt-2">Generate a contract and track the sale</p>
+                </div>
+                <button onclick="closeModal('startSaleModal')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            
+            <!-- Trust Warning -->
+            <div class="bg-gradient-to-r from-red-900/60 to-orange-900/60 border-2 border-red-500 rounded-xl p-4 mb-6">
+                <div class="flex items-start gap-3">
+                    <span class="text-3xl">🚨</span>
+                    <div>
+                        <h4 class="text-red-300 font-bold mb-2">⚠️ IMPORTANT: TRUST WARNING</h4>
+                        <ul class="text-red-200/90 text-sm space-y-1">
+                            <li>• Only proceed if you TRUST this buyer</li>
+                            <li>• VERIFY their identity in person before accepting cash</li>
+                            <li>• SCREENSHOT all transactions and contracts</li>
+                            <li>• Meet in PUBLIC areas with witnesses</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="startSaleForm" class="space-y-4">
+                <input type="hidden" id="saleVehicleId" value="">
+                
+                <!-- Buyer Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-300 font-bold mb-2">👤 Buyer Name *</label>
+                        <input type="text" id="saleBuyerName" required placeholder="Character name in city" 
+                            class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-bold mb-2">📱 Buyer Phone *</label>
+                        <input type="text" id="saleBuyerPhone" required placeholder="In-city phone number" 
+                            class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                
+                <!-- Payment Breakdown (auto-calculated) -->
+                <div id="salePaymentBreakdown" class="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
+                    <!-- Will be populated by JS -->
+                </div>
+                
+                <!-- Agreement Date -->
+                <div>
+                    <label class="block text-gray-300 font-bold mb-2">📅 Agreement Date</label>
+                    <input type="date" id="saleAgreementDate" 
+                        class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500">
+                </div>
+                
+                <!-- Notes -->
+                <div>
+                    <label class="block text-gray-300 font-bold mb-2">📝 Additional Notes (optional)</label>
+                    <textarea id="saleNotes" rows="2" placeholder="Any special terms or conditions..."
+                        class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+                
+                <!-- Acknowledgment Checkbox -->
+                <div class="bg-amber-900/30 rounded-xl p-4 border border-amber-500/50">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="saleAcknowledge" required class="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500">
+                        <span class="text-amber-200 text-sm">
+                            I understand that <strong>PaulysAutos.com is NOT responsible</strong> for any disputes arising from this sale. 
+                            I have verified the buyer's identity and accept all risks associated with accepting a down payment.
+                        </span>
+                    </label>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal('startSaleModal')" class="flex-1 bg-gray-700 text-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
+                        <span>📄</span>
+                        Generate Contract & Start Sale
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Sale Contract Modal -->
+    <div id="viewSaleContractModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-cyan-500/50">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">📄 Vehicle Sale Contract</h2>
+                    <p class="text-gray-400 mt-2">Official agreement for city court records</p>
+                </div>
+                <button onclick="closeModal('viewSaleContractModal')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            
+            <div id="saleContractContent" class="bg-white text-gray-900 rounded-xl p-6 mb-6 font-mono text-sm">
+                <!-- Contract content will be populated by JS -->
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="copySaleContract()" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    Copy Contract
+                </button>
+                <button onclick="printSaleContract()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print / Screenshot
+                </button>
+                <button onclick="closeModal('viewSaleContractModal')" class="bg-gray-700 text-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Photo Services Modal -->
     <div id="photoServicesModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
         <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-amber-500/50">

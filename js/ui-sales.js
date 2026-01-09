@@ -792,3 +792,478 @@ window.confirmDeleteSale = async function(saleId) {
         showToast('Failed to delete sale: ' + error.message, 'error');
     }
 };
+
+// ==================== VEHICLE SALES TRACKER ====================
+// For tracking sales with down payment calculations and contracts
+
+const LUX_MAX_TRANSACTION = 750000;
+const CITY_SALES_FEE = 25000;
+
+/**
+ * Calculate payment breakdown for a vehicle sale
+ */
+function calculateSaleBreakdown(vehiclePrice) {
+    const needsDownPayment = vehiclePrice > LUX_MAX_TRANSACTION;
+    const downPayment = needsDownPayment ? vehiclePrice - LUX_MAX_TRANSACTION : 0;
+    const luxTransaction = needsDownPayment ? LUX_MAX_TRANSACTION : vehiclePrice;
+    const totalWithFee = vehiclePrice + CITY_SALES_FEE;
+    
+    return {
+        vehiclePrice,
+        needsDownPayment,
+        downPayment,
+        luxTransaction,
+        cityFee: CITY_SALES_FEE,
+        totalWithFee
+    };
+}
+
+/**
+ * Show the Start Sale modal
+ */
+window.showStartSaleModal = function(vehicleId) {
+    const p = properties.find(prop => prop.id === vehicleId);
+    if (!p) {
+        showToast('Vehicle not found', 'error');
+        return;
+    }
+    
+    const buyPrice = PropertyDataService.getValue(vehicleId, 'buyPrice', p.buyPrice || 0);
+    const breakdown = calculateSaleBreakdown(buyPrice);
+    
+    // Set form values
+    document.getElementById('saleVehicleId').value = vehicleId;
+    document.getElementById('saleBuyerName').value = '';
+    document.getElementById('saleBuyerPhone').value = '';
+    document.getElementById('saleAgreementDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('saleNotes').value = '';
+    document.getElementById('saleAcknowledge').checked = false;
+    
+    // Populate payment breakdown
+    const breakdownEl = document.getElementById('salePaymentBreakdown');
+    if (breakdown.needsDownPayment) {
+        breakdownEl.innerHTML = `
+            <h4 class="text-white font-bold mb-3 flex items-center gap-2">
+                <span class="text-xl">💰</span> Payment Breakdown
+                <span class="text-amber-400 text-sm font-normal">(Down payment required)</span>
+            </h4>
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="bg-gray-700/50 rounded-lg p-3">
+                    <div class="text-gray-400 text-xs">Vehicle Price</div>
+                    <div class="text-white text-xl font-bold">$${breakdown.vehiclePrice.toLocaleString()}</div>
+                </div>
+                <div class="bg-red-900/50 border border-red-500/50 rounded-lg p-3">
+                    <div class="text-red-300 text-xs font-bold">💵 DOWN PAYMENT</div>
+                    <div class="text-red-400 text-xl font-bold">$${breakdown.downPayment.toLocaleString()}</div>
+                    <div class="text-red-300/70 text-[10px]">Cash before LUX</div>
+                </div>
+                <div class="bg-green-900/50 border border-green-500/50 rounded-lg p-3">
+                    <div class="text-green-300 text-xs">LUX Transaction</div>
+                    <div class="text-green-400 text-xl font-bold">$${breakdown.luxTransaction.toLocaleString()}</div>
+                    <div class="text-green-300/70 text-[10px]">After down payment</div>
+                </div>
+            </div>
+            <div class="mt-3 text-center text-gray-400 text-sm">
+                + City Fee: <span class="text-amber-400 font-bold">$${breakdown.cityFee.toLocaleString()}</span> (buyer pays at LUX)
+            </div>
+        `;
+    } else {
+        breakdownEl.innerHTML = `
+            <h4 class="text-white font-bold mb-3 flex items-center gap-2">
+                <span class="text-xl">💰</span> Payment Breakdown
+                <span class="text-green-400 text-sm font-normal">(No down payment needed)</span>
+            </h4>
+            <div class="grid grid-cols-2 gap-3 text-center">
+                <div class="bg-green-900/50 border border-green-500/50 rounded-lg p-3">
+                    <div class="text-green-300 text-xs">LUX Transaction</div>
+                    <div class="text-green-400 text-xl font-bold">$${breakdown.vehiclePrice.toLocaleString()}</div>
+                </div>
+                <div class="bg-gray-700/50 rounded-lg p-3">
+                    <div class="text-gray-400 text-xs">+ City Fee</div>
+                    <div class="text-amber-400 text-xl font-bold">$${breakdown.cityFee.toLocaleString()}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    openModal('startSaleModal');
+};
+
+/**
+ * Generate a unique contract ID
+ */
+function generateContractId() {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 8);
+    return `SC-${timestamp}-${random}`.toUpperCase();
+}
+
+/**
+ * Generate sale contract HTML
+ */
+function generateSaleContractHTML(data) {
+    const date = new Date(data.agreementDate).toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    
+    return `
+<div style="font-family: 'Courier New', monospace; padding: 20px; max-width: 700px; margin: 0 auto;">
+    <div style="text-align: center; border-bottom: 3px double #333; padding-bottom: 15px; margin-bottom: 20px;">
+        <h1 style="margin: 0; font-size: 24px; letter-spacing: 2px;">VEHICLE SALE CONTRACT</h1>
+        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Contract ID: ${data.contractId}</p>
+        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Generated via PaulysAutos.com</p>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+        <p style="margin: 0;"><strong>Date:</strong> ${date}</p>
+    </div>
+    
+    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PARTIES</h3>
+        <p style="margin: 5px 0;"><strong>SELLER:</strong> ${data.sellerName}</p>
+        <p style="margin: 5px 0;"><strong>BUYER:</strong> ${data.buyerName}</p>
+        <p style="margin: 5px 0;"><strong>BUYER PHONE:</strong> ${data.buyerPhone}</p>
+    </div>
+    
+    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">VEHICLE INFORMATION</h3>
+        <p style="margin: 5px 0;"><strong>Vehicle:</strong> ${data.vehicleTitle}</p>
+        <p style="margin: 5px 0;"><strong>License Plate:</strong> ${data.vehiclePlate || 'N/A'}</p>
+        <p style="margin: 5px 0;"><strong>Vehicle Type:</strong> ${data.vehicleType || 'N/A'}</p>
+    </div>
+    
+    <div style="margin-bottom: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ffc107; padding-bottom: 5px;">💰 PAYMENT TERMS</h3>
+        <p style="margin: 5px 0;"><strong>Vehicle Price:</strong> $${data.vehiclePrice.toLocaleString()}</p>
+        ${data.downPayment > 0 ? `
+        <p style="margin: 5px 0; color: #dc3545;"><strong>⚠️ DOWN PAYMENT (Cash):</strong> $${data.downPayment.toLocaleString()}</p>
+        <p style="margin: 5px 0; color: #28a745;"><strong>LUX Transaction:</strong> $${data.luxTransaction.toLocaleString()}</p>
+        ` : `
+        <p style="margin: 5px 0; color: #28a745;"><strong>LUX Transaction:</strong> $${data.vehiclePrice.toLocaleString()}</p>
+        `}
+        <p style="margin: 5px 0;"><strong>City Sales Fee:</strong> $${data.cityFee.toLocaleString()} (paid by buyer)</p>
+    </div>
+    
+    ${data.downPayment > 0 ? `
+    <div style="margin-bottom: 20px; padding: 15px; background: #f8d7da; border-radius: 8px; border: 2px solid #dc3545;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #dc3545;">⚠️ DOWN PAYMENT AGREEMENT</h3>
+        <p style="margin: 5px 0; font-size: 12px;">The BUYER agrees to pay the SELLER a cash down payment of <strong>$${data.downPayment.toLocaleString()}</strong> before the vehicle transfer occurs via LUX.</p>
+        <p style="margin: 5px 0; font-size: 12px;">The SELLER agrees that upon receipt of the down payment, they will complete the vehicle transfer via the LUX app for the remaining <strong>$${data.luxTransaction.toLocaleString()}</strong>.</p>
+        <p style="margin: 10px 0 5px 0; font-size: 12px;"><strong>Down Payment Status:</strong> ☐ Pending  ☐ Received</p>
+    </div>
+    ` : ''}
+    
+    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">TERMS & CONDITIONS</h3>
+        <ol style="margin: 0; padding-left: 20px; font-size: 11px; line-height: 1.6;">
+            <li>This agreement is binding upon both parties once signed.</li>
+            <li>The vehicle is sold "AS-IS" with no warranties unless otherwise stated.</li>
+            <li>The seller certifies they have legal ownership and authority to sell.</li>
+            <li>The buyer acknowledges inspection of the vehicle prior to purchase.</li>
+            <li>Transfer of ownership occurs upon completion of LUX transaction.</li>
+            ${data.downPayment > 0 ? `
+            <li><strong>The seller must complete the LUX transfer within 24 hours of receiving down payment.</strong></li>
+            <li><strong>Failure to complete transfer after receiving down payment constitutes FRAUD.</strong></li>
+            ` : ''}
+        </ol>
+    </div>
+    
+    ${data.notes ? `
+    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ADDITIONAL NOTES</h3>
+        <p style="margin: 0; font-size: 12px;">${data.notes}</p>
+    </div>
+    ` : ''}
+    
+    <div style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="border-top: 2px solid #333; padding-top: 10px;">
+            <p style="margin: 0; font-size: 12px;"><strong>SELLER SIGNATURE</strong></p>
+            <p style="margin: 20px 0 5px 0; font-size: 11px;">Name: ${data.sellerName}</p>
+            <p style="margin: 0; font-size: 11px;">Date: _________________</p>
+        </div>
+        <div style="border-top: 2px solid #333; padding-top: 10px;">
+            <p style="margin: 0; font-size: 12px;"><strong>BUYER SIGNATURE</strong></p>
+            <p style="margin: 20px 0 5px 0; font-size: 11px;">Name: ${data.buyerName}</p>
+            <p style="margin: 0; font-size: 11px;">Date: _________________</p>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 15px;">
+        <p style="margin: 0;">This contract was generated via PaulysAutos.com</p>
+        <p style="margin: 5px 0 0 0;">Contract ID: ${data.contractId} | Generated: ${new Date().toLocaleString()}</p>
+        <p style="margin: 5px 0 0 0; font-weight: bold;">PaulysAutos.com is not liable for disputes. This document is for city court records.</p>
+    </div>
+</div>
+    `;
+}
+
+/**
+ * Handle Start Sale form submission
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const startSaleForm = document.getElementById('startSaleForm');
+    if (startSaleForm) {
+        startSaleForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const vehicleId = parseInt(document.getElementById('saleVehicleId').value);
+            const buyerName = document.getElementById('saleBuyerName').value.trim();
+            const buyerPhone = document.getElementById('saleBuyerPhone').value.trim();
+            const agreementDate = document.getElementById('saleAgreementDate').value;
+            const notes = document.getElementById('saleNotes').value.trim();
+            const acknowledged = document.getElementById('saleAcknowledge').checked;
+            
+            if (!acknowledged) {
+                showToast('Please acknowledge the terms before proceeding', 'error');
+                return;
+            }
+            
+            const p = properties.find(prop => prop.id === vehicleId);
+            if (!p) {
+                showToast('Vehicle not found', 'error');
+                return;
+            }
+            
+            const buyPrice = PropertyDataService.getValue(vehicleId, 'buyPrice', p.buyPrice || 0);
+            const breakdown = calculateSaleBreakdown(buyPrice);
+            const contractId = generateContractId();
+            
+            // Get seller info
+            let sellerName = 'Unknown Seller';
+            try {
+                const usersSnapshot = await db.collection('users')
+                    .where('email', '==', p.ownerEmail)
+                    .limit(1)
+                    .get();
+                if (!usersSnapshot.empty) {
+                    sellerName = usersSnapshot.docs[0].data().username || p.ownerEmail;
+                }
+            } catch (err) {
+                console.log('[Sale] Could not fetch seller name');
+            }
+            
+            // Create contract data
+            const contractData = {
+                contractId,
+                vehicleId,
+                vehicleTitle: p.title,
+                vehiclePlate: PropertyDataService.getValue(vehicleId, 'plate', p.plate || ''),
+                vehicleType: PropertyDataService.getValue(vehicleId, 'type', p.type || ''),
+                sellerName,
+                sellerEmail: p.ownerEmail,
+                buyerName,
+                buyerPhone,
+                vehiclePrice: buyPrice,
+                downPayment: breakdown.downPayment,
+                luxTransaction: breakdown.luxTransaction,
+                cityFee: breakdown.cityFee,
+                agreementDate,
+                notes,
+                createdAt: new Date().toISOString(),
+                status: 'pending',
+                downPaymentReceived: false
+            };
+            
+            // Save pending sale to vehicle
+            const pendingSaleData = {
+                contractId,
+                buyerName,
+                buyerPhone,
+                downPayment: breakdown.downPayment,
+                luxAmount: breakdown.luxTransaction,
+                downPaymentReceived: false,
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                // Save contract to Firestore
+                await db.collection('saleContracts').doc(contractId).set(contractData);
+                
+                // Update vehicle with pending sale
+                await PropertyDataService.setValue(vehicleId, 'pendingSale', pendingSaleData);
+                
+                showToast('✅ Sale contract generated!', 'success');
+                closeModal('startSaleModal');
+                
+                // Show the contract
+                viewSaleContract(contractId);
+                
+                // Refresh the stats view
+                if (typeof renderPropertyStatsContent === 'function') {
+                    setTimeout(() => renderPropertyStatsContent(vehicleId), 500);
+                }
+                
+            } catch (error) {
+                console.error('[Sale] Error creating sale:', error);
+                showToast('Failed to create sale: ' + error.message, 'error');
+            }
+        });
+    }
+});
+
+/**
+ * View a sale contract
+ */
+window.viewSaleContract = async function(contractId) {
+    try {
+        const doc = await db.collection('saleContracts').doc(contractId).get();
+        if (!doc.exists) {
+            showToast('Contract not found', 'error');
+            return;
+        }
+        
+        const data = doc.data();
+        const contractHTML = generateSaleContractHTML(data);
+        
+        document.getElementById('saleContractContent').innerHTML = contractHTML;
+        window.currentSaleContractId = contractId;
+        
+        openModal('viewSaleContractModal');
+        
+    } catch (error) {
+        console.error('[Sale] Error viewing contract:', error);
+        showToast('Failed to load contract', 'error');
+    }
+};
+
+/**
+ * Copy sale contract to clipboard
+ */
+window.copySaleContract = function() {
+    const contractEl = document.getElementById('saleContractContent');
+    if (!contractEl) return;
+    
+    // Get text content
+    const text = contractEl.innerText;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('✅ Contract copied to clipboard!', 'success');
+    }).catch(() => {
+        showToast('Failed to copy contract', 'error');
+    });
+};
+
+/**
+ * Print sale contract
+ */
+window.printSaleContract = function() {
+    const contractEl = document.getElementById('saleContractContent');
+    if (!contractEl) return;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Vehicle Sale Contract</title>
+            <style>
+                body { margin: 0; padding: 20px; }
+                @media print {
+                    body { padding: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            ${contractEl.innerHTML}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 250);
+};
+
+/**
+ * Confirm down payment received
+ */
+window.confirmDownPaymentReceived = async function(vehicleId) {
+    const confirmed = confirm(
+        '⚠️ CONFIRM DOWN PAYMENT RECEIVED\n\n' +
+        'By clicking OK, you confirm that:\n' +
+        '• You have PHYSICALLY received the cash down payment\n' +
+        '• You are ready to complete the LUX transfer\n' +
+        '• You understand this action cannot be undone\n\n' +
+        'Are you sure you want to proceed?'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+        const p = properties.find(prop => prop.id === vehicleId);
+        if (!p) throw new Error('Vehicle not found');
+        
+        const pendingSale = PropertyDataService.getValue(vehicleId, 'pendingSale', p.pendingSale || null);
+        if (!pendingSale) throw new Error('No pending sale found');
+        
+        // Update pending sale
+        pendingSale.downPaymentReceived = true;
+        pendingSale.downPaymentReceivedAt = new Date().toISOString();
+        
+        await PropertyDataService.setValue(vehicleId, 'pendingSale', pendingSale);
+        
+        // Update contract in Firestore
+        if (pendingSale.contractId) {
+            await db.collection('saleContracts').doc(pendingSale.contractId).update({
+                downPaymentReceived: true,
+                downPaymentReceivedAt: new Date().toISOString()
+            });
+        }
+        
+        showToast('✅ Down payment confirmed! Complete the LUX transfer now.', 'success');
+        
+        // Refresh stats view
+        if (typeof renderPropertyStatsContent === 'function') {
+            renderPropertyStatsContent(vehicleId);
+        }
+        
+    } catch (error) {
+        console.error('[Sale] Error confirming down payment:', error);
+        showToast('Failed to confirm: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Cancel a pending sale
+ */
+window.cancelPendingSale = async function(vehicleId) {
+    const confirmed = confirm(
+        '⚠️ CANCEL PENDING SALE\n\n' +
+        'This will:\n' +
+        '• Remove the pending sale from this vehicle\n' +
+        '• Mark the contract as cancelled\n\n' +
+        'Are you sure you want to cancel this sale?'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+        const p = properties.find(prop => prop.id === vehicleId);
+        if (!p) throw new Error('Vehicle not found');
+        
+        const pendingSale = PropertyDataService.getValue(vehicleId, 'pendingSale', p.pendingSale || null);
+        
+        // Update contract status if exists
+        if (pendingSale && pendingSale.contractId) {
+            await db.collection('saleContracts').doc(pendingSale.contractId).update({
+                status: 'cancelled',
+                cancelledAt: new Date().toISOString()
+            });
+        }
+        
+        // Remove pending sale from vehicle
+        await PropertyDataService.setValue(vehicleId, 'pendingSale', null);
+        
+        showToast('✅ Sale cancelled', 'success');
+        
+        // Refresh stats view
+        if (typeof renderPropertyStatsContent === 'function') {
+            renderPropertyStatsContent(vehicleId);
+        }
+        
+    } catch (error) {
+        console.error('[Sale] Error cancelling sale:', error);
+        showToast('Failed to cancel: ' + error.message, 'error');
+    }
+};
+
+console.log('[UI-Sales] Vehicle sales tracker loaded');

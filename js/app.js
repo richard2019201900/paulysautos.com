@@ -769,289 +769,205 @@ function renderPropertyStatsContent(id) {
                     ${p.images.length === 0 ? '<p class="text-gray-500 text-center py-8">No images yet. Click "Add Images" to showcase your property!</p>' : ''}
                 </div>
                 
-                <!-- Renter & Payment Info -->
-                <h3 class="text-xl font-bold text-gray-200 mb-4">Renter & Payment Info <span class="text-sm text-purple-400">(Click to edit)</span></h3>
+                <!-- Sales Tracker Section -->
+                <h3 class="text-xl font-bold text-gray-200 mb-4">🚗 Sales Tracker</h3>
                 
-                <!-- Renter Info Row -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <!-- Renter Name -->
-                    <div id="tile-renterName-${id}" 
-                         class="stat-tile p-4 bg-gradient-to-br from-sky-600 to-sky-800 rounded-xl border border-sky-500 cursor-pointer"
-                         onclick="startEditTile('renterName', ${id}, 'text')"
-                         data-field="renterName"
-                         data-original-value="${sanitize(renterName)}">
-                        <div class="flex items-center gap-3 mb-1">
-                            <svg class="w-6 h-6 text-sky-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            <span class="text-sky-200 font-semibold">Renter Name</span>
-                        </div>
-                        <div class="text-xs text-sky-300 mb-2 opacity-80">🔒 Only you can see this</div>
-                        <div id="value-renterName-${id}" class="text-lg font-bold text-white">${renterName || '<span class="text-sky-300 opacity-70">Not set</span>'}</div>
-                        <div class="text-xs text-sky-300 mt-2 opacity-70">${renterName ? 'Click to edit' : '⚠️ Set before selecting last payment date'}</div>
-                    </div>
-                    
-                    <!-- Renter Phone -->
-                    <div class="stat-tile p-4 bg-gradient-to-br from-pink-600 to-pink-800 rounded-xl border border-pink-500">
-                        <div class="flex items-center justify-between mb-1">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-6 h-6 text-pink-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                                <span class="text-pink-200 font-semibold">Renter Phone</span>
-                            </div>
-                            ${renterPhone ? `
-                            <button onclick="event.stopPropagation(); copyRenterPhone('${renterPhone}', this)" class="bg-pink-500 hover:bg-pink-400 text-white px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1" title="Copy phone number">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                                Copy
-                            </button>
-                            ` : ''}
-                        </div>
-                        <div class="text-xs text-pink-300 mb-2 opacity-80">🔒 Only you can see this</div>
-                        <div id="tile-renterPhone-${id}" 
-                             class="cursor-pointer"
-                             onclick="startEditTile('renterPhone', ${id}, 'tel')"
-                             data-field="renterPhone"
-                             data-original-value="${sanitize(renterPhone)}">
-                            <div id="value-renterPhone-${id}" class="text-lg font-bold text-white">${renterPhone || '<span class="text-pink-300 opacity-70">Not set</span>'}</div>
-                            <div class="text-xs text-pink-300 mt-2 opacity-70">Click to edit</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Renter Notes -->
-                    <div id="tile-renterNotes-${id}" 
-                         class="stat-tile p-4 bg-gradient-to-br from-violet-600 to-violet-800 rounded-xl border border-violet-500 cursor-pointer"
-                         onclick="startEditTile('renterNotes', ${id}, 'textarea')"
-                         data-field="renterNotes"
-                         data-original-value="${sanitize(renterNotes)}">
-                        <div class="flex items-center gap-3 mb-1">
-                            <svg class="w-6 h-6 text-violet-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            <span class="text-violet-200 font-semibold">Private Renter Notes</span>
-                        </div>
-                        <div class="text-xs text-violet-300 mb-2 opacity-80">🔒 Only you can see this</div>
-                        <div id="value-renterNotes-${id}" class="text-sm font-medium text-white" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${renterNotes || '<span class="text-violet-300 opacity-70">e.g. Prefers upfront monthly discounts</span>'}</div>
-                        <div class="text-xs text-violet-300 mt-2 opacity-70">Click to edit</div>
-                    </div>
-                </div>
-                
-                <!-- Payment Info Row -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div id="tile-paymentFrequency-${id}" 
-                         class="stat-tile p-4 bg-gradient-to-br from-teal-600 to-teal-800 rounded-xl border border-teal-500 cursor-pointer"
-                         onclick="startEditTile('paymentFrequency', ${id}, 'frequency')"
-                         data-field="paymentFrequency"
-                         data-original-value="${paymentFrequency}">
-                        <div class="flex items-center gap-3 mb-2">
-                            <svg class="w-6 h-6 text-teal-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span class="text-teal-200 font-semibold">Payment Frequency</span>
-                        </div>
-                        <div id="value-paymentFrequency-${id}" class="text-lg font-bold text-white capitalize">${paymentFrequency || '<span class="text-teal-300 opacity-70">Not Set</span>'}</div>
-                        <div class="text-xs text-teal-300 mt-2 opacity-70">${paymentFrequency ? 'Click to edit' : '⚠️ Set before selecting last payment date'}</div>
-                    </div>
-                    
-                    <!-- Last Payment Date -->
-                    <div id="tile-lastPaymentDate-${id}" 
-                         class="stat-tile p-4 bg-gradient-to-br from-lime-600 to-lime-800 rounded-xl border border-lime-500 cursor-pointer"
-                         onclick="startEditTile('lastPaymentDate', ${id}, 'date')"
-                         data-field="lastPaymentDate"
-                         data-original-value="${lastPaymentDate}">
-                        <div class="flex items-center gap-3 mb-2">
-                            <svg class="w-6 h-6 text-lime-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span class="text-lime-200 font-semibold">Last Payment</span>
-                        </div>
-                        <div id="value-lastPaymentDate-${id}" class="text-lg font-bold text-white">${lastPaymentDate ? formatDate(lastPaymentDate) : '<span class="text-lime-300 opacity-70">Not set</span>'}</div>
-                        <div class="text-xs text-lime-300 mt-2 opacity-70">${(!renterName || !paymentFrequency) ? '⚠️ Set renter name & frequency first!' : 'Click to edit'}</div>
-                    </div>
-                    
-                    <!-- Next Due Date (calculated, not editable) -->
-                    <div class="stat-tile p-4 bg-gradient-to-br ${daysUntilDue !== null && daysUntilDue <= 1 ? 'from-red-600 to-red-800 border-red-500' : 'from-gray-600 to-gray-800 border-gray-500'} rounded-xl border">
-                        <div class="flex items-center gap-3 mb-2">
-                            <svg class="w-6 h-6 ${daysUntilDue !== null && daysUntilDue <= 1 ? 'text-red-200' : 'text-gray-200'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span class="${daysUntilDue !== null && daysUntilDue <= 1 ? 'text-red-200' : 'text-gray-200'} font-semibold">Next Due Date</span>
-                        </div>
-                        <div class="text-lg font-bold text-white">${nextDueDate || '<span class="opacity-70">Set last payment</span>'}</div>
-                        ${daysUntilDue !== null ? `<div class="text-xs ${daysUntilDue <= 1 ? 'text-red-200 font-bold' : 'text-gray-300'} mt-2">${daysUntilDue === 0 ? '⚠️ Due today!' : daysUntilDue === 1 ? '⚠️ Due tomorrow!' : daysUntilDue < 0 ? '🚨 ' + Math.abs(daysUntilDue) + ' day(s) overdue!' : daysUntilDue + ' days remaining'}</div>` : '<div class="text-xs text-gray-400 mt-2">Auto-calculated</div>'}
-                    </div>
-                </div>
-                
-                <!-- Sell Property Action (shows for available properties or to log direct sales) -->
-                ${!hasActiveRTO ? `
-                <div class="bg-gradient-to-r from-rose-900/40 to-pink-900/40 border border-rose-500/50 rounded-xl p-4 mb-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <!-- Payment Breakdown Calculator -->
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 rounded-xl p-5 mb-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="text-2xl">💰</span>
                         <div>
-                            <h4 class="text-rose-300 font-bold flex items-center gap-2">
-                                <span class="text-xl">🏡</span>
-                                Sell This Property
-                            </h4>
-                            <p class="text-gray-400 text-sm mt-1">Log a direct sale, mark as sold, and optionally transfer ownership</p>
+                            <h4 class="text-white font-bold text-lg">Payment Breakdown</h4>
+                            <p class="text-gray-400 text-sm">LUX app max transaction: $750,000</p>
                         </div>
-                        <button onclick="showLogSaleModal(${id})" class="bg-gradient-to-r from-rose-500 to-pink-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg">
-                            <span>🏆</span>
-                            Log Sale
-                        </button>
                     </div>
+                    
+                    ${(() => {
+                        const LUX_MAX = 750000;
+                        const CITY_FEE = 25000;
+                        const totalWithFee = buyPrice + CITY_FEE;
+                        const needsDownPayment = buyPrice > LUX_MAX;
+                        const downPayment = needsDownPayment ? buyPrice - LUX_MAX : 0;
+                        const luxTransaction = needsDownPayment ? LUX_MAX : buyPrice;
+                        
+                        if (needsDownPayment) {
+                            return `
+                            <div class="bg-amber-900/30 border border-amber-500/50 rounded-lg p-4 mb-4">
+                                <div class="flex items-start gap-3 mb-3">
+                                    <span class="text-amber-400 text-xl">⚠️</span>
+                                    <div>
+                                        <p class="text-amber-300 font-bold">Down Payment Required</p>
+                                        <p class="text-amber-200/80 text-sm">This vehicle exceeds the $750k LUX transaction limit</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+                                    <div class="text-gray-400 text-sm mb-1">Vehicle Price</div>
+                                    <div class="text-white text-2xl font-black">$${buyPrice.toLocaleString()}</div>
+                                </div>
+                                <div class="bg-red-900/50 border border-red-500/50 rounded-lg p-4 text-center">
+                                    <div class="text-red-300 text-sm mb-1 font-bold">💵 DOWN PAYMENT</div>
+                                    <div class="text-red-400 text-2xl font-black">$${downPayment.toLocaleString()}</div>
+                                    <div class="text-red-300/70 text-xs mt-1">Cash before LUX transfer</div>
+                                </div>
+                                <div class="bg-green-900/50 border border-green-500/50 rounded-lg p-4 text-center">
+                                    <div class="text-green-300 text-sm mb-1">LUX Transaction</div>
+                                    <div class="text-green-400 text-2xl font-black">$${luxTransaction.toLocaleString()}</div>
+                                    <div class="text-green-300/70 text-xs mt-1">After down payment received</div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-700/30 rounded-lg p-3 text-center">
+                                <span class="text-gray-400 text-sm">+ City Sales Fee: </span>
+                                <span class="text-amber-400 font-bold">$${CITY_FEE.toLocaleString()}</span>
+                                <span class="text-gray-500 text-sm"> (paid by buyer at LUX)</span>
+                            </div>
+                            `;
+                        } else {
+                            return `
+                            <div class="bg-green-900/30 border border-green-500/50 rounded-lg p-4 mb-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-green-400 text-xl">✅</span>
+                                    <div>
+                                        <p class="text-green-300 font-bold">No Down Payment Needed</p>
+                                        <p class="text-green-200/80 text-sm">This vehicle can be sold in a single LUX transaction</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="bg-green-900/50 border border-green-500/50 rounded-lg p-4 text-center">
+                                    <div class="text-green-300 text-sm mb-1">LUX Transaction</div>
+                                    <div class="text-green-400 text-2xl font-black">$${buyPrice.toLocaleString()}</div>
+                                </div>
+                                <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+                                    <div class="text-gray-400 text-sm mb-1">+ City Sales Fee</div>
+                                    <div class="text-amber-400 text-2xl font-black">$${CITY_FEE.toLocaleString()}</div>
+                                </div>
+                            </div>
+                            `;
+                        }
+                    })()}
                 </div>
-                ` : ''}
                 
-                <!-- Complete Lease Action (only shows when renter is assigned) -->
-                ${renterName ? `
-                <div class="bg-gradient-to-r from-gray-800/80 to-gray-900/80 border border-gray-600 rounded-xl p-4 mb-4">
-                    <div class="flex flex-col gap-4">
-                        <!-- Complete Lease -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div>
-                                <h4 class="text-gray-200 font-bold flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Renter Moving Out?
-                                </h4>
-                                <p class="text-gray-400 text-sm mt-1">Complete the lease to finalize payment history, clear renter info, and mark available</p>
-                            </div>
-                            <button onclick="showCompleteLeaseModal(${id})" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Complete Lease
-                            </button>
-                        </div>
-                        
-                        <div class="border-t border-gray-700"></div>
-                        
-                        <!-- Eviction -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div>
-                                <h4 class="text-gray-200 font-bold flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                                    Evict Renter?
-                                </h4>
-                                <p class="text-gray-400 text-sm mt-1">Remove renter for non-payment, clear their info, and mark property available</p>
-                            </div>
-                            <button onclick="showEvictionModal(${id})" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                                Evict Renter
-                            </button>
+                <!-- Trust Warning Banner -->
+                ${buyPrice > 750000 ? `
+                <div class="bg-gradient-to-r from-red-900/60 to-orange-900/60 border-2 border-red-500 rounded-xl p-5 mb-4">
+                    <div class="flex items-start gap-4">
+                        <div class="text-4xl">🚨</div>
+                        <div>
+                            <h4 class="text-red-300 font-black text-lg mb-2">⚠️ DOWN PAYMENT TRUST WARNING</h4>
+                            <ul class="text-red-200/90 text-sm space-y-2">
+                                <li>• <strong>VERIFY BUYER IDENTITY</strong> - Meet in person, confirm their character name matches their ID</li>
+                                <li>• <strong>GENERATE A CONTRACT</strong> - Always create a written agreement before accepting any cash</li>
+                                <li>• <strong>SCREENSHOT EVERYTHING</strong> - Document the cash handoff, contract signing, and LUX transfer</li>
+                                <li>• <strong>USE PUBLIC LOCATIONS</strong> - Meet at Legion Square, MRPD, or other populated areas</li>
+                                <li>• <strong>BRING WITNESSES</strong> - Have a trusted friend present during the transaction</li>
+                            </ul>
+                            <p class="text-red-300 font-bold mt-3 text-sm">
+                                🏛️ PaulysAutos.com is NOT responsible for any disputes. The contract generated is for your protection in city court.
+                            </p>
                         </div>
                     </div>
                 </div>
                 ` : ''}
                 
-                <!-- Private Owner Tools / Active RTO Status -->
-                ${hasActiveRTO ? `
-                <div class="bg-gradient-to-r from-green-900/40 to-emerald-900/40 border-2 border-green-500/50 rounded-xl p-4 mb-4">
-                    <div class="flex flex-col gap-3">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-green-300 font-bold flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Active Rent-to-Own Contract
-                                <span class="text-[10px] bg-green-900/50 text-green-200 px-2 py-0.5 rounded-full animate-pulse">ACTIVE</span>
-                            </h4>
-                        </div>
-                        
-                        <!-- Deposit Status -->
-                        ${(() => {
-                            const depositAmount = PropertyDataService.getValue(id, 'rtoDepositAmount', p.rtoDepositAmount || 0);
-                            const depositPaid = PropertyDataService.getValue(id, 'rtoDepositPaid', p.rtoDepositPaid || false);
-                            if (depositAmount === 0) {
-                                return `<div class="bg-gray-800/50 rounded-lg p-2 text-sm">
-                                    <span class="text-gray-400">💰 Deposit:</span>
-                                    <span class="text-green-400 ml-2">$0 (Waived)</span>
-                                </div>`;
-                            } else if (depositPaid) {
-                                return `<div class="bg-gray-800/50 rounded-lg p-2 text-sm">
-                                    <span class="text-gray-400">💰 Deposit:</span>
-                                    <span class="text-green-400 ml-2">$${depositAmount.toLocaleString()} ✓ Paid</span>
-                                </div>`;
-                            } else {
-                                return `<div class="bg-amber-900/50 border border-amber-500/50 rounded-lg p-2 text-sm">
-                                    <span class="text-amber-300">⚠️ Deposit Due:</span>
-                                    <span class="text-amber-400 font-bold ml-2">$${depositAmount.toLocaleString()}</span>
-                                </div>`;
-                            }
-                        })()}
-                        
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                            <div class="bg-gray-800/50 rounded-lg p-2">
-                                <div class="text-gray-400 text-xs">Buyer</div>
-                                <div class="text-white font-semibold">${PropertyDataService.getValue(id, 'rtoBuyer', p.rtoBuyer || 'Unknown')}</div>
+                <!-- Pending Sale Tracking -->
+                ${(() => {
+                    const pendingSale = PropertyDataService.getValue(id, 'pendingSale', p.pendingSale || null);
+                    if (pendingSale) {
+                        return `
+                        <div class="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 border-2 border-amber-500/50 rounded-xl p-5 mb-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-amber-300 font-bold flex items-center gap-2">
+                                    <span class="text-xl">📋</span>
+                                    Pending Sale in Progress
+                                    <span class="text-[10px] bg-amber-900/50 text-amber-200 px-2 py-0.5 rounded-full animate-pulse">PENDING</span>
+                                </h4>
                             </div>
-                            <div class="bg-gray-800/50 rounded-lg p-2">
-                                <div class="text-gray-400 text-xs">Payment Progress</div>
-                                <div class="text-green-400 font-bold">${rtoCurrentPayment} of ${rtoTotalPayments - 1}</div>
+                            
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-4">
+                                <div class="bg-gray-800/50 rounded-lg p-3">
+                                    <div class="text-gray-400 text-xs">Buyer</div>
+                                    <div class="text-white font-bold">${pendingSale.buyerName || 'Unknown'}</div>
+                                </div>
+                                <div class="bg-gray-800/50 rounded-lg p-3">
+                                    <div class="text-gray-400 text-xs">Down Payment</div>
+                                    <div class="text-${pendingSale.downPaymentReceived ? 'green' : 'amber'}-400 font-bold">
+                                        $${(pendingSale.downPayment || 0).toLocaleString()}
+                                        ${pendingSale.downPaymentReceived ? '✓' : '⏳'}
+                                    </div>
+                                </div>
+                                <div class="bg-gray-800/50 rounded-lg p-3">
+                                    <div class="text-gray-400 text-xs">LUX Remaining</div>
+                                    <div class="text-cyan-400 font-bold">$${(pendingSale.luxAmount || 0).toLocaleString()}</div>
+                                </div>
+                                <div class="bg-gray-800/50 rounded-lg p-3">
+                                    <div class="text-gray-400 text-xs">Contract</div>
+                                    <div class="text-green-400 font-bold">${pendingSale.contractId ? '✓ Generated' : 'None'}</div>
+                                </div>
                             </div>
-                            <div class="bg-gray-800/50 rounded-lg p-2">
-                                <div class="text-gray-400 text-xs">Next Payment</div>
-                                <div class="text-amber-400 font-semibold">$${PropertyDataService.getValue(id, 'rtoExpectedMonthly', p.rtoExpectedMonthly || monthlyPrice).toLocaleString()}</div>
+                            
+                            <div class="flex flex-wrap gap-2">
+                                ${pendingSale.contractId ? `
+                                <button onclick="viewSaleContract('${pendingSale.contractId}')" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    View Contract
+                                </button>
+                                ` : ''}
+                                ${!pendingSale.downPaymentReceived && pendingSale.downPayment > 0 ? `
+                                <button onclick="confirmDownPaymentReceived(${id})" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    Confirm Down Payment Received
+                                </button>
+                                ` : ''}
+                                <button onclick="cancelPendingSale(${id})" class="bg-red-600/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    Cancel Sale
+                                </button>
                             </div>
-                            <div class="bg-gray-800/50 rounded-lg p-2">
-                                <div class="text-gray-400 text-xs">Remaining Balance</div>
-                                <div class="text-cyan-400 font-semibold">$${PropertyDataService.getValue(id, 'rtoRemainingBalance', p.rtoRemainingBalance || 0).toLocaleString()}</div>
-                            </div>
                         </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="viewRTOContract('${PropertyDataService.getValue(id, 'rtoContractId', p.rtoContractId || '')}')" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                View Contract
-                            </button>
-                            <button onclick="showRTOPaymentHistory(${id})" class="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 hover:opacity-90 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                                Payment History
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="showRentToOwnWizard(${id})" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                New Contract
-                            </button>
-                            <button onclick="confirmDeleteRTOContract(${id}, '${PropertyDataService.getValue(id, 'rtoContractId', p.rtoContractId || '')}')" class="bg-red-600/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2" title="Delete this contract">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                ` : `
-                <div class="bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border border-amber-500/30 rounded-xl p-4 mb-4 relative ${!canAccessRTO ? 'opacity-75' : ''}">
-                    ${!canAccessRTO ? `
-                    <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center z-10">
-                        <div class="text-4xl mb-2">👑</div>
-                        <div class="text-purple-300 font-bold text-lg">Elite Feature</div>
-                        <p class="text-gray-400 text-sm mb-3 text-center px-4">Rent-to-Own contracts require an Elite subscription</p>
-                        <button onclick="showRentToOwnWizard(${id})" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition">
-                            Upgrade to Elite
-                        </button>
-                    </div>
-                    ` : ''}
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <h4 class="text-amber-300 font-bold flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                Rent-to-Own Contract
-                                <span class="text-[10px] bg-purple-900/50 text-purple-200 px-2 py-0.5 rounded-full">👑 ELITE</span>
-                            </h4>
-                            <p class="text-gray-400 text-sm mt-1">Generate a rent-to-own agreement for this property</p>
-                        </div>
-                        <button onclick="showRentToOwnWizard(${id})" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-gray-900 px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg ${!canAccessRTO ? 'pointer-events-none' : ''}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Generate Contract
-                        </button>
-                    </div>
-                </div>
-                `}
+                        `;
+                    }
+                    return '';
+                })()}
                 
-                <!-- Reminder Script (only shows when due soon) -->
-                ${showReminderSection ? `
-                <div class="bg-gradient-to-r from-red-900/50 to-orange-900/50 border border-red-500/50 rounded-xl p-4 mb-8">
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="text-lg font-bold text-red-200 flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                            Payment Reminder Script
-                            <span class="text-xs font-normal text-red-300">(edit as needed)</span>
-                        </h4>
-                        <button onclick="copyReminderScript(${id}, this)" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition flex items-center gap-2" title="Text in city for fastest response">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                            Copy Message
-                        </button>
+                <!-- Start New Sale / Complete Sale Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gradient-to-r from-emerald-900/40 to-green-900/40 border border-emerald-500/50 rounded-xl p-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <h4 class="text-emerald-300 font-bold flex items-center gap-2">
+                                    <span class="text-xl">📝</span>
+                                    Start New Sale
+                                </h4>
+                                <p class="text-gray-400 text-sm mt-1">Generate contract & track down payment</p>
+                            </div>
+                            <button onclick="showStartSaleModal(${id})" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg">
+                                <span>📄</span>
+                                Start Sale
+                            </button>
+                        </div>
                     </div>
-                    <div class="text-xs text-yellow-300 mb-3 flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Text in city for fastest response
+                    
+                    <div class="bg-gradient-to-r from-rose-900/40 to-pink-900/40 border border-rose-500/50 rounded-xl p-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <h4 class="text-rose-300 font-bold flex items-center gap-2">
+                                    <span class="text-xl">🏆</span>
+                                    Log Completed Sale
+                                </h4>
+                                <p class="text-gray-400 text-sm mt-1">Record a sale that's already done</p>
+                            </div>
+                            <button onclick="showLogSaleModal(${id})" class="bg-gradient-to-r from-rose-500 to-pink-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg">
+                                <span>✓</span>
+                                Log Sale
+                            </button>
+                        </div>
                     </div>
-                    <textarea id="reminderScript-${id}" rows="4" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700/80 font-medium text-white focus:ring-2 focus:ring-purple-500 transition resize-y">${reminderScript}</textarea>
                 </div>
-                ` : '<div class="mb-8"></div>'}
             </div>
         </div>
         
