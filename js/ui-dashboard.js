@@ -194,8 +194,8 @@ async function calculateTotalsAsync() {
         premium: [],
         rtoTotal: 0,
         rtoContracts: [],
-        houseSalesTotal: 0,
-        houseSales: []
+        vehicleSalesTotal: 0,
+        vehicleSales: []
     };
     
     // Process each owned vehicle
@@ -219,15 +219,15 @@ async function calculateTotalsAsync() {
             // Completed sale
             data.soldVehicles.push(vehicleInfo);
             data.totalSalesRevenue += salePrice;
-            // Also add to houseSales for backwards compatibility
-            data.houseSales.push({
+            // Also add to vehicleSales for backwards compatibility
+            data.vehicleSales.push({
                 id: v.id,
                 propertyTitle: vehicleInfo.title,
                 salePrice: salePrice,
                 saleDate: PropertyDataService.getValue(v.id, 'soldDate', ''),
                 buyerName: PropertyDataService.getValue(v.id, 'buyerName', 'Unknown')
             });
-            data.houseSalesTotal += salePrice;
+            data.vehicleSalesTotal += salePrice;
         } else if (pendingSale) {
             // Pending contract
             data.pendingContracts.push(vehicleInfo);
@@ -264,14 +264,14 @@ async function calculateTotalsAsync() {
                         price: sale.salePrice || 0,
                         isSold: true
                     });
-                    data.houseSales.push({
+                    data.vehicleSales.push({
                         id: doc.id,
                         propertyTitle: sale.vehicleTitle || 'Vehicle',
                         salePrice: sale.salePrice || 0,
                         saleDate: sale.saleDate || '',
                         buyerName: sale.buyerName || 'Unknown'
                     });
-                    data.houseSalesTotal += (sale.salePrice || 0);
+                    data.vehicleSalesTotal += (sale.salePrice || 0);
                 }
             });
         }
@@ -301,8 +301,8 @@ function calculateTotals() {
         premium: [],
         rtoTotal: 0,
         rtoContracts: [],
-        houseSalesTotal: 0,
-        houseSales: [],
+        vehicleSalesTotal: 0,
+        vehicleSales: [],
         // Vehicle sales specific
         totalSalesRevenue: 0,
         portfolioValue: 0,
@@ -331,7 +331,7 @@ function calculateTotals() {
         
         if (isSold) {
             data.soldVehicles.push(vehicleInfo);
-            data.houseSalesTotal += price;
+            data.vehicleSalesTotal += price;
             data.totalSalesRevenue += price;
         } else {
             data.available.push(vehicleInfo);
@@ -366,10 +366,10 @@ function updateDashboardTiles(totals) {
     const data = totals.data || totals || {};
     
     // For backwards compatibility, map new data to old element IDs
-    const totalSales = data.totalSalesRevenue || data.houseSalesTotal || 0;
+    const totalSales = data.totalSalesRevenue || data.vehicleSalesTotal || 0;
     const activeCount = data.activeListings?.length || data.available?.length || 0;
     const pendingCount = data.pendingContracts?.length || 0;
-    const soldCount = data.soldVehicles?.length || data.houseSales?.length || 0;
+    const soldCount = data.soldVehicles?.length || data.vehicleSales?.length || 0;
     const portfolioValue = data.portfolioValue || 0;
     const premiumCount = data.premiumListings?.length || data.premium?.length || 0;
     
@@ -429,9 +429,9 @@ function updateDashboardTiles(totals) {
         ? `Featured listings` 
         : 'No premium listings';
     
-    // Sales Revenue (using houseSalesDisplay)
-    const salesRevEl = $('houseSalesDisplay');
-    const salesRevCountEl = $('houseSalesCount');
+    // Sales Revenue (using vehicleSalesDisplay)
+    const salesRevEl = $('vehicleSalesDisplay');
+    const salesRevCountEl = $('vehicleSalesCount');
     if (salesRevEl) salesRevEl.textContent = formatPrice(totalSales);
     if (salesRevCountEl) salesRevCountEl.textContent = soldCount > 0 
         ? `From ${soldCount} completed sale${soldCount > 1 ? 's' : ''}` 
@@ -699,13 +699,12 @@ window.startCellEdit = function(propertyId, field, cell, type) {
             <select class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm w-full" 
                     onchange="saveCellEdit(this, ${propertyId}, '${field}', '${type}')"
                     onblur="setTimeout(() => cancelCellEdit(this), 150)">
-                <option value="apartment" ${currentValue === 'apartment' ? 'selected' : ''}>Apartment</option>
-                <option value="house" ${currentValue === 'house' ? 'selected' : ''}>House</option>
-                <option value="condo" ${currentValue === 'condo' ? 'selected' : ''}>Condo</option>
-                <option value="villa" ${currentValue === 'villa' ? 'selected' : ''}>Villa</option>
-                <option value="hotel" ${currentValue === 'hotel' ? 'selected' : ''}>Hotel</option>
-                <option value="warehouse" ${currentValue === 'warehouse' ? 'selected' : ''}>Warehouse</option>
-                <option value="hideout" ${currentValue === 'hideout' ? 'selected' : ''}>Hideout</option>
+                <option value="car" ${currentValue === 'car' ? 'selected' : ''}>Car</option>
+                <option value="truck" ${currentValue === 'truck' ? 'selected' : ''}>Truck</option>
+                <option value="suv" ${currentValue === 'suv' ? 'selected' : ''}>SUV</option>
+                <option value="boat" ${currentValue === 'boat' ? 'selected' : ''}>Boat</option>
+                <option value="motorcycle" ${currentValue === 'motorcycle' ? 'selected' : ''}>Motorcycle</option>
+                <option value="other" ${currentValue === 'other' ? 'selected' : ''}>Other</option>
             </select>
         `;
     } else if (type === 'frequency') {

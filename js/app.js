@@ -1138,13 +1138,24 @@ async function loadVehicleSalesHistory(vehicleId) {
     const contentEl = document.getElementById(`salesHistoryContent-${vehicleId}`);
     if (!contentEl) return;
     
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+    
     try {
-        // Query houseSales collection for this vehicle
-        const salesSnapshot = await db.collection('houseSales')
-            .where('propertyId', '==', vehicleId)
-            .orderBy('recordedAt', 'desc')
+        // Query vehicleSales collection for this vehicle
+        // Use simple query without orderBy to avoid index requirement
+        // Check both vehicleId (new) and propertyId (legacy) fields
+        let salesSnapshot = await db.collection('vehicleSales')
+            .where('vehicleId', '==', numericId)
             .limit(10)
             .get();
+        
+        // If no results, try legacy propertyId field
+        if (salesSnapshot.empty) {
+            salesSnapshot = await db.collection('vehicleSales')
+                .where('propertyId', '==', numericId)
+                .limit(10)
+                .get();
+        }
         
         if (salesSnapshot.empty) {
             contentEl.innerHTML = `
@@ -1157,7 +1168,10 @@ async function loadVehicleSalesHistory(vehicleId) {
             return;
         }
         
-        const sales = salesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sort client-side by recordedAt descending
+        const sales = salesSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => new Date(b.recordedAt || 0) - new Date(a.recordedAt || 0));
         
         contentEl.innerHTML = `
             <div class="space-y-4">
@@ -1744,14 +1758,12 @@ window.startEditPropertyType = function(propertyId) {
             <select id="type-select-${propertyId}" 
                     class="bg-gray-800 border-2 border-purple-500 rounded-full px-4 py-2 text-white text-sm font-bold uppercase cursor-pointer focus:ring-2 focus:ring-purple-400"
                     onchange="savePropertyType(${propertyId}, this.value)">
-                <option value="apartment" ${currentValue === 'apartment' ? 'selected' : ''}>Apartment</option>
-                <option value="house" ${currentValue === 'house' ? 'selected' : ''}>House</option>
-                <option value="condo" ${currentValue === 'condo' ? 'selected' : ''}>Condo</option>
-                <option value="villa" ${currentValue === 'villa' ? 'selected' : ''}>Villa</option>
-                <option value="hotel" ${currentValue === 'hotel' ? 'selected' : ''}>Hotel</option>
-                <option value="office" ${currentValue === 'office' ? 'selected' : ''}>Office</option>
-                <option value="warehouse" ${currentValue === 'warehouse' ? 'selected' : ''}>Warehouse</option>
-                <option value="hideout" ${currentValue === 'hideout' ? 'selected' : ''}>Hideout</option>
+                <option value="car" ${currentValue === 'car' ? 'selected' : ''}>Car</option>
+                <option value="truck" ${currentValue === 'truck' ? 'selected' : ''}>Truck</option>
+                <option value="suv" ${currentValue === 'suv' ? 'selected' : ''}>SUV</option>
+                <option value="boat" ${currentValue === 'boat' ? 'selected' : ''}>Boat</option>
+                <option value="motorcycle" ${currentValue === 'motorcycle' ? 'selected' : ''}>Motorcycle</option>
+                <option value="other" ${currentValue === 'other' ? 'selected' : ''}>Other</option>
             </select>
             <button onclick="renderPropertyStatsContent(${propertyId})" class="text-xs text-gray-400 hover:text-white">Cancel</button>
         </div>
@@ -6723,7 +6735,7 @@ window.showRTOCompletionPrompt = function(propertyId, rtoContractId, buyerName, 
                     </div>
                     
                     <div class="text-gray-300 text-sm">
-                        <p class="mb-3">Would you like to finalize this as a house sale? This will:</p>
+                        <p class="mb-3">Would you like to finalize this as a vehicle sale? This will:</p>
                         <ul class="space-y-2 text-sm">
                             <li class="flex items-start gap-2">
                                 <span class="text-amber-400">•</span>
@@ -6731,7 +6743,7 @@ window.showRTOCompletionPrompt = function(propertyId, rtoContractId, buyerName, 
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="text-amber-400">•</span>
-                                <span>Add to your House Sales records</span>
+                                <span>Add to your Vehicle Sales records</span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="text-amber-400">•</span>
@@ -6766,7 +6778,7 @@ window.closeRTOCompletionModal = function() {
 };
 
 /**
- * Finalize RTO as a house sale
+ * Finalize RTO as a vehicle sale
  */
 window.finalizeRTOSale = function(propertyId, rtoContractId) {
     closeRTOCompletionModal();

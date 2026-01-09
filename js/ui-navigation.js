@@ -313,7 +313,7 @@ window.renderBlogPage = function() {
                     <li>Edit or delete payments if mistakes are made</li>
                 </ul>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">🏷️ House Sales Tracking:</h4>
+                <h4 class="font-bold text-white mb-2 mt-6">🏷️ Vehicle Sales Tracking:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
                     <li>Log property sales and track the financials on your dashboard</li>
                     <li>Celebration banners when you complete a sale</li>
@@ -325,7 +325,7 @@ window.renderBlogPage = function() {
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
                     <li>8 new tiles showing exactly what you're earning</li>
                     <li>Income broken down by Daily, Weekly, Biweekly, and Monthly renters</li>
-                    <li>Dedicated RTO Income and House Sales tracking</li>
+                    <li>Dedicated RTO Income and Vehicle Sales tracking</li>
                     <li>Click any tile for a detailed breakdown</li>
                 </ul>
                 

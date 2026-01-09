@@ -1,6 +1,5 @@
 /**
- * PROPERTY FILTERS - Button-Based Filter System
- * Dual-filter: Interior (Walk-in/Instance) + Type (Houses/Apartments/etc)
+ * VEHICLE FILTERS - Button-Based Filter System
  */
 
 // Filter state
@@ -15,30 +14,38 @@ function getPropertyValue(property, field) {
 }
 
 /**
- * Browse properties - scroll to listings
+ * Browse vehicles - scroll to listings
  */
-window.browseProperties = function() {
+window.browseVehicles = function() {
     activeInteriorFilter = null;
     activeTypeFilter = null;
     updateFilterButtonStates();
     applyAllFilters();
     
-    var propertiesSection = $('properties');
-    if (propertiesSection) {
-        propertiesSection.scrollIntoView({ behavior: 'smooth' });
+    var vehiclesSection = $('vehicles');
+    if (vehiclesSection) {
+        vehiclesSection.scrollIntoView({ behavior: 'smooth' });
     }
 };
 
+// Alias for legacy code
+window.browseProperties = window.browseVehicles;
+
 /**
- * List property - open create listing modal
+ * List vehicle - open create listing modal
  */
-window.listYourProperty = function() {
-    if (typeof openCreateListingModal === 'function') {
+window.listYourVehicle = function() {
+    if (typeof openModal === 'function') {
+        openModal('createListingModal');
+    } else if (typeof openCreateListingModal === 'function') {
         openCreateListingModal();
     } else if (!auth.currentUser && typeof openAuthModal === 'function') {
         openAuthModal();
     }
 };
+
+// Alias for legacy code
+window.listYourProperty = window.listYourVehicle;
 
 /**
  * Update button visual states

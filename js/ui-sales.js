@@ -7,7 +7,7 @@
  * - Celebration banners
  * - Create sale celebration
  * - House sales system (log sale modal)
- * - Submit house sale
+ * - Submit vehicle sale
  * - Ownership transfer system
  * - Admin XP adjustment
  * - Delete/reverse sale system
@@ -55,7 +55,7 @@ async function checkCelebrationBanners() {
 }
 
 /**
- * Create a house sale celebration banner (24 hours)
+ * Create a vehicle sale celebration banner (24 hours)
  */
 window.createSaleCelebration = async function(sellerDisplayName, propertyTitle, salePrice, buyerName) {
     try {
@@ -90,7 +90,7 @@ window.createSaleCelebration = async function(sellerDisplayName, propertyTitle, 
         // Save
         await db.collection('settings').doc('celebrations').set({ active }, { merge: true });
         
-        console.log('[Celebrations] Created house sale celebration:', celebrationId);
+        console.log('[Celebrations] Created vehicle sale celebration:', celebrationId);
         return celebrationId;
     } catch (e) {
         console.error('[Celebrations] Error creating celebration:', e);
@@ -100,17 +100,19 @@ window.createSaleCelebration = async function(sellerDisplayName, propertyTitle, 
 // ==================== HOUSE SALES SYSTEM ====================
 
 /**
- * Show the Log House Sale modal
+ * Show the Log Vehicle Sale modal
  */
 window.showLogSaleModal = function(propertyId, rtoContractId = null) {
-    const p = properties.find(prop => prop.id === propertyId);
+    // Ensure numeric ID for comparison
+    const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
+    const p = properties.find(prop => prop.id === numericId);
     if (!p) {
-        showToast('Property not found', 'error');
+        showToast('Vehicle not found', 'error');
         return;
     }
     
-    const buyPrice = PropertyDataService.getValue(propertyId, 'buyPrice', p.buyPrice || 0);
-    const renterName = PropertyDataService.getValue(propertyId, 'renterName', p.renterName || '');
+    const buyPrice = PropertyDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
+    const buyerName = PropertyDataService.getValue(numericId, 'renterName', p.renterName || '');
     const today = new Date().toISOString().split('T')[0];
     const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     
@@ -118,20 +120,20 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
     const isRTOCompletion = !!rtoContractId;
     const saleType = isRTOCompletion ? 'rto_completion' : 'direct_sale';
     
-    // Get current property owner info
-    const propertyOwnerEmail = PropertyDataService.getValue(propertyId, 'owner', p.owner || '');
+    // Get current vehicle owner info
+    const vehicleOwnerEmail = PropertyDataService.getValue(numericId, 'owner', p.owner || '');
     const currentUserEmail = auth.currentUser?.email || '';
     const currentUserDisplayName = window.currentUserData?.displayName || currentUserEmail.split('@')[0];
     
     // Build seller selection HTML for admins
     const sellerSelectionHTML = isAdmin ? `
         <div>
-            <label class="block text-gray-400 text-sm mb-2">Seller (who sold the property):</label>
+            <label class="block text-gray-400 text-sm mb-2">Seller (who sold the vehicle):</label>
             <select id="saleSellerSelect" class="w-full bg-gray-800 border border-gray-600 rounded-xl py-3 px-4 text-white focus:border-rose-500 focus:outline-none">
                 <option value="">-- Select Seller --</option>
                 <!-- Will be populated dynamically -->
             </select>
-            <p class="text-gray-500 text-xs mt-1">Select the property owner who made this sale</p>
+            <p class="text-gray-500 text-xs mt-1">Select the vehicle owner who made this sale</p>
         </div>
     ` : `
         <input type="hidden" id="saleSellerSelect" value="${currentUserEmail}">
@@ -147,8 +149,8 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
                 
                 <div class="bg-gradient-to-r from-rose-600 to-pink-600 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
-                        <span>🏡</span>
-                        Log House Sale
+                        <span>🚗</span>
+                        Log Vehicle Sale
                     </h3>
                     <p class="text-rose-100 text-sm mt-1">${p.title}</p>
                 </div>
@@ -174,7 +176,7 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
                     
                     <div>
                         <label class="block text-gray-400 text-sm mb-2">Buyer Name:</label>
-                        <input type="text" id="saleBuyerInput" value="${renterName}" placeholder="Enter buyer's name"
+                        <input type="text" id="saleBuyerInput" value="${buyerName}" placeholder="Enter buyer's name"
                             class="w-full bg-gray-800 border border-gray-600 rounded-xl py-3 px-4 text-white focus:border-rose-500 focus:outline-none">
                     </div>
                     
@@ -185,8 +187,8 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
                     </div>
                     
                     <div>
-                        <label class="block text-gray-400 text-sm mb-2">PMA Realtor Fee (10%):</label>
-                        <div id="realtorFeeDisplay" class="bg-gray-800 rounded-xl py-3 px-4 text-amber-400 font-bold">
+                        <label class="block text-gray-400 text-sm mb-2">PMA Sales Fee (10%):</label>
+                        <div id="salesFeeDisplay" class="bg-gray-800 rounded-xl py-3 px-4 text-amber-400 font-bold">
                             $${Math.round(buyPrice * 0.10).toLocaleString()}
                         </div>
                         <p class="text-gray-500 text-xs mt-1">Auto-calculated from sale price</p>
@@ -203,7 +205,7 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
                             <input type="checkbox" id="transferOwnershipCheckbox" class="w-5 h-5 rounded accent-rose-500">
                             <div>
                                 <label for="transferOwnershipCheckbox" class="text-white font-medium cursor-pointer">Request ownership transfer</label>
-                                <p class="text-gray-500 text-xs">Transfer this property to the buyer's account (requires admin approval)</p>
+                                <p class="text-gray-500 text-xs">Transfer this vehicle to the buyer's account (requires admin approval)</p>
                             </div>
                         </div>
                     </div>
@@ -213,7 +215,7 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
                     <button onclick="closeLogSaleModal()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                         Cancel
                     </button>
-                    <button onclick="submitHouseSale(${propertyId}, '${saleType}', '${rtoContractId || ''}')" class="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                    <button onclick="submitVehicleSale(${numericId}, '${saleType}', '${rtoContractId || ''}')" class="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
                         🏆 Complete Sale
                     </button>
                 </div>
@@ -225,7 +227,7 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
     
     // Update realtor fee on price change
     const priceInput = document.getElementById('salePriceInput');
-    const feeDisplay = document.getElementById('realtorFeeDisplay');
+    const feeDisplay = document.getElementById('salesFeeDisplay');
     if (priceInput && feeDisplay) {
         priceInput.addEventListener('input', () => {
             const price = parseInt(priceInput.value) || 0;
@@ -284,15 +286,18 @@ async function populateSellerDropdown(propertyId, defaultOwnerEmail) {
 }
 
 /**
- * Submit house sale to Firestore
+ * Submit vehicle sale to Firestore
  */
-window.submitHouseSale = async function(propertyId, saleType, rtoContractId) {
+window.submitVehicleSale = async function(vehicleId, saleType, rtoContractId) {
     const priceInput = document.getElementById('salePriceInput');
     const buyerInput = document.getElementById('saleBuyerInput');
     const dateInput = document.getElementById('saleDateInput');
     const notesInput = document.getElementById('saleNotesInput');
     const transferCheckbox = document.getElementById('transferOwnershipCheckbox');
     const sellerSelect = document.getElementById('saleSellerSelect');
+    
+    // Ensure numeric ID
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
     
     const salePrice = parseInt(priceInput?.value) || 0;
     const buyerName = buyerInput?.value?.trim() || '';
@@ -333,18 +338,18 @@ window.submitHouseSale = async function(propertyId, saleType, rtoContractId) {
     }
     
     try {
-        showToast('🏡 Recording sale...', 'info');
+        showToast('🚗 Recording sale...', 'info');
         closeLogSaleModal();
         
-        const p = properties.find(prop => prop.id === propertyId);
+        const p = properties.find(prop => prop.id === numericId);
         
-        const realtorFee = Math.round(salePrice * 0.10);
-        const netProceeds = salePrice - realtorFee;
+        const salesFee = Math.round(salePrice * 0.10);
+        const netProceeds = salePrice - salesFee;
         
         // Create sale record - NEVER store usernames, only display names
         const saleDoc = {
-            propertyId: propertyId,
-            propertyTitle: p?.title || `Property #${propertyId}`,
+            vehicleId: numericId,
+            vehicleTitle: p?.title || `Vehicle #${numericId}`,
             salePrice: salePrice,
             saleDate: saleDate,
             buyerName: buyerName,
@@ -353,22 +358,24 @@ window.submitHouseSale = async function(propertyId, saleType, rtoContractId) {
             sellerUid: sellerUid,                  // UID for XP awards
             saleType: saleType,
             rtoContractId: rtoContractId || null,
-            realtorFee: realtorFee,
-            realtorFeePercent: 10,
+            salesFee: salesFee,
+            salesFeePercent: 10,
             netProceeds: netProceeds,
             requestTransfer: requestTransfer,
             transferStatus: requestTransfer ? 'pending' : null,
             notes: notes,
             recordedAt: new Date().toISOString(),
-            recordedBy: auth.currentUser?.email  // Who logged it (for audit)
+            recordedBy: auth.currentUser?.email,  // Who logged it (for audit)
+            // Keep propertyId for backwards compatibility
+            propertyId: numericId
         };
         
-        // Save to houseSales collection
-        const saleRef = await db.collection('houseSales').add(saleDoc);
-        console.log('[HouseSale] Created sale record:', saleRef.id);
+        // Save to vehicleSales collection
+        const saleRef = await db.collection('vehicleSales').add(saleDoc);
+        console.log('[VehicleSale] Created sale record:', saleRef.id);
         
-        // Mark property as sold
-        await PropertyDataService.writeMultiple(propertyId, {
+        // Mark vehicle as sold
+        await PropertyDataService.writeMultiple(numericId, {
             isSold: true,
             soldDate: saleDate,
             soldTo: buyerName,
@@ -376,13 +383,17 @@ window.submitHouseSale = async function(propertyId, saleType, rtoContractId) {
             saleId: saleRef.id
         });
         
-        // If RTO completion, update the contract status
+        // If RTO completion, update the contract status (legacy support)
         if (rtoContractId) {
-            await db.collection('rentToOwnContracts').doc(rtoContractId).update({
-                status: 'completed',
-                completedDate: saleDate,
-                saleId: saleRef.id
-            });
+            try {
+                await db.collection('rentToOwnContracts').doc(rtoContractId).update({
+                    status: 'completed',
+                    completedDate: saleDate,
+                    saleId: saleRef.id
+                });
+            } catch (e) {
+                console.log('[VehicleSale] No RTO contract to update');
+            }
         }
         
         // Award XP to the SELLER (not the person logging it)
@@ -395,15 +406,15 @@ window.submitHouseSale = async function(propertyId, saleType, rtoContractId) {
         
         // If transfer requested, create transfer request
         if (requestTransfer) {
-            await createOwnershipTransferRequest(propertyId, buyerName, currentUserEmail, saleRef.id);
+            await createOwnershipTransferRequest(numericId, buyerName, currentUserEmail, saleRef.id);
         }
         
         showToast('🎉 Sale recorded! Congratulations!', 'success');
         
-        // Refresh the property stats page
+        // Refresh the vehicle stats page
         setTimeout(() => {
             if (typeof renderPropertyStatsContent === 'function') {
-                renderPropertyStatsContent(propertyId);
+                renderPropertyStatsContent(numericId);
             }
             if (typeof renderOwnerDashboard === 'function') {
                 renderOwnerDashboard();
@@ -647,7 +658,7 @@ window.showDeleteSaleModal = function(saleId, propertyTitle, sellerDisplayName, 
                     <div class="text-gray-400 text-sm space-y-2">
                         <p><strong>This action will:</strong></p>
                         <ul class="list-disc list-inside space-y-1">
-                            <li>Delete the sale record from houseSales</li>
+                            <li>Delete the sale record from vehicleSales</li>
                             <li>Remove the sale celebration banner</li>
                             <li>Deduct 2,500 XP from the seller</li>
                             <li>Mark the property as unsold</li>
@@ -704,7 +715,7 @@ window.confirmDeleteSale = async function(saleId) {
         closeDeleteSaleModal();
         
         // 1. Get the sale record
-        const saleDoc = await db.collection('houseSales').doc(saleId).get();
+        const saleDoc = await db.collection('vehicleSales').doc(saleId).get();
         if (!saleDoc.exists) {
             showToast('Sale record not found', 'error');
             return;
@@ -767,7 +778,7 @@ window.confirmDeleteSale = async function(saleId) {
         }
         
         // 6. Delete the sale record
-        await db.collection('houseSales').doc(saleId).delete();
+        await db.collection('vehicleSales').doc(saleId).delete();
         
         // 7. Log the deletion for audit
         await db.collection('adminLogs').add({
@@ -822,17 +833,19 @@ function calculateSaleBreakdown(vehiclePrice) {
  * Show the Start Sale modal
  */
 window.showStartSaleModal = function(vehicleId) {
-    const p = properties.find(prop => prop.id === vehicleId);
+    // Ensure numeric ID for comparison
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+    const p = properties.find(prop => prop.id === numericId);
     if (!p) {
         showToast('Vehicle not found', 'error');
         return;
     }
     
-    const buyPrice = PropertyDataService.getValue(vehicleId, 'buyPrice', p.buyPrice || 0);
+    const buyPrice = PropertyDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
     const breakdown = calculateSaleBreakdown(buyPrice);
     
     // Set form values
-    document.getElementById('saleVehicleId').value = vehicleId;
+    document.getElementById('saleVehicleId').value = numericId;
     document.getElementById('saleBuyerName').value = '';
     document.getElementById('saleBuyerPhone').value = '';
     document.getElementById('saleAgreementDate').value = new Date().toISOString().split('T')[0];
