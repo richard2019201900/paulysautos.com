@@ -171,7 +171,7 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
             // Update the accent section to show multiple contacts
             accent.innerHTML = `
                 <div class="text-gray-300 text-sm mb-3">
-                    <strong>🏢 Multiple Real Estate Agents</strong><br>
+                    <strong>🏢 Multiple Sales Agents</strong><br>
                     This property has ${agentContacts.length} agents. Text <strong>ALL</strong> of them for the quickest response!
                 </div>
                 <div class="grid grid-cols-${Math.min(agentContacts.length, 3)} gap-2">

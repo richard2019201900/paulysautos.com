@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * AGENT MANAGEMENT - Real Estate Agent System
+ * AGENT MANAGEMENT - Sales Agent System
  * ============================================================================
  * 
  * Features:
@@ -583,7 +583,7 @@ window.renderAgentsTab = async function() {
         
         container.innerHTML = 
             '<div class="flex justify-between items-center mb-4">' +
-                '<h4 class="text-lg font-bold text-gray-200">Real Estate Agents</h4>' +
+                '<h4 class="text-lg font-bold text-gray-200">Sales Agents</h4>' +
                 '<button onclick="renderAgentsTab()" class="text-purple-400 hover:text-purple-300 text-sm font-bold px-3 py-2 bg-gray-700 rounded-lg">🔄 Refresh</button>' +
             '</div>' +
             '<div class="space-y-4">' + agentCardsHtml + '</div>' +
@@ -700,7 +700,7 @@ window.renderPropertyAgentSection = async function(propertyId) {
     var isMasterAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     var userEmail = auth.currentUser?.email?.toLowerCase();
     
-    var html = '<h4 class="text-lg font-bold text-gray-200 mb-4 flex items-center gap-2">🏢 Real Estate Agents</h4>';
+    var html = '<h4 class="text-lg font-bold text-gray-200 mb-4 flex items-center gap-2">🏢 Sales Agents</h4>';
     
     // Current agents list
     if (currentAgents.length === 0) {
@@ -752,7 +752,7 @@ window.renderPropertyAgentSection = async function(propertyId) {
         });
         
         html += '<div class="border-t border-gray-700 pt-4">' +
-            '<label class="text-gray-400 text-sm block mb-2">Add Agent to Property:</label>' +
+            '<label class="text-gray-400 text-sm block mb-2">Add Sales Agent to Vehicle:</label>' +
             '<div class="flex gap-2">' +
                 '<select id="addAgentSelect" class="flex-1 px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white">' +
                     '<option value="">Select an agent...</option>' +

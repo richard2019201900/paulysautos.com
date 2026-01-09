@@ -1079,6 +1079,16 @@ function renderPropertyStatsContent(id) {
             <p class="text-gray-500 italic">Loading agent section...</p>
         </div>
         
+        <!-- Sales History Section -->
+        <div id="salesHistorySection-${id}" class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
+            <h3 class="text-2xl font-bold text-gray-200 mb-4 flex items-center gap-3">
+                <span>📜</span> Sales History
+            </h3>
+            <div id="salesHistoryContent-${id}">
+                <p class="text-gray-500 italic">Loading sales history...</p>
+            </div>
+        </div>
+        
         <!-- Actions -->
         <div class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
             <h3 class="text-2xl font-bold text-gray-200 mb-6">⚡ Quick Actions</h3>
@@ -1104,29 +1114,7 @@ function renderPropertyStatsContent(id) {
         
         </div><!-- End of padding wrapper for Pricing & Quick Actions sections -->
         
-        <!-- Analytics and Reviews - continue within main card -->
-        <div class="px-6 md:px-8 pb-8">
-        
-        <!-- Property Analytics & Payment Ledger -->
-        <div class="bg-gray-800/50 rounded-2xl p-6 mb-8 border border-gray-700">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-2xl font-bold text-gray-200 flex items-center gap-3">
-                    <span>📊</span> Property Analytics & Ledger
-                </h3>
-                <button onclick="renderPropertyAnalytics(${id})" class="text-purple-400 hover:text-purple-300 text-sm font-semibold flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    Refresh
-                </button>
-            </div>
-            <div id="propertyAnalyticsSection">
-                <div class="text-center py-8">
-                    <div class="text-4xl mb-4 animate-pulse">📊</div>
-                    <p class="text-gray-400">Loading analytics...</p>
-                </div>
-            </div>
-        </div>
-        
-        </div><!-- End of Analytics section -->
+        </div><!-- End of main card -->
     `;
     
     // Render agent section dynamically
@@ -1138,7 +1126,87 @@ function renderPropertyStatsContent(id) {
             }
         });
     }
+    
+    // Load sales history for this vehicle
+    loadVehicleSalesHistory(id);
 }
+
+/**
+ * Load and display sales history for a vehicle
+ */
+async function loadVehicleSalesHistory(vehicleId) {
+    const contentEl = document.getElementById(`salesHistoryContent-${vehicleId}`);
+    if (!contentEl) return;
+    
+    try {
+        // Query houseSales collection for this vehicle
+        const salesSnapshot = await db.collection('houseSales')
+            .where('propertyId', '==', vehicleId)
+            .orderBy('recordedAt', 'desc')
+            .limit(10)
+            .get();
+        
+        if (salesSnapshot.empty) {
+            contentEl.innerHTML = `
+                <div class="text-center py-6">
+                    <div class="text-4xl mb-3">🚗</div>
+                    <p class="text-gray-400">No sales recorded for this vehicle yet</p>
+                    <p class="text-gray-500 text-sm mt-2">Sales will appear here when you log a completed sale</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const sales = salesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        contentEl.innerHTML = `
+            <div class="space-y-4">
+                ${sales.map((sale, index) => `
+                    <div class="bg-gray-800/50 rounded-xl p-4 border ${index === 0 ? 'border-green-500/50' : 'border-gray-700'}">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xl">
+                                    ${index === 0 ? '🏆' : '💰'}
+                                </div>
+                                <div>
+                                    <div class="text-white font-bold text-lg">$${(sale.salePrice || 0).toLocaleString()}</div>
+                                    <div class="text-gray-400 text-sm">${sale.saleDate ? formatDate(sale.saleDate) : 'Unknown date'}</div>
+                                </div>
+                            </div>
+                            ${index === 0 ? '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold">LATEST</span>' : ''}
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500">Buyer:</span>
+                                <span class="text-white ml-2">${sale.buyerName || 'Unknown'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Seller:</span>
+                                <span class="text-white ml-2">${sale.sellerDisplayName || 'Unknown'}</span>
+                            </div>
+                        </div>
+                        ${sale.notes ? `
+                            <div class="mt-3 text-sm text-gray-400 italic border-t border-gray-700 pt-3">
+                                📝 ${sale.notes}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('[SalesHistory] Error loading sales:', error);
+        contentEl.innerHTML = `
+            <div class="text-center py-6 text-gray-500">
+                <p>Could not load sales history</p>
+                <p class="text-sm mt-1">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+window.loadVehicleSalesHistory = loadVehicleSalesHistory;
 
 /**
  * Start editing a tile - shows inline input

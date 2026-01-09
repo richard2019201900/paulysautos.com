@@ -483,14 +483,15 @@ const PropertyDataService = {
         const prop = properties.find(p => p.id === numericId);
         
         try {
-            // UNIFIED: Always write to settings/properties
+            // UNIFIED: Always write to settings/properties (or settings/vehicles for PaulysAutos)
             const updateData = {
                 [`${numericId}.${field}`]: value,
                 [`${numericId}.updatedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
                 [`${numericId}.updatedBy`]: auth.currentUser?.email || 'unknown'
             };
             
-            await db.collection(this.collectionName).doc(this.docName).update(updateData);
+            // Use set with merge to auto-create document if it doesn't exist
+            await db.collection(this.collectionName).doc(this.docName).set(updateData, { merge: true });
             
             // Update local property object immediately
             if (prop) {
@@ -525,7 +526,8 @@ const PropertyDataService = {
                 updateData[`${numericId}.${field}`] = fields[field];
             });
             
-            await db.collection(this.collectionName).doc(this.docName).update(updateData);
+            // Use set with merge to auto-create document if it doesn't exist
+            await db.collection(this.collectionName).doc(this.docName).set(updateData, { merge: true });
             
             // Update local property object
             if (prop) {
