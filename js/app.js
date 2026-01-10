@@ -216,10 +216,10 @@ window.viewProperty = function(id) {
             <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl md:text-4xl font-black text-white mb-2">✨ ${sanitize(p.title)}</h2>
-                    <p class="text-lg md:text-xl text-gray-300 font-semibold">📝 Description: ${sanitize(p.location)}</p>
+                    <p class="text-lg md:text-xl text-gray-300 font-semibold">📝 Description: ${sanitize(p.location) || 'No description'}</p>
                     <p id="propertyOwnerDisplay" class="text-blue-400 font-semibold mt-1">👤 Owner: Loading...</p>
                 </div>
-                <span class="badge text-white text-sm font-bold px-4 py-2 rounded-full uppercase">${PropertyDataService.getValue(id, 'type', p.type)}</span>
+                <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg border border-amber-400/50">${PropertyDataService.getValue(id, 'type', p.type) || 'OTHER'}</span>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
                 ${[
@@ -646,12 +646,12 @@ function renderPropertyStatsContent(id) {
                     </div>
                     <div class="flex flex-col items-end gap-2">
                         <span id="tile-type-${id}" 
-                              class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-4 py-2 rounded-full uppercase cursor-pointer hover:ring-2 hover:ring-amber-400 transition flex items-center gap-2 shadow-lg tracking-wide"
+                              class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase cursor-pointer hover:ring-2 hover:ring-amber-400 transition flex items-center gap-2 shadow-lg tracking-wider border border-amber-400/50"
                               onclick="startEditPropertyType(${id})"
                               data-field="type"
                               data-original-value="${propertyType}"
                               title="Click to change vehicle type">
-                            ${propertyType}
+                            ${propertyType || 'OTHER'}
                             <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </span>
                         <span id="stats-owner-${id}" class="bg-blue-600/80 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
@@ -2929,33 +2929,33 @@ window.startEditField = function(field, propertyId, element) {
         if (newValue !== currentValue) {
             element.innerHTML = '<span class="text-gray-400">Saving...</span>';
             try {
+                // PropertyDataService.write already handles Firestore update
                 await PropertyDataService.write(propertyId, field, newValue);
                 
                 // Update local property object
                 if (prop) prop[field] = newValue;
                 
-                // Get property and clean undefined values before Firestore write
-                const propToSave = properties.find(p => p.id === propertyId);
-                if (propToSave) {
-                    // Remove undefined values (Firestore doesn't accept them)
-                    const cleanProp = {};
-                    Object.keys(propToSave).forEach(key => {
-                        if (propToSave[key] !== undefined) {
-                            cleanProp[key] = propToSave[key];
-                        }
-                    });
-                    
-                    // Update Firestore properties doc
-                    await db.collection('settings').doc('properties').set({
-                        [propertyId]: cleanProp
-                    }, { merge: true });
+                // Update the display
+                element.innerHTML = newValue || (field === 'location' ? 'Click to add description' : '');
+                if (newValue) {
+                    element.className = element.className.replace('text-gray-500 italic', 'text-gray-300');
                 }
                 
-                renderPropertyStatsContent(propertyId);
-                renderProperties(state.filteredProperties);
+                // Re-render if on stats page
+                if (typeof renderPropertyStatsContent === 'function') {
+                    renderPropertyStatsContent(propertyId);
+                }
+                
+                // Show success toast
+                if (typeof showToast === 'function') {
+                    showToast('Saved successfully!', 'success');
+                }
             } catch (error) {
                 console.error('Failed to save:', error);
                 element.innerHTML = originalContent;
+                if (typeof showToast === 'function') {
+                    showToast('Failed to save: ' + error.message, 'error');
+                }
             }
         } else {
             // Restore original or show placeholder

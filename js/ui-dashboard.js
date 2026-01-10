@@ -987,7 +987,7 @@ async function renderProperties(list) {
             <div class="p-5 md:p-6">
                 <div class="flex justify-between items-start gap-2 mb-2">
                     <h4 class="text-xl md:text-2xl font-bold ${isPremium ? 'text-amber-300' : 'text-white'} min-h-[1.75rem] line-clamp-1">${sanitize(p.title)}</h4>
-                    <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide shrink-0 shadow-lg">${PropertyDataService.getValue(p.id, 'type', p.type)}</span>
+                    <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-lg border border-amber-400/50">${PropertyDataService.getValue(p.id, 'type', p.type) || 'OTHER'}</span>
                 </div>
                 <div class="flex items-center gap-3 text-sm mb-3">
                     <span class="text-gray-400">🔖</span>
