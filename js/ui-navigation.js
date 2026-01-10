@@ -861,6 +861,7 @@ window.navigateTo = function(section) {
 
 window.goBack = function() {
     hideElement($('propertyDetailPage'));
+    hideElement($('vehicleDetailPage'));
     hideElement($('vehicleStatsPage'));
     hideElement($('leaderboardPage'));
     hideElement($('blogPage'));

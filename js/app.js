@@ -146,15 +146,15 @@ window.viewProperty = function(id) {
 
     // Premium badge for images section - high z-index to stay above image interactions
     const premiumImageBadge = isPremium 
-        ? '<div class="absolute top-4 left-4 z-20 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2 pointer-events-none"><span>👑</span> Premium</div>' 
+        ? '<div class="absolute top-4 left-4 z-40 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2"><span>👑</span> Premium</div>' 
         : '';
 
     // Build images section - horizontal scroll layout with large main image and thumbnails below
     const imagesSection = hasImages 
-        ? `<div class="relative p-4 md:p-6">
+        ? `<div class="relative p-4 md:p-6 z-10">
             ${premiumImageBadge}
             <!-- Main large image -->
-            <div class="mb-4">
+            <div class="mb-4 relative">
                 <img src="${p.images[0]}" alt="${sanitize(p.title)} - Main Image" onclick="openLightbox(state.currentImages, 0)" class="img-clickable w-full h-72 md:h-[500px] object-cover rounded-xl shadow-lg border border-gray-600" loading="lazy" onerror="${imgErrorHandler}">
             </div>
             <!-- Horizontal scroll thumbnails -->
@@ -168,7 +168,7 @@ window.viewProperty = function(id) {
             </div>
             ` : ''}
            </div>`
-        : `<div class="relative p-4 md:p-6">
+        : `<div class="relative p-4 md:p-6 z-10">
             ${premiumImageBadge}
             <div class="md:col-span-2 w-full h-72 md:h-96 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
                 <span class="text-8xl mb-4">🚗</span>
@@ -636,23 +636,23 @@ function renderPropertyStatsContent(id) {
                             <span>📝</span>
                             <span class="text-lg text-gray-300 font-semibold">Description:</span>
                             <span id="editable-location-${id}" 
-                                  class="text-lg text-gray-300 font-semibold cursor-pointer hover:text-purple-300 transition"
+                                  class="text-lg ${p.location ? 'text-gray-300' : 'text-gray-500 italic'} font-semibold cursor-pointer hover:text-purple-300 transition min-w-[150px]"
                                   onclick="startEditField('location', ${id}, this)"
                                   title="Click to edit description">
-                                ${sanitize(p.location)}
+                                ${p.location ? sanitize(p.location) : 'Click to add description'}
                             </span>
                             <span class="text-purple-400 text-sm">✏️</span>
                         </div>
                     </div>
                     <div class="flex flex-col items-end gap-2">
                         <span id="tile-type-${id}" 
-                              class="badge text-white text-sm font-bold px-4 py-2 rounded-full uppercase cursor-pointer hover:ring-2 hover:ring-purple-400 transition flex items-center gap-2"
+                              class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-4 py-2 rounded-full uppercase cursor-pointer hover:ring-2 hover:ring-amber-400 transition flex items-center gap-2 shadow-lg tracking-wide"
                               onclick="startEditPropertyType(${id})"
                               data-field="type"
                               data-original-value="${propertyType}"
-                              title="Click to change property type">
+                              title="Click to change vehicle type">
                             ${propertyType}
-                            <svg class="w-3.5 h-3.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </span>
                         <span id="stats-owner-${id}" class="bg-blue-600/80 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -2908,13 +2908,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== EDIT TITLE/LOCATION ====================
 window.startEditField = function(field, propertyId, element) {
-    const currentValue = PropertyDataService.getValue(propertyId, field, properties.find(p => p.id === propertyId)?.[field]);
+    const prop = properties.find(p => p.id === propertyId);
+    const currentValue = PropertyDataService.getValue(propertyId, field, prop?.[field]) || '';
     
     const input = document.createElement('input');
     input.type = 'text';
     input.value = currentValue;
+    input.placeholder = field === 'location' ? 'Enter description...' : `Enter ${field}...`;
     input.className = 'bg-gray-800 border-2 border-purple-500 rounded-lg px-3 py-2 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400';
-    input.style.width = Math.max(200, element.offsetWidth + 50) + 'px';
+    input.style.width = Math.max(250, element.offsetWidth + 50) + 'px';
     
     const originalContent = element.innerHTML;
     element.innerHTML = '';
@@ -2924,13 +2926,12 @@ window.startEditField = function(field, propertyId, element) {
     
     const saveField = async () => {
         const newValue = input.value.trim();
-        if (newValue && newValue !== currentValue) {
+        if (newValue !== currentValue) {
             element.innerHTML = '<span class="text-gray-400">Saving...</span>';
             try {
                 await PropertyDataService.write(propertyId, field, newValue);
                 
                 // Update local property object
-                const prop = properties.find(p => p.id === propertyId);
                 if (prop) prop[field] = newValue;
                 
                 // Update Firestore properties doc for user-created properties
@@ -2945,7 +2946,13 @@ window.startEditField = function(field, propertyId, element) {
                 element.innerHTML = originalContent;
             }
         } else {
-            element.innerHTML = currentValue;
+            // Restore original or show placeholder
+            if (!currentValue && field === 'location') {
+                element.innerHTML = 'Click to add description';
+                element.className = element.className.replace('text-gray-300', 'text-gray-500 italic');
+            } else {
+                element.innerHTML = currentValue || originalContent;
+            }
         }
     };
     
@@ -2955,7 +2962,11 @@ window.startEditField = function(field, propertyId, element) {
             e.preventDefault();
             input.blur();
         } else if (e.key === 'Escape') {
-            element.innerHTML = currentValue;
+            if (!currentValue && field === 'location') {
+                element.innerHTML = 'Click to add description';
+            } else {
+                element.innerHTML = currentValue || originalContent;
+            }
         }
     });
 };
