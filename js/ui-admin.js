@@ -13,10 +13,10 @@
  * - Activity log
  * - Admin stats display
  * - Admin user list rendering
- * - User properties expansion
+ * - User vehicles expansion
  * - User filtering
  * 
- * DEPENDENCIES: TierService, PropertyDataService, UserPreferencesService
+ * DEPENDENCIES: TierService, VehicleDataService, UserPreferencesService
  * ============================================================================
  */
 
@@ -302,8 +302,8 @@ window.loadPhotoRequests = async function() {
                                     <a href="tel:${escapeHtml(req.phone || '')}" class="text-cyan-400 hover:underline">${escapeHtml(req.phone || 'N/A')}</a>
                                 </p>
                                 <p class="text-gray-400">
-                                    <span class="text-gray-500">Property:</span> 
-                                    <span class="text-white">${escapeHtml(req.propertyName || req.property || 'Not specified')}</span>
+                                    <span class="text-gray-500">Vehicle:</span> 
+                                    <span class="text-white">${escapeHtml(req.vehicleName || req.vehicle || 'Not specified')}</span>
                                 </p>
                                 ${req.message ? `
                                     <div class="mt-2 bg-gray-900/50 rounded-lg p-3 border border-gray-700">
@@ -812,7 +812,7 @@ window.processRequestSnapshot = function(snapshot) {
     updateRequestsBadge(count);
     
     // Only refresh user list if pending requests have actually changed
-    // This prevents collapsing open property lists during polling
+    // This prevents collapsing open vehicle lists during polling
     if (hasChanged && window.adminUsersData && window.adminUsersData.length > 0) {
         const searchTerm = ($('adminUserSearch')?.value || '').toLowerCase();
         const filtered = searchTerm 
@@ -1141,15 +1141,15 @@ window.startAdminUsersListener = function() {
         });
 };
 
-// Real-time listener for properties - detects new listings AND updates admin panel data
+// Real-time listener for vehicles - detects new listings AND updates admin panel data
 window.startAdminPropertiesListener = function() {
     if (!TierService.isMasterAdmin(auth.currentUser?.email)) return;
-    // The actual property data is stored in settings/properties document, not a 'properties' collection
+    // The actual vehicle data is stored in settings/vehicles document, not a 'vehicles' collection
     // So we just need to call the settings listener
     startSettingsPropertiesListener();
 };
 
-// Real-time listener for settings/properties document - this is where user-created properties are stored
+// Real-time listener for settings/vehicles document - this is where user-created vehicles are stored
 window.startSettingsPropertiesListener = function() {
     // Always unsubscribe existing listener first (prevents orphaned listeners)
     if (window.settingsPropertiesUnsubscribe) {
@@ -1184,7 +1184,7 @@ window.startSettingsPropertiesListener = function() {
         window.settingsPropertiesFirstLoadDone = false;
     }
     
-    window.settingsPropertiesUnsubscribe = db.collection('settings').doc('properties')
+    window.settingsPropertiesUnsubscribe = db.collection('settings').doc('vehicles')
         .onSnapshot((doc) => {
             if (!doc.exists) {
                 return;
@@ -1200,7 +1200,7 @@ window.startSettingsPropertiesListener = function() {
                 
                 // Only skip if prop is completely invalid - allow empty images arrays
                 if (!prop || !prop.title) {
-                    return; // Skip invalid properties (must have at least a title)
+                    return; // Skip invalid vehicles (must have at least a title)
                 }
                 
                 prop.id = propId;
@@ -1216,21 +1216,21 @@ window.startSettingsPropertiesListener = function() {
                     }
                 }
                 
-                // Check if this is a NEW property (not seen in any previous snapshot)
+                // Check if this is a NEW vehicle (not seen in any previous snapshot)
                 const isNewToUs = !window.seenPropertyIds.has(propId);
                 
                 if (isNewToUs) {
-                    // Add to local properties array if not already there
-                    const existingIndex = properties.findIndex(p => p.id === propId);
+                    // Add to local vehicles array if not already there
+                    const existingIndex = vehicles.findIndex(p => p.id === propId);
                     if (existingIndex === -1) {
-                        properties.push(prop);
+                        vehicles.push(prop);
                         
                         // Set up owner mapping
                         if (prop.ownerEmail) {
                             const email = prop.ownerEmail.toLowerCase();
-                            if (!ownerPropertyMap[email]) ownerPropertyMap[email] = [];
-                            if (!ownerPropertyMap[email].includes(propId)) ownerPropertyMap[email].push(propId);
-                            propertyOwnerEmail[propId] = email;
+                            if (!ownerVehicleMap[email]) ownerVehicleMap[email] = [];
+                            if (!ownerVehicleMap[email].includes(propId)) ownerVehicleMap[email].push(propId);
+                            vehicleOwnerEmail[propId] = email;
                         }
                         
                         // Set default availability
@@ -1262,12 +1262,12 @@ window.startSettingsPropertiesListener = function() {
                     }
                 }
                 
-                // Mark this property ID as seen
+                // Mark this vehicle ID as seen
                 window.seenPropertyIds.add(propId);
             });
             
-            // Update filtered properties
-            state.filteredProperties = [...properties];
+            // Update filtered vehicles
+            state.filteredVehicles = [...vehicles];
             
             // Save pending listing notifications to Firestore via UserPreferencesService
             if (window.UserPreferencesService) {
@@ -1410,7 +1410,7 @@ window.showNewListingNotification = function(listing, isMissed = false) {
                 <span class="text-3xl">${icon}</span>
                 <div class="flex-1">
                     <div class="text-white font-bold text-lg">${titleText}</div>
-                    <div class="text-white/90">${listing.title || 'New Property'}</div>
+                    <div class="text-white/90">${listing.title || 'New Vehicle'}</div>
                     <div class="text-white/70 text-sm">by ${ownerName}</div>
                     ${premiumBadge}
                     <div class="text-white/60 text-xs mt-1">${timeDisplay}</div>
@@ -1474,9 +1474,9 @@ window.handleListingNotificationClick = async function(ownerEmail, listingId) {
         }, 4000);
     } else {
         console.warn('[Notification] User card not found for email:', ownerEmail);
-        // Fallback: open property stats
-        if (typeof viewPropertyStats === 'function') {
-            viewPropertyStats(listingId);
+        // Fallback: open vehicle stats
+        if (typeof viewVehicleStats === 'function') {
+            viewVehicleStats(listingId);
         }
     }
 };
@@ -1546,7 +1546,7 @@ window.loadActivityLog = function() {
                 icon = '🏠';
                 bgColor = 'from-green-900/50 to-emerald-900/50 border-green-600/30';
                 title = 'New Listing Posted';
-                description = `${entry.data.title || 'New Property'} listed by ${entry.data.ownerEmail?.split('@')[0] || 'Unknown'}`;
+                description = `${entry.data.title || 'New Vehicle'} listed by ${entry.data.ownerEmail?.split('@')[0] || 'Unknown'}`;
                 break;
             case 'upgrade':
                 icon = '⬆️';
@@ -1572,10 +1572,10 @@ window.loadActivityLog = function() {
                 icon = '🗑️';
                 bgColor = 'from-red-900/50 to-gray-900/50 border-red-600/30';
                 title = 'User Deleted';
-                const propInfo = entry.data.propertiesDeleted > 0 
-                    ? ` (${entry.data.propertiesDeleted} properties deleted)` 
-                    : entry.data.propertiesOrphaned > 0 
-                        ? ` (${entry.data.propertiesOrphaned} properties orphaned)` 
+                const propInfo = entry.data.vehiclesDeleted > 0 
+                    ? ` (${entry.data.vehiclesDeleted} vehicles deleted)` 
+                    : entry.data.vehiclesOrphaned > 0 
+                        ? ` (${entry.data.vehiclesOrphaned} vehicles orphaned)` 
                         : '';
                 description = `${entry.data.email?.split('@')[0] || 'User'} account removed${propInfo}`;
                 break;
@@ -1758,7 +1758,7 @@ window.handleNewUserNotificationClick = async function(userId) {
  * 
  * @param {Object} options
  * @param {string} options.targetSelector - CSS selector for target element
- * @param {string} options.tabName - Dashboard tab to switch to (e.g., 'admin', 'myProperties')
+ * @param {string} options.tabName - Dashboard tab to switch to (e.g., 'admin', 'myVehicles')
  * @param {number} options.maxWaitMs - Maximum time to wait for element (default: 5000)
  * @param {string} options.highlightColor - Border highlight color
  * @param {string} options.glowColor - Glow effect color
@@ -1767,7 +1767,7 @@ window.handleNewUserNotificationClick = async function(userId) {
 window.scrollToAndHighlightElement = async function(options) {
     const {
         targetSelector,
-        tabName = 'myProperties',
+        tabName = 'myVehicles',
         maxWaitMs = 5000,
         highlightColor = 'rgba(239, 68, 68, 0.7)',
         glowColor = 'rgba(239, 68, 68, 0.4)',
@@ -1960,7 +1960,7 @@ window.reRenderPendingNotifications = function() {
             }
         } else if (notificationId.startsWith('new-listing-')) {
             const listingId = parseInt(notificationId.replace('new-listing-', ''));
-            const listing = properties.find(p => p.id === listingId);
+            const listing = vehicles.find(p => p.id === listingId);
             if (listing) {
                 showNewListingNotification(listing, true);
             }
@@ -1976,7 +1976,7 @@ window.reRenderPendingNotifications = function() {
 };
 
 // Show a notification for a new premium activation
-window.showNewPremiumNotification = function(property, ownerEmail, isMissed = false) {
+window.showNewPremiumNotification = function(vehicle, ownerEmail, isMissed = false) {
     const stack = $('adminNotificationsStack');
     if (!stack) {
         return;
@@ -1984,7 +1984,7 @@ window.showNewPremiumNotification = function(property, ownerEmail, isMissed = fa
     
     stack.classList.remove('hidden');
     
-    const notificationId = 'new-premium-' + property.id + '-' + Date.now();
+    const notificationId = 'new-premium-' + vehicle.id + '-' + Date.now();
     
     // Don't add if already dismissed
     if (window.dismissedAdminNotifications.has(notificationId)) return;
@@ -1995,14 +1995,14 @@ window.showNewPremiumNotification = function(property, ownerEmail, isMissed = fa
     let timeDisplay;
     let activatedDate = null;
     
-    if (property.premiumActivatedAt?.toDate) {
-        activatedDate = property.premiumActivatedAt.toDate();
-    } else if (property.premiumActivatedAt) {
-        activatedDate = new Date(property.premiumActivatedAt);
-    } else if (property.createdAt?.toDate) {
-        activatedDate = property.createdAt.toDate();
-    } else if (property.createdAt) {
-        activatedDate = new Date(property.createdAt);
+    if (vehicle.premiumActivatedAt?.toDate) {
+        activatedDate = vehicle.premiumActivatedAt.toDate();
+    } else if (vehicle.premiumActivatedAt) {
+        activatedDate = new Date(vehicle.premiumActivatedAt);
+    } else if (vehicle.createdAt?.toDate) {
+        activatedDate = vehicle.createdAt.toDate();
+    } else if (vehicle.createdAt) {
+        activatedDate = new Date(vehicle.createdAt);
     }
     
     if (activatedDate && !isNaN(activatedDate.getTime())) {
@@ -2031,7 +2031,7 @@ window.showNewPremiumNotification = function(property, ownerEmail, isMissed = fa
                 <span class="text-3xl">👑</span>
                 <div class="flex-1">
                     <div class="text-white font-bold text-lg">${titleText}</div>
-                    <div class="text-white/90 font-semibold">${property.title || 'Property'}</div>
+                    <div class="text-white/90 font-semibold">${vehicle.title || 'Vehicle'}</div>
                     <div class="text-white/70 text-sm">by ${ownerName} • $10k/week fee</div>
                     <div class="text-white/50 text-xs mt-1">${timeDisplay}</div>
                 </div>
@@ -2097,7 +2097,7 @@ window.renderAdminNotificationStack = function(notifications, hasNew = false) {
                 bgGradient = 'from-amber-600 to-yellow-500';
                 borderColor = 'border-amber-400';
                 title = 'Premium Listing Activated!';
-                message = n.message || `${n.propertyTitle || 'Property'} enabled premium - collect $10k/week`;
+                message = n.message || `${n.vehicleTitle || 'Vehicle'} enabled premium - collect $10k/week`;
                 // Add to pending premium notifications for badge count
                 if (!window.pendingAdminNotifications.has('new-premium-' + n.id)) {
                     window.pendingAdminNotifications.add('new-premium-' + n.id);
@@ -2228,7 +2228,7 @@ window.updateAdminStats = async function(users) {
     
     // Refresh availability data from Firestore for accuracy
     try {
-        const availDoc = await db.collection('settings').doc('propertyAvailability').get();
+        const availDoc = await db.collection('settings').doc('vehicleAvailability').get();
         if (availDoc.exists) {
             const availData = availDoc.data();
             Object.keys(availData).forEach(key => {
@@ -2270,12 +2270,12 @@ window.updateAdminStats = async function(users) {
     let premiumTrialCount = 0;
     const premiumFeePerWeek = 10000; // $10k/week per premium listing
     
-    // Check each property for premium status
-    properties.forEach(p => {
-        const isPremium = PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false);
+    // Check each vehicle for premium status
+    vehicles.forEach(p => {
+        const isPremium = VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false);
         if (isPremium) {
             premiumListingsCount++;
-            const isPremiumTrial = PropertyDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
+            const isPremiumTrial = VehicleDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
             if (isPremiumTrial) {
                 premiumTrialCount++;
             } else {
@@ -2436,11 +2436,11 @@ window.updateAdminStats = async function(users) {
     const premiumDetail = $('adminStatPremiumDetail');
     if (premiumDetail) {
         // Get list of premium listings
-        const premiumListings = properties.filter(p => 
-            PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false)
+        const premiumListings = vehicles.filter(p => 
+            VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false)
         );
         const premiumList = premiumListings.slice(0, 4).map(p => {
-            const isTrial = PropertyDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
+            const isTrial = VehicleDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
             const icon = isTrial ? '🎁' : '💰';
             return `<div class="truncate">${icon} ${p.title}</div>`;
         }).join('');
@@ -2477,8 +2477,8 @@ window.updateAdminStats = async function(users) {
     }
     
     // ==================== TOTAL LISTINGS STAT ====================
-    const totalListings = properties.length;
-    const availableListings = properties.filter(p => state.availability[p.id] !== false).length;
+    const totalListings = vehicles.length;
+    const availableListings = vehicles.filter(p => state.availability[p.id] !== false).length;
     const soldListings = totalListings - availableListings;
     
     const statListings = $('adminStatListings');
@@ -2603,9 +2603,9 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             ? { icon: '👑', name: 'Owner', bgColor: 'bg-red-600', maxListings: Infinity }
             : (TIERS[user.tier] || TIERS.starter);
         
-        // CRITICAL: Use OwnershipService for consistent property ownership
-        const userProperties = OwnershipService.getPropertiesForOwner(user.email);
-        const listingCount = userProperties.length;
+        // CRITICAL: Use OwnershipService for consistent vehicle ownership
+        const userVehicles = OwnershipService.getVehiclesForOwner(user.email);
+        const listingCount = userVehicles.length;
         const maxListings = (isUserMasterAdmin || tierData.maxListings === Infinity) ? '∞' : tierData.maxListings;
         const escapedEmail = user.email.replace(/'/g, "\\'");
         const escapedId = user.id;
@@ -2624,21 +2624,21 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             ? user.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             : 'Unknown';
         
-        // Calculate property type breakdown
+        // Calculate vehicle type breakdown
         const propTypeBreakdown = {};
         const interiorBreakdown = { 'Walk-in': 0, 'Instance': 0 };
-        userProperties.forEach(p => {
+        userVehicles.forEach(p => {
             const pType = p.type || 'unknown';
             propTypeBreakdown[pType] = (propTypeBreakdown[pType] || 0) + 1;
             if (p.interiorType === 'Walk-in') interiorBreakdown['Walk-in']++;
             else if (p.interiorType === 'Instance') interiorBreakdown['Instance']++;
         });
         
-        // Format property type breakdown for display (clickable)
+        // Format vehicle type breakdown for display (clickable)
         let propBreakdownHTML = '';
         const typeIcons = { house: '🏠', apartment: '🏢', condo: '🏨', villa: '🏡', hotel: '🏩', office: '🏢', warehouse: '🏭', hideout: '🏚️' };
         
-        if (userProperties.length > 0) {
+        if (userVehicles.length > 0) {
             const typeEntries = Object.entries(propTypeBreakdown)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 3) // Show top 3
@@ -2649,7 +2649,7 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                 })
                 .join(' <span class="text-gray-600">•</span> ');
             
-            const walkinPct = Math.round((interiorBreakdown['Walk-in'] / userProperties.length) * 100);
+            const walkinPct = Math.round((interiorBreakdown['Walk-in'] / userVehicles.length) * 100);
             const instancePct = 100 - walkinPct;
             
             propBreakdownHTML = `
@@ -2662,23 +2662,23 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             `;
         }
         
-        const propertiesHTML = userProperties.length > 0 
-            ? userProperties.map((p, index) => {
-                const title = p.title || p.name || 'Unnamed Property';
+        const vehiclesHTML = userVehicles.length > 0 
+            ? userVehicles.map((p, index) => {
+                const title = p.title || p.name || 'Unnamed Vehicle';
                 const isAvailable = state.availability[p.id] !== false;
                 const typeIcon = typeIcons[p.type] || '🏠';
                 const interiorIcon = p.interiorType === 'Walk-in' ? '🚶' : '🌀';
-                // Check premium status from property data (real-time synced from Firestore)
-                const isPremium = PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false);
+                // Check premium status from vehicle data (real-time synced from Firestore)
+                const isPremium = VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false);
                 const premiumIndicator = isPremium ? '<span class="text-amber-400" title="Premium Listing - $10k/week">👑</span>' : '';
                 return `
-                    <div class="flex items-center justify-between py-1.5 border-b border-gray-700/50 last:border-0 user-property-item transition-all duration-300" data-type="${p.type || ''}" data-interior="${p.interiorType || ''}" data-propertyid="${p.id}">
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-700/50 last:border-0 user-vehicle-item transition-all duration-300" data-type="${p.type || ''}" data-interior="${p.interiorType || ''}" data-vehicleid="${p.id}">
                         <span class="text-gray-300 text-xs flex items-center gap-1">
                             <span class="text-gray-500">${index + 1}.</span>
                             <span title="${(p.type || 'unknown').charAt(0).toUpperCase() + (p.type || 'unknown').slice(1)}">${typeIcon}</span>
                             <span title="${p.interiorType || 'Unknown'}" class="text-gray-600">${interiorIcon}</span>
                             ${premiumIndicator}
-                            <a onclick="viewPropertyStats(${p.id})" class="hover:text-cyan-400 cursor-pointer hover:underline transition">${title}</a>
+                            <a onclick="viewVehicleStats(${p.id})" class="hover:text-cyan-400 cursor-pointer hover:underline transition">${title}</a>
                         </span>
                         <span class="text-xs ${isAvailable ? 'text-green-400' : 'text-red-400'}">${isAvailable ? '🟢' : '🔴'}</span>
                     </div>
@@ -2688,17 +2688,17 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
         
         // Build premium listings tracking section
         let premiumTrackingHTML = '';
-        const premiumListings = userProperties.filter(p => {
-            const isPremium = PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false);
-            const isPremiumTrial = PropertyDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
+        const premiumListings = userVehicles.filter(p => {
+            const isPremium = VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false);
+            const isPremiumTrial = VehicleDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
             return isPremium && !isPremiumTrial;
         });
         
         if (premiumListings.length > 0) {
             const premiumItems = premiumListings.map(p => {
-                const title = p.title || p.name || 'Property';
-                const premiumLastPayment = PropertyDataService.getValue(p.id, 'premiumLastPayment', p.premiumLastPayment || '');
-                const weeklyFee = PropertyDataService.getValue(p.id, 'premiumWeeklyFee', p.premiumWeeklyFee || 10000);
+                const title = p.title || p.name || 'Vehicle';
+                const premiumLastPayment = VehicleDataService.getValue(p.id, 'premiumLastPayment', p.premiumLastPayment || '');
+                const weeklyFee = VehicleDataService.getValue(p.id, 'premiumWeeklyFee', p.premiumWeeklyFee || 10000);
                 
                 let lastPaidDisplay = 'Never';
                 let nextDueDisplay = 'Not set';
@@ -2999,7 +2999,7 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                                 <div class="text-gray-500 text-xs truncate">${user.email}</div>
                             </div>
                         </div>
-                        <!-- Row 2: Tier badge, Phone, Listings, Properties toggle -->
+                        <!-- Row 2: Tier badge, Phone, Listings, Vehicles toggle -->
                         <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
                             <span class="px-2 py-0.5 rounded ${tierData.bgColor} text-white font-bold">${tierData.name}</span>
                             ${user.managedServicesInterest ? `<span class="px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold flex items-center gap-1 animate-pulse" title="Interested in Managed Services">
@@ -3025,15 +3025,15 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                                 <span class="text-gray-500">🕐 Last Login:</span> 
                                 <span class="text-gray-300">${lastLogin}</span>
                             </div>
-                            <div title="Last property posted">
+                            <div title="Last vehicle posted">
                                 <span class="text-gray-500">🏠 Last Post:</span> 
                                 <span class="text-gray-300">${lastPropertyPost}</span>
                             </div>
                         </div>
                         ${propBreakdownHTML}
-                        <!-- Properties List -->
+                        <!-- Vehicles List -->
                         <div id="propList_${escapedId}" class="hidden mt-2 bg-gray-900/50 rounded-lg p-2 max-h-32 overflow-y-auto">
-                            ${propertiesHTML}
+                            ${vehiclesHTML}
                         </div>
                         ${subscriptionHTML}
                         ${premiumTrackingHTML}
@@ -3180,7 +3180,7 @@ window.toggleUserGroup = function(groupId) {
     }
 };
 
-// Filter user properties by type (House, Apartment, etc.)
+// Filter user vehicles by type (House, Apartment, etc.)
 window.filterUserPropertiesByType = function(userId, type) {
     const list = $('propList_' + userId);
     if (!list) return;
@@ -3190,8 +3190,8 @@ window.filterUserPropertiesByType = function(userId, type) {
     const toggle = $('propToggle_' + userId);
     if (toggle) toggle.textContent = '▼';
     
-    // Get all property items
-    const items = list.querySelectorAll('.user-property-item');
+    // Get all vehicle items
+    const items = list.querySelectorAll('.user-vehicle-item');
     let visibleCount = 0;
     
     items.forEach(item => {
@@ -3213,13 +3213,13 @@ window.filterUserPropertiesByType = function(userId, type) {
     if (!list.querySelector('.show-all-btn')) {
         const showAllBtn = document.createElement('button');
         showAllBtn.className = 'show-all-btn mt-2 text-xs text-cyan-400 hover:text-cyan-300 underline cursor-pointer';
-        showAllBtn.textContent = '↩ Show All Properties';
+        showAllBtn.textContent = '↩ Show All Vehicles';
         showAllBtn.onclick = () => resetUserPropertiesFilter(userId);
         list.appendChild(showAllBtn);
     }
 };
 
-// Filter user properties by interior type (Walk-in, Instance)
+// Filter user vehicles by interior type (Walk-in, Instance)
 window.filterUserPropertiesByInterior = function(userId, interiorType) {
     const list = $('propList_' + userId);
     if (!list) return;
@@ -3229,8 +3229,8 @@ window.filterUserPropertiesByInterior = function(userId, interiorType) {
     const toggle = $('propToggle_' + userId);
     if (toggle) toggle.textContent = '▼';
     
-    // Get all property items
-    const items = list.querySelectorAll('.user-property-item');
+    // Get all vehicle items
+    const items = list.querySelectorAll('.user-vehicle-item');
     let visibleCount = 0;
     
     items.forEach(item => {
@@ -3245,24 +3245,24 @@ window.filterUserPropertiesByInterior = function(userId, interiorType) {
     });
     
     const icon = interiorType === 'Walk-in' ? '🚶' : '🌀';
-    showToast(`${icon} Showing ${visibleCount} ${interiorType} properties - Click "Show All" to reset`, 'info');
+    showToast(`${icon} Showing ${visibleCount} ${interiorType} vehicles - Click "Show All" to reset`, 'info');
     
     // Add a "Show All" button if not already present
     if (!list.querySelector('.show-all-btn')) {
         const showAllBtn = document.createElement('button');
         showAllBtn.className = 'show-all-btn mt-2 text-xs text-cyan-400 hover:text-cyan-300 underline cursor-pointer';
-        showAllBtn.textContent = '↩ Show All Properties';
+        showAllBtn.textContent = '↩ Show All Vehicles';
         showAllBtn.onclick = () => resetUserPropertiesFilter(userId);
         list.appendChild(showAllBtn);
     }
 };
 
-// Reset user properties filter
+// Reset user vehicles filter
 window.resetUserPropertiesFilter = function(userId) {
     const list = $('propList_' + userId);
     if (!list) return;
     
-    const items = list.querySelectorAll('.user-property-item');
+    const items = list.querySelectorAll('.user-vehicle-item');
     items.forEach(item => {
         item.style.display = '';
         item.style.background = '';
@@ -3272,7 +3272,7 @@ window.resetUserPropertiesFilter = function(userId) {
     const showAllBtn = list.querySelector('.show-all-btn');
     if (showAllBtn) showAllBtn.remove();
     
-    showToast('Showing all properties', 'info');
+    showToast('Showing all vehicles', 'info');
 };
 
 window.filterAdminUsers = function() {

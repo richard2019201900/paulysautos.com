@@ -12,7 +12,7 @@
  * - Payment history report
  * - Report data export
  * 
- * DEPENDENCIES: TierService, PropertyDataService
+ * DEPENDENCIES: TierService, VehicleDataService
  * ============================================================================
  */
 
@@ -21,8 +21,8 @@
 // ============================================
 
 window.openReportsModal = async function() {
-    // Use OWNED properties for reports (not all viewable)
-    const ownedProps = getOwnedProperties();
+    // Use OWNED vehicles for reports (not all viewable)
+    const ownedProps = getOwnedVehicles();
     if (ownedProps.length === 0) {
         showToast('No vehicles owned by this account to generate reports for', 'error');
         return;
@@ -41,7 +41,7 @@ window.openReportsModal = async function() {
     document.body.insertAdjacentHTML('beforeend', loadingHTML);
     
     try {
-        // Fetch actual payment data from Firestore for all properties
+        // Fetch actual payment data from Firestore for all vehicles
         const reportData = await generateReportDataAsync(ownedProps);
         
         // Remove loading modal
@@ -82,8 +82,8 @@ function renderReportsModal(reportData) {
                         <button id="reportTab-revenue" onclick="switchReportTab('revenue')" class="px-4 py-2 text-sm font-medium rounded-t-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition">
                             💰 Revenue
                         </button>
-                        <button id="reportTab-renters" onclick="switchReportTab('renters')" class="px-4 py-2 text-sm font-medium rounded-t-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition">
-                            👥 Renter Earnings
+                        <button id="reportTab-buyers" onclick="switchReportTab('buyers')" class="px-4 py-2 text-sm font-medium rounded-t-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition">
+                            👥 Buyer Earnings
                         </button>
                         <button id="reportTab-occupancy" onclick="switchReportTab('occupancy')" class="px-4 py-2 text-sm font-medium rounded-t-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition">
                             🏠 Occupancy
@@ -106,9 +106,9 @@ function renderReportsModal(reportData) {
                         ${renderRevenueReport(reportData)}
                     </div>
                     
-                    <!-- Renter Earnings Tab -->
-                    <div id="reportContent-renters" class="report-tab-content hidden">
-                        ${renderRenterEarningsReport(reportData)}
+                    <!-- Buyer Earnings Tab -->
+                    <div id="reportContent-buyers" class="report-tab-content hidden">
+                        ${renderBuyerEarningsReport(reportData)}
                     </div>
                     
                     <!-- Occupancy Tab -->
@@ -169,42 +169,42 @@ window.switchReportTab = function(tabName) {
  * Generate report data by fetching ACTUAL payment history from Firestore
  * This ensures reports reflect real collected payments, not just prices
  */
-async function generateReportDataAsync(properties) {
+async function generateReportDataAsync(vehicles) {
     const now = new Date();
     const data = {
-        totalProperties: properties.length,
-        soldProperties: 0,
-        availableProperties: 0,
+        totalProperties: vehicles.length,
+        soldVehicles: 0,
+        availableVehicles: 0,
         totalWeeklyRevenue: 0,
         totalMonthlyRevenue: 0,
         totalPaymentsReceived: 0,
         totalPaymentAmount: 0,
-        propertyStats: [],
+        vehicleStats: [],
         revenueByType: {},
         revenueByFrequency: { daily: 0, weekly: 0, biweekly: 0, monthly: 0 },
         frequencyCount: { daily: 0, weekly: 0, biweekly: 0, monthly: 0 },
-        renterEarnings: {}, // NEW: Track actual earnings per renter
+        buyerEarnings: {}, // NEW: Track actual earnings per buyer
         tenureHistory: [],   // NEW: All completed tenures
         paymentHistory: []
     };
     
-    // Fetch payment history for all properties in parallel
-    const paymentPromises = properties.map(async (p) => {
+    // Fetch payment history for all vehicles in parallel
+    const paymentPromises = vehicles.map(async (p) => {
         try {
             const historyDoc = await db.collection('paymentHistory').doc(String(p.id)).get();
             if (historyDoc.exists) {
                 const histData = historyDoc.data();
                 return {
-                    propertyId: p.id,
+                    vehicleId: p.id,
                     payments: histData.payments || [],
                     tenureHistory: histData.tenureHistory || [],
                     vacancyPeriods: histData.vacancyPeriods || []
                 };
             }
         } catch (e) {
-            console.warn(`[EliteReports] Could not fetch history for property ${p.id}:`, e);
+            console.warn(`[EliteReports] Could not fetch history for vehicle ${p.id}:`, e);
         }
-        return { propertyId: p.id, payments: [], tenureHistory: [], vacancyPeriods: [] };
+        return { vehicleId: p.id, payments: [], tenureHistory: [], vacancyPeriods: [] };
     });
     
     const allPaymentData = await Promise.all(paymentPromises);
@@ -212,46 +212,46 @@ async function generateReportDataAsync(properties) {
     // Create lookup for payment data
     const paymentDataByProperty = {};
     allPaymentData.forEach(pd => {
-        paymentDataByProperty[pd.propertyId] = pd;
+        paymentDataByProperty[pd.vehicleId] = pd;
     });
     
-    properties.forEach(p => {
+    vehicles.forEach(p => {
         const isAvailable = state.availability[p.id] !== false;
-        const buyerName = PropertyDataService.getValue(p.id, 'buyerName', p.buyerName || '');
-        const paymentFrequency = PropertyDataService.getValue(p.id, 'paymentFrequency', p.paymentFrequency || '');
-        const lastPaymentDate = PropertyDataService.getValue(p.id, 'lastPaymentDate', p.lastPaymentDate || '');
-        const dailyPrice = PropertyDataService.getValue(p.id, 'dailyPrice', p.dailyPrice || 0);
+        const buyerName = VehicleDataService.getValue(p.id, 'buyerName', p.buyerName || '');
+        const paymentFrequency = VehicleDataService.getValue(p.id, 'paymentFrequency', p.paymentFrequency || '');
+        const lastPaymentDate = VehicleDataService.getValue(p.id, 'lastPaymentDate', p.lastPaymentDate || '');
+        const dailyPrice = VehicleDataService.getValue(p.id, 'dailyPrice', p.dailyPrice || 0);
         const weeklyPrice = p.weeklyPrice || 0;
         const monthlyPrice = p.monthlyPrice || 0;
-        const biweeklyPrice = PropertyDataService.getValue(p.id, 'biweeklyPrice', p.biweeklyPrice || weeklyPrice * 2);
+        const biweeklyPrice = VehicleDataService.getValue(p.id, 'biweeklyPrice', p.biweeklyPrice || weeklyPrice * 2);
         
         // Get ACTUAL payment history from Firestore
-        const propertyPaymentData = paymentDataByProperty[p.id] || { payments: [], tenureHistory: [] };
-        const payments = propertyPaymentData.payments || [];
-        const tenures = propertyPaymentData.tenureHistory || [];
+        const vehiclePaymentData = paymentDataByProperty[p.id] || { payments: [], tenureHistory: [] };
+        const payments = vehiclePaymentData.payments || [];
+        const tenures = vehiclePaymentData.tenureHistory || [];
         
         // Calculate ACTUAL received amount
         const totalReceived = payments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
         
-        // Track payments by renter for "Renter Earnings" report
+        // Track payments by buyer for "Buyer Earnings" report
         payments.forEach(pay => {
             const rName = pay.buyerName || 'Unknown';
-            if (!data.renterEarnings[rName]) {
-                data.renterEarnings[rName] = {
+            if (!data.buyerEarnings[rName]) {
+                data.buyerEarnings[rName] = {
                     name: rName,
                     totalPaid: 0,
                     paymentCount: 0,
-                    properties: new Set(),
+                    vehicles: new Set(),
                     lastPayment: null
                 };
             }
-            data.renterEarnings[rName].totalPaid += (pay.amount || 0);
-            data.renterEarnings[rName].paymentCount++;
-            data.renterEarnings[rName].properties.add(p.title || `Property #${p.id}`);
+            data.buyerEarnings[rName].totalPaid += (pay.amount || 0);
+            data.buyerEarnings[rName].paymentCount++;
+            data.buyerEarnings[rName].vehicles.add(p.title || `Vehicle #${p.id}`);
             
             const payDate = new Date(pay.paymentDate || pay.recordedAt);
-            if (!data.renterEarnings[rName].lastPayment || payDate > data.renterEarnings[rName].lastPayment) {
-                data.renterEarnings[rName].lastPayment = payDate;
+            if (!data.buyerEarnings[rName].lastPayment || payDate > data.buyerEarnings[rName].lastPayment) {
+                data.buyerEarnings[rName].lastPayment = payDate;
             }
         });
         
@@ -259,7 +259,7 @@ async function generateReportDataAsync(properties) {
         tenures.forEach(t => {
             data.tenureHistory.push({
                 ...t,
-                propertyName: p.title || `Property #${p.id}`
+                vehicleName: p.title || `Vehicle #${p.id}`
             });
         });
         
@@ -291,9 +291,9 @@ async function generateReportDataAsync(properties) {
         }
         
         if (isAvailable) {
-            data.availableProperties++;
+            data.availableVehicles++;
         } else {
-            data.soldProperties++;
+            data.soldVehicles++;
             data.totalWeeklyRevenue += (paymentFrequency === 'weekly' ? paymentAmount : 0);
             data.totalMonthlyRevenue += monthlyEquivalent;
         }
@@ -305,12 +305,12 @@ async function generateReportDataAsync(properties) {
         payments.forEach(pay => {
             data.paymentHistory.push({
                 ...pay,
-                propertyId: p.id,
-                propertyName: p.title || `Property #${p.id}`
+                vehicleId: p.id,
+                vehicleName: p.title || `Vehicle #${p.id}`
             });
         });
         
-        // Revenue by property type
+        // Revenue by vehicle type
         const propType = p.type || 'Other';
         if (!data.revenueByType[propType]) {
             data.revenueByType[propType] = { count: 0, sold: 0, revenue: 0, collected: 0 };
@@ -322,11 +322,11 @@ async function generateReportDataAsync(properties) {
             data.revenueByType[propType].revenue += monthlyEquivalent;
         }
         
-        // Property stats for ranking
-        data.propertyStats.push({
+        // Vehicle stats for ranking
+        data.vehicleStats.push({
             id: p.id,
-            name: p.title || `Property #${p.id}`,
-            title: p.title || `Property #${p.id}`,
+            name: p.title || `Vehicle #${p.id}`,
+            title: p.title || `Vehicle #${p.id}`,
             type: propType,
             isRented: !isAvailable,
             buyerName: buyerName,
@@ -339,14 +339,14 @@ async function generateReportDataAsync(properties) {
         });
     });
     
-    // Sort properties by ACTUAL revenue collected
-    data.propertyStats.sort((a, b) => b.totalReceived - a.totalReceived);
+    // Sort vehicles by ACTUAL revenue collected
+    data.vehicleStats.sort((a, b) => b.totalReceived - a.totalReceived);
     
-    // Convert renter earnings to array and sort
-    data.renterEarningsList = Object.values(data.renterEarnings)
+    // Convert buyer earnings to array and sort
+    data.buyerEarningsList = Object.values(data.buyerEarnings)
         .map(r => ({
             ...r,
-            properties: Array.from(r.properties)
+            vehicles: Array.from(r.vehicles)
         }))
         .sort((a, b) => b.totalPaid - a.totalPaid);
     
@@ -355,7 +355,7 @@ async function generateReportDataAsync(properties) {
     
     // Calculate occupancy rate
     data.occupancyRate = data.totalProperties > 0 
-        ? Math.round((data.soldProperties / data.totalProperties) * 100) 
+        ? Math.round((data.soldVehicles / data.totalProperties) * 100) 
         : 0;
     
     return data;
@@ -366,9 +366,9 @@ function renderOverviewReport(data) {
                            data.occupancyRate >= 50 ? 'text-yellow-400' : 'text-red-400';
     
     // Calculate vacancy loss (potential revenue from empty units)
-    const avgRentPerUnit = data.soldProperties > 0 ? data.totalMonthlyRevenue / data.soldProperties : 0;
-    const weeklyVacancyLoss = Math.round((avgRentPerUnit / 4) * data.availableProperties);
-    const monthlyVacancyLoss = Math.round(avgRentPerUnit * data.availableProperties);
+    const avgRentPerUnit = data.soldVehicles > 0 ? data.totalMonthlyRevenue / data.soldVehicles : 0;
+    const weeklyVacancyLoss = Math.round((avgRentPerUnit / 4) * data.availableVehicles);
+    const monthlyVacancyLoss = Math.round(avgRentPerUnit * data.availableVehicles);
     
     // Calculate cash flow forecast (next 4 weeks)
     const weeklyIncome = Math.round(data.totalMonthlyRevenue / 4);
@@ -379,9 +379,9 @@ function renderOverviewReport(data) {
         { week: 'Week 4', amount: weeklyIncome }
     ];
     
-    // Find overdue payments (properties with past due dates)
+    // Find overdue payments (vehicles with past due dates)
     const now = new Date();
-    const overdueProps = data.propertyStats.filter(p => {
+    const overdueProps = data.vehicleStats.filter(p => {
         if (!p.isRented || !p.lastPaymentDate) return false;
         const freq = p.frequency || 'weekly';
         const lastPay = new Date(p.lastPaymentDate + 'T00:00:00');
@@ -394,7 +394,7 @@ function renderOverviewReport(data) {
     });
     
     // Find upcoming payments (due within 3 days)
-    const upcomingProps = data.propertyStats.filter(p => {
+    const upcomingProps = data.vehicleStats.filter(p => {
         if (!p.isRented || !p.lastPaymentDate) return false;
         const freq = p.frequency || 'weekly';
         const lastPay = new Date(p.lastPaymentDate + 'T00:00:00');
@@ -410,7 +410,7 @@ function renderOverviewReport(data) {
     return `
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
-                <p class="text-gray-400 text-xs mb-1">Total Properties</p>
+                <p class="text-gray-400 text-xs mb-1">Total Vehicles</p>
                 <p class="text-2xl font-bold text-white">${data.totalProperties}</p>
             </div>
             <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
@@ -485,18 +485,18 @@ function renderOverviewReport(data) {
                 <div class="flex justify-center gap-6 mt-4 text-sm">
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span class="text-gray-300">Rented: ${data.soldProperties}</span>
+                        <span class="text-gray-300">Rented: ${data.soldVehicles}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 bg-gray-600 rounded-full"></div>
-                        <span class="text-gray-300">Available: ${data.availableProperties}</span>
+                        <span class="text-gray-300">Available: ${data.availableVehicles}</span>
                     </div>
                 </div>
             </div>
             
             <!-- Revenue by Type -->
             <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
-                <h4 class="text-white font-bold mb-4">🏢 Revenue by Property Type</h4>
+                <h4 class="text-white font-bold mb-4">🏢 Revenue by Vehicle Type</h4>
                 <div class="space-y-3">
                     ${Object.entries(data.revenueByType).map(([type, stats]) => {
                         const maxRevenue = Math.max(...Object.values(data.revenueByType).map(s => s.revenue));
@@ -525,11 +525,11 @@ function renderOverviewReport(data) {
                 <h4 class="text-red-400 font-bold mb-3 flex items-center gap-2">
                     💸 Vacancy Loss Calculator
                 </h4>
-                ${data.availableProperties > 0 ? `
+                ${data.availableVehicles > 0 ? `
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-400 text-sm">Empty Units:</span>
-                            <span class="text-white font-bold">${data.availableProperties}</span>
+                            <span class="text-white font-bold">${data.availableVehicles}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-400 text-sm">Avg Rent/Unit:</span>
@@ -595,7 +595,7 @@ function renderRevenueReport(data) {
         monthly: { count: 0, revenue: 0 }
     };
     
-    data.propertyStats.filter(p => p.isRented).forEach(p => {
+    data.vehicleStats.filter(p => p.isRented).forEach(p => {
         const freq = p.frequency || 'weekly';
         if (frequencyBreakdown[freq]) {
             frequencyBreakdown[freq].count++;
@@ -641,12 +641,12 @@ function renderRevenueReport(data) {
         </div>
         
         <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
-            <h4 class="text-white font-bold mb-4">📋 Revenue Breakdown by Property</h4>
+            <h4 class="text-white font-bold mb-4">📋 Revenue Breakdown by Vehicle</h4>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="text-gray-400 border-b border-gray-700">
-                            <th class="text-left py-2 px-3">Property</th>
+                            <th class="text-left py-2 px-3">Vehicle</th>
                             <th class="text-left py-2 px-3">Type</th>
                             <th class="text-center py-2 px-3">Frequency</th>
                             <th class="text-right py-2 px-3">Current Rate</th>
@@ -654,7 +654,7 @@ function renderRevenueReport(data) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${data.propertyStats.filter(p => p.isRented || p.totalReceived > 0).map(p => `
+                        ${data.vehicleStats.filter(p => p.isRented || p.totalReceived > 0).map(p => `
                             <tr class="border-b border-gray-800 hover:bg-gray-800/50">
                                 <td class="py-2 px-3 text-white">${p.name}</td>
                                 <td class="py-2 px-3 text-gray-400">${p.type}</td>
@@ -680,24 +680,24 @@ function renderRevenueReport(data) {
 }
 
 function renderOccupancyReport(data) {
-    const rentedProps = data.propertyStats.filter(p => p.isRented);
-    const availableProps = data.propertyStats.filter(p => !p.isRented);
+    const rentedProps = data.vehicleStats.filter(p => p.isRented);
+    const availableProps = data.vehicleStats.filter(p => !p.isRented);
     
     return `
         <div class="grid grid-cols-2 gap-4 mb-6">
             <div class="bg-gradient-to-br from-green-600/20 to-emerald-700/20 rounded-xl p-6 border border-green-500/30 text-center">
                 <p class="text-green-300 text-sm mb-2">Rented Units</p>
-                <p class="text-5xl font-black text-green-400">${data.soldProperties}</p>
+                <p class="text-5xl font-black text-green-400">${data.soldVehicles}</p>
                 <p class="text-green-300 text-xs mt-2">${data.occupancyRate}% of portfolio</p>
             </div>
             <div class="bg-gradient-to-br from-gray-600/20 to-gray-700/20 rounded-xl p-6 border border-gray-500/30 text-center">
                 <p class="text-gray-300 text-sm mb-2">Available Units</p>
-                <p class="text-5xl font-black text-gray-400">${data.availableProperties}</p>
+                <p class="text-5xl font-black text-gray-400">${data.availableVehicles}</p>
                 <p class="text-gray-400 text-xs mt-2">${100 - data.occupancyRate}% of portfolio</p>
             </div>
         </div>
         
-        <!-- Rented Properties -->
+        <!-- Rented Vehicles -->
         <div class="bg-gray-900 rounded-xl p-4 border border-gray-700 mb-4">
             <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
                 <span class="w-3 h-3 bg-green-500 rounded-full"></span>
@@ -709,16 +709,16 @@ function renderOccupancyReport(data) {
                         <div class="bg-gray-800 rounded-lg px-3 py-2 flex justify-between items-center">
                             <div>
                                 <p class="text-white text-sm font-medium">${p.name}</p>
-                                <p class="text-gray-400 text-xs">Renter: ${p.buyerName || 'Unknown'}</p>
+                                <p class="text-gray-400 text-xs">Buyer: ${p.buyerName || 'Unknown'}</p>
                             </div>
                             <p class="text-green-400 text-sm font-medium">${formatPrice(p.paymentAmount)}/${p.frequency.charAt(0)}</p>
                         </div>
                     `).join('')}
                 </div>
-            ` : '<p class="text-gray-500 text-center py-4">No rented properties</p>'}
+            ` : '<p class="text-gray-500 text-center py-4">No rented vehicles</p>'}
         </div>
         
-        <!-- Available Properties -->
+        <!-- Available Vehicles -->
         <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
             <h4 class="text-gray-400 font-bold mb-3 flex items-center gap-2">
                 <span class="w-3 h-3 bg-gray-500 rounded-full"></span>
@@ -736,18 +736,18 @@ function renderOccupancyReport(data) {
                         </div>
                     `).join('')}
                 </div>
-            ` : '<p class="text-green-400 text-center py-4">🎉 All properties are rented!</p>'}
+            ` : '<p class="text-green-400 text-center py-4">🎉 All vehicles are rented!</p>'}
         </div>
     `;
 }
 
 /**
- * Render Renter Earnings Report - Shows actual collected amounts per renter
+ * Render Buyer Earnings Report - Shows actual collected amounts per buyer
  */
-function renderRenterEarningsReport(data) {
-    const renterList = data.renterEarningsList || [];
-    const totalCollected = renterList.reduce((sum, r) => sum + r.totalPaid, 0);
-    const totalPayments = renterList.reduce((sum, r) => sum + r.paymentCount, 0);
+function renderBuyerEarningsReport(data) {
+    const buyerList = data.buyerEarningsList || [];
+    const totalCollected = buyerList.reduce((sum, r) => sum + r.totalPaid, 0);
+    const totalPayments = buyerList.reduce((sum, r) => sum + r.paymentCount, 0);
     
     return `
         <!-- Summary Stats -->
@@ -761,26 +761,26 @@ function renderRenterEarningsReport(data) {
                 <p class="text-2xl font-bold text-blue-400">${totalPayments}</p>
             </div>
             <div class="bg-gradient-to-br from-purple-600/20 to-pink-700/20 rounded-xl p-4 border border-purple-500/30">
-                <p class="text-purple-300 text-xs mb-1">Unique Renters</p>
-                <p class="text-2xl font-bold text-purple-400">${renterList.length}</p>
+                <p class="text-purple-300 text-xs mb-1">Unique Buyers</p>
+                <p class="text-2xl font-bold text-purple-400">${buyerList.length}</p>
             </div>
             <div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 rounded-xl p-4 border border-amber-500/30">
-                <p class="text-amber-300 text-xs mb-1">Avg per Renter</p>
-                <p class="text-2xl font-bold text-amber-400">${renterList.length > 0 ? formatPrice(totalCollected / renterList.length) : '$0'}</p>
+                <p class="text-amber-300 text-xs mb-1">Avg per Buyer</p>
+                <p class="text-2xl font-bold text-amber-400">${buyerList.length > 0 ? formatPrice(totalCollected / buyerList.length) : '$0'}</p>
             </div>
         </div>
         
-        <!-- Renter Earnings List -->
+        <!-- Buyer Earnings List -->
         <div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
             <h4 class="text-white font-bold mb-4 flex items-center gap-2">
-                👥 Earnings by Renter
+                👥 Earnings by Buyer
                 <span class="text-xs font-normal text-gray-400">(sorted by total paid)</span>
             </h4>
             
-            ${renterList.length > 0 ? `
+            ${buyerList.length > 0 ? `
                 <div class="space-y-3">
-                    ${renterList.map((r, i) => {
-                        const maxPaid = renterList[0]?.totalPaid || 1;
+                    ${buyerList.map((r, i) => {
+                        const maxPaid = buyerList[0]?.totalPaid || 1;
                         const width = (r.totalPaid / maxPaid) * 100;
                         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '💰';
                         return `
@@ -807,9 +807,9 @@ function renderRenterEarningsReport(data) {
                                     <div class="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all" style="width: ${width}%"></div>
                                 </div>
                                 
-                                <!-- Properties -->
+                                <!-- Vehicles -->
                                 <div class="flex flex-wrap gap-1">
-                                    ${r.properties.map(prop => `
+                                    ${r.vehicles.map(prop => `
                                         <span class="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">${prop}</span>
                                     `).join('')}
                                 </div>
@@ -821,7 +821,7 @@ function renderRenterEarningsReport(data) {
                 <div class="text-center py-8">
                     <div class="text-4xl mb-3">📭</div>
                     <p class="text-gray-400">No payment history yet</p>
-                    <p class="text-gray-500 text-sm mt-1">Payments will appear here when renters pay</p>
+                    <p class="text-gray-500 text-sm mt-1">Payments will appear here when buyers pay</p>
                 </div>
             `}
         </div>
@@ -837,8 +837,8 @@ function renderRenterEarningsReport(data) {
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="text-gray-400 border-b border-gray-700">
-                            <th class="text-left py-2 px-3">Renter</th>
-                            <th class="text-left py-2 px-3">Property</th>
+                            <th class="text-left py-2 px-3">Buyer</th>
+                            <th class="text-left py-2 px-3">Vehicle</th>
                             <th class="text-center py-2 px-3">Duration</th>
                             <th class="text-right py-2 px-3">Total Collected</th>
                         </tr>
@@ -847,7 +847,7 @@ function renderRenterEarningsReport(data) {
                         ${data.tenureHistory.slice(0, 10).map(t => `
                             <tr class="border-b border-gray-800 hover:bg-gray-800/50">
                                 <td class="py-2 px-3 text-white">${t.buyerName || 'Unknown'}</td>
-                                <td class="py-2 px-3 text-gray-400">${t.propertyName || 'Unknown'}</td>
+                                <td class="py-2 px-3 text-gray-400">${t.vehicleName || 'Unknown'}</td>
                                 <td class="py-2 px-3 text-center text-gray-400">${t.tenureDays || 0} days</td>
                                 <td class="py-2 px-3 text-right text-green-400 font-bold">${formatPrice(t.totalCollected || 0)}</td>
                             </tr>
@@ -861,8 +861,8 @@ function renderRenterEarningsReport(data) {
 }
 
 function renderPerformanceReport(data) {
-    const topByRevenue = [...data.propertyStats].filter(p => p.isRented).sort((a, b) => b.monthlyEquivalent - a.monthlyEquivalent).slice(0, 5);
-    const topByPayments = [...data.propertyStats].filter(p => p.totalReceived > 0).sort((a, b) => b.totalReceived - a.totalReceived).slice(0, 5);
+    const topByRevenue = [...data.vehicleStats].filter(p => p.isRented).sort((a, b) => b.monthlyEquivalent - a.monthlyEquivalent).slice(0, 5);
+    const topByPayments = [...data.vehicleStats].filter(p => p.totalReceived > 0).sort((a, b) => b.totalReceived - a.totalReceived).slice(0, 5);
     
     return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -891,7 +891,7 @@ function renderPerformanceReport(data) {
                             `;
                         }).join('')}
                     </div>
-                ` : '<p class="text-gray-500 text-center py-4">No rented properties yet</p>'}
+                ` : '<p class="text-gray-500 text-center py-4">No rented vehicles yet</p>'}
             </div>
             
             <!-- Top by Total Collected -->
@@ -930,7 +930,7 @@ function renderPerformanceReport(data) {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div class="bg-gray-900/50 rounded-lg p-3">
                     <p class="text-gray-400 mb-1">Avg Rent per Unit</p>
-                    <p class="text-white font-bold">${data.soldProperties > 0 ? formatPrice(data.totalMonthlyRevenue / data.soldProperties) : '$0'}/mo</p>
+                    <p class="text-white font-bold">${data.soldVehicles > 0 ? formatPrice(data.totalMonthlyRevenue / data.soldVehicles) : '$0'}/mo</p>
                 </div>
                 <div class="bg-gray-900/50 rounded-lg p-3">
                     <p class="text-gray-400 mb-1">Portfolio Value</p>
@@ -938,7 +938,7 @@ function renderPerformanceReport(data) {
                 </div>
                 <div class="bg-gray-900/50 rounded-lg p-3">
                     <p class="text-gray-400 mb-1">Vacancy Loss</p>
-                    <p class="text-red-400 font-bold">${data.availableProperties} units idle</p>
+                    <p class="text-red-400 font-bold">${data.availableVehicles} units idle</p>
                 </div>
             </div>
         </div>
@@ -996,7 +996,7 @@ function updateEliteReportsButton() {
 // These are used by the dynamically generated reports modal
 async function generateOverviewReport() {
     const content = document.getElementById('reportContent');
-    const ownerProps = getOwnedProperties();
+    const ownerProps = getOwnedVehicles();
     
     // Calculate stats
     let totalWeeklyIncome = 0;
@@ -1010,8 +1010,8 @@ async function generateOverviewReport() {
     const allPayments = await Promise.all(paymentPromises);
     
     ownerProps.forEach((p, idx) => {
-        const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
-        const monthlyPrice = PropertyDataService.getValue(p.id, 'monthlyPrice', p.monthlyPrice || weeklyPrice * 4);
+        const weeklyPrice = VehicleDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
+        const monthlyPrice = VehicleDataService.getValue(p.id, 'monthlyPrice', p.monthlyPrice || weeklyPrice * 4);
         const isOccupied = state.availability[p.id] === false;
         
         if (isOccupied) {
@@ -1092,7 +1092,7 @@ async function generateOverviewReport() {
             
             <!-- Top Performers Preview -->
             <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700">
-                <h4 class="text-lg font-bold text-white mb-4">🏆 Top Performing Properties</h4>
+                <h4 class="text-lg font-bold text-white mb-4">🏆 Top Performing Vehicles</h4>
                 ${generateTopPerformersPreview(ownerProps)}
             </div>
         </div>
@@ -1101,14 +1101,14 @@ async function generateOverviewReport() {
 
 // Generate Top Performers Preview
 function generateTopPerformersPreview(ownerProps) {
-    // Sort by weekly price (occupied properties first)
+    // Sort by weekly price (occupied vehicles first)
     const sorted = [...ownerProps].sort((a, b) => {
         const aOccupied = state.availability[a.id] === false;
         const bOccupied = state.availability[b.id] === false;
-        const aPrice = PropertyDataService.getValue(a.id, 'weeklyPrice', a.weeklyPrice || 0);
-        const bPrice = PropertyDataService.getValue(b.id, 'weeklyPrice', b.weeklyPrice || 0);
+        const aPrice = VehicleDataService.getValue(a.id, 'weeklyPrice', a.weeklyPrice || 0);
+        const bPrice = VehicleDataService.getValue(b.id, 'weeklyPrice', b.weeklyPrice || 0);
         
-        // Occupied properties with highest income first
+        // Occupied vehicles with highest income first
         if (aOccupied && !bOccupied) return -1;
         if (!aOccupied && bOccupied) return 1;
         return bPrice - aPrice;
@@ -1123,9 +1123,9 @@ function generateTopPerformersPreview(ownerProps) {
     return `
         <div class="space-y-3">
             ${top3.map((p, idx) => {
-                const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
+                const weeklyPrice = VehicleDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
                 const isOccupied = state.availability[p.id] === false;
-                const buyerName = PropertyDataService.getValue(p.id, 'buyerName', '');
+                const buyerName = VehicleDataService.getValue(p.id, 'buyerName', '');
                 const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
                 
                 return `
@@ -1153,21 +1153,21 @@ function generateTopPerformersPreview(ownerProps) {
 // Generate Income Report
 async function generateIncomeReport() {
     const content = document.getElementById('reportContent');
-    const ownerProps = getOwnedProperties();
+    const ownerProps = getOwnedVehicles();
     
     // Gather all payment data
     const paymentPromises = ownerProps.map(p => getPaymentHistory(p.id));
     const allPayments = await Promise.all(paymentPromises);
     
-    // Calculate income by property
-    const incomeByProperty = ownerProps.map((p, idx) => {
+    // Calculate income by vehicle
+    const incomeByVehicle = ownerProps.map((p, idx) => {
         const payments = allPayments[idx] || [];
         const totalCollected = payments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
-        const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
+        const weeklyPrice = VehicleDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
         const isOccupied = state.availability[p.id] === false;
         
         return {
-            property: p,
+            vehicle: p,
             totalCollected,
             weeklyPrice,
             monthlyPrice: weeklyPrice * 4,
@@ -1177,8 +1177,8 @@ async function generateIncomeReport() {
     }).sort((a, b) => b.totalCollected - a.totalCollected);
     
     // Calculate totals
-    const grandTotalCollected = incomeByProperty.reduce((sum, p) => sum + p.totalCollected, 0);
-    const maxCollected = Math.max(...incomeByProperty.map(p => p.totalCollected), 1);
+    const grandTotalCollected = incomeByVehicle.reduce((sum, p) => sum + p.totalCollected, 0);
+    const maxCollected = Math.max(...incomeByVehicle.map(p => p.totalCollected), 1);
     
     content.innerHTML = `
         <div class="space-y-6">
@@ -1190,22 +1190,22 @@ async function generateIncomeReport() {
                         <div class="text-4xl font-black text-white mt-1">$${formatLargeNumber(grandTotalCollected)}</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-gray-400 text-sm">Across ${incomeByProperty.length} properties</div>
-                        <div class="text-gray-400 text-sm">${incomeByProperty.reduce((sum, p) => sum + p.paymentCount, 0)} total payments</div>
+                        <div class="text-gray-400 text-sm">Across ${incomeByVehicle.length} vehicles</div>
+                        <div class="text-gray-400 text-sm">${incomeByVehicle.reduce((sum, p) => sum + p.paymentCount, 0)} total payments</div>
                     </div>
                 </div>
             </div>
             
-            <!-- Income by Property Chart -->
+            <!-- Income by Vehicle Chart -->
             <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700">
-                <h4 class="text-lg font-bold text-white mb-4">📊 Revenue by Property</h4>
+                <h4 class="text-lg font-bold text-white mb-4">📊 Revenue by Vehicle</h4>
                 <div class="space-y-4">
-                    ${incomeByProperty.map(item => {
+                    ${incomeByVehicle.map(item => {
                         const percentage = maxCollected > 0 ? (item.totalCollected / maxCollected) * 100 : 0;
                         return `
                             <div>
                                 <div class="flex justify-between text-sm mb-1">
-                                    <span class="text-white font-medium truncate max-w-[60%]">${item.property.title}</span>
+                                    <span class="text-white font-medium truncate max-w-[60%]">${item.vehicle.title}</span>
                                     <span class="text-green-400 font-bold">$${formatLargeNumber(item.totalCollected)}</span>
                                 </div>
                                 <div class="h-6 bg-gray-700 rounded-lg overflow-hidden relative">
@@ -1227,13 +1227,13 @@ async function generateIncomeReport() {
                     <div class="bg-gray-700/50 rounded-lg p-4">
                         <div class="text-sm text-gray-400 mb-1">If All Units Occupied (Weekly)</div>
                         <div class="text-2xl font-black text-blue-400">
-                            $${formatLargeNumber(incomeByProperty.reduce((sum, p) => sum + p.weeklyPrice, 0))}
+                            $${formatLargeNumber(incomeByVehicle.reduce((sum, p) => sum + p.weeklyPrice, 0))}
                         </div>
                     </div>
                     <div class="bg-gray-700/50 rounded-lg p-4">
                         <div class="text-sm text-gray-400 mb-1">If All Units Occupied (Monthly)</div>
                         <div class="text-2xl font-black text-purple-400">
-                            $${formatLargeNumber(incomeByProperty.reduce((sum, p) => sum + p.monthlyPrice, 0))}
+                            $${formatLargeNumber(incomeByVehicle.reduce((sum, p) => sum + p.monthlyPrice, 0))}
                         </div>
                     </div>
                 </div>
@@ -1245,17 +1245,17 @@ async function generateIncomeReport() {
 // Generate Occupancy Report
 async function generateOccupancyReport() {
     const content = document.getElementById('reportContent');
-    const ownerProps = getOwnedProperties();
+    const ownerProps = getOwnedVehicles();
     
     // Calculate occupancy stats
     const occupied = ownerProps.filter(p => state.availability[p.id] === false);
     const available = ownerProps.filter(p => state.availability[p.id] !== false);
     const occupancyRate = ownerProps.length > 0 ? Math.round((occupied.length / ownerProps.length) * 100) : 0;
     
-    // Group by property type
+    // Group by vehicle type
     const byType = {};
     ownerProps.forEach(p => {
-        const type = PropertyDataService.getValue(p.id, 'type', p.type || 'other');
+        const type = VehicleDataService.getValue(p.id, 'type', p.type || 'other');
         if (!byType[type]) {
             byType[type] = { total: 0, occupied: 0 };
         }
@@ -1292,7 +1292,7 @@ async function generateOccupancyReport() {
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     ${ownerProps.map(p => {
                         const isOccupied = state.availability[p.id] === false;
-                        const buyerName = PropertyDataService.getValue(p.id, 'buyerName', '');
+                        const buyerName = VehicleDataService.getValue(p.id, 'buyerName', '');
                         return `
                             <div class="relative group cursor-pointer" title="${p.title}${isOccupied ? ' - ' + buyerName : ''}">
                                 <div class="aspect-square rounded-xl ${isOccupied ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-gray-600 to-gray-700'} flex items-center justify-center text-2xl shadow-lg">
@@ -1312,7 +1312,7 @@ async function generateOccupancyReport() {
             
             <!-- Occupancy by Type -->
             <div class="bg-gray-800/50 rounded-xl p-5 border border-gray-700">
-                <h4 class="text-lg font-bold text-white mb-4">📊 Occupancy by Property Type</h4>
+                <h4 class="text-lg font-bold text-white mb-4">📊 Occupancy by Vehicle Type</h4>
                 <div class="space-y-4">
                     ${Object.entries(byType).map(([type, data]) => {
                         const rate = Math.round((data.occupied / data.total) * 100);
@@ -1338,7 +1338,7 @@ async function generateOccupancyReport() {
                     <h4 class="text-lg font-bold text-white mb-4">🔑 Available Units</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         ${available.map(p => {
-                            const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
+                            const weeklyPrice = VehicleDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
                             return `
                                 <div class="bg-gray-700/50 rounded-lg p-3 flex justify-between items-center">
                                     <div>
@@ -1359,7 +1359,7 @@ async function generateOccupancyReport() {
 // Generate Payments Report
 async function generatePaymentsReport() {
     const content = document.getElementById('reportContent');
-    const ownerProps = getOwnedProperties();
+    const ownerProps = getOwnedVehicles();
     
     // Gather all payment data
     const paymentPromises = ownerProps.map(p => getPaymentHistory(p.id));
@@ -1372,8 +1372,8 @@ async function generatePaymentsReport() {
         payments.forEach(payment => {
             flatPayments.push({
                 ...payment,
-                propertyId: p.id,
-                propertyTitle: p.title
+                vehicleId: p.id,
+                vehicleTitle: p.title
             });
         });
     });
@@ -1447,8 +1447,8 @@ async function generatePaymentsReport() {
                             <thead>
                                 <tr class="text-left text-gray-400 border-b border-gray-700">
                                     <th class="pb-3 font-medium">Date</th>
-                                    <th class="pb-3 font-medium">Property</th>
-                                    <th class="pb-3 font-medium">Renter</th>
+                                    <th class="pb-3 font-medium">Vehicle</th>
+                                    <th class="pb-3 font-medium">Buyer</th>
                                     <th class="pb-3 font-medium text-right">Amount</th>
                                 </tr>
                             </thead>
@@ -1458,7 +1458,7 @@ async function generatePaymentsReport() {
                                     return `
                                         <tr class="border-b border-gray-700/50">
                                             <td class="py-3">${date.toLocaleDateString()}</td>
-                                            <td class="py-3 truncate max-w-[150px]">${payment.propertyTitle}</td>
+                                            <td class="py-3 truncate max-w-[150px]">${payment.vehicleTitle}</td>
                                             <td class="py-3">${payment.buyerName || 'Unknown'}</td>
                                             <td class="py-3 text-right text-green-400 font-bold">$${(payment.amount || 0).toLocaleString()}</td>
                                         </tr>
@@ -1471,7 +1471,7 @@ async function generatePaymentsReport() {
                         <p class="text-gray-500 text-sm mt-4 text-center">Showing 15 of ${flatPayments.length} payments</p>
                     ` : ''}
                 ` : `
-                    <p class="text-gray-500 text-center py-8">No payments logged yet. Start tracking payments on your property stats pages!</p>
+                    <p class="text-gray-500 text-center py-8">No payments logged yet. Start tracking payments on your vehicle stats pages!</p>
                 `}
             </div>
         </div>
@@ -1480,20 +1480,20 @@ async function generatePaymentsReport() {
 
 // Export report data
 window.exportReportData = async function() {
-    const ownerProps = getOwnedProperties();
+    const ownerProps = getOwnedVehicles();
     
     // Gather all payment data
     const paymentPromises = ownerProps.map(p => getPaymentHistory(p.id));
     const allPayments = await Promise.all(paymentPromises);
     
     // Build CSV data
-    let csv = 'Property,Type,Weekly Price,Monthly Price,Status,Renter,Payments Logged,Total Collected\n';
+    let csv = 'Vehicle,Type,Weekly Price,Monthly Price,Status,Buyer,Payments Logged,Total Collected\n';
     
     ownerProps.forEach((p, idx) => {
-        const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
-        const monthlyPrice = PropertyDataService.getValue(p.id, 'monthlyPrice', p.monthlyPrice || weeklyPrice * 4);
+        const weeklyPrice = VehicleDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
+        const monthlyPrice = VehicleDataService.getValue(p.id, 'monthlyPrice', p.monthlyPrice || weeklyPrice * 4);
         const isOccupied = state.availability[p.id] === false;
-        const buyerName = PropertyDataService.getValue(p.id, 'buyerName', '') || '';
+        const buyerName = VehicleDataService.getValue(p.id, 'buyerName', '') || '';
         const payments = allPayments[idx] || [];
         const totalCollected = payments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
         
@@ -1515,15 +1515,15 @@ window.exportReportData = async function() {
 };
 
 // Helper getOwnerProperties is defined in data.js - use that instead
-// This module uses getOwnedProperties for financial calculations
+// This module uses getOwnedVehicles for financial calculations
 
-// Helper to get properties user actually OWNS (for FINANCIALS - never all properties)
+// Helper to get vehicles user actually OWNS (for FINANCIALS - never all vehicles)
 // CRITICAL: Uses OwnershipService for consistent ownership across entire application
-function getOwnedProperties() {
+function getOwnedVehicles() {
     const user = auth.currentUser;
     if (!user) return [];
     
-    return OwnershipService.getPropertiesForOwner(user.email);
+    return OwnershipService.getVehiclesForOwner(user.email);
 }
 
 // Format large numbers

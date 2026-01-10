@@ -93,7 +93,7 @@ const GamificationService = {
                     level: 1,
                     title: 'Newcomer',
                     achievements: {},
-                    stats: { totalSales: 0, propertiesPosted: 0 },
+                    stats: { totalSales: 0, vehiclesPosted: 0 },
                     rewards: {}
                 };
                 
@@ -344,7 +344,7 @@ const GamificationService = {
     },
 
     // Use a reward (returns true if successful)
-    useReward: async function(userId, rewardId, propertyId) {
+    useReward: async function(userId, rewardId, vehicleId) {
         const userRef = db.collection('users').doc(userId);
         
         try {
@@ -362,7 +362,7 @@ const GamificationService = {
                 
                 transaction.update(userRef, {
                     [`gamification.rewards.${rewardId}.used`]: true,
-                    [`gamification.rewards.${rewardId}.usedOn`]: propertyId,
+                    [`gamification.rewards.${rewardId}.usedOn`]: vehicleId,
                     [`gamification.rewards.${rewardId}.usedAt`]: now
                 });
                 
@@ -394,7 +394,7 @@ const GamificationService = {
             type: data.type,
             userId: data.userId,
             userName: data.userName,
-            propertyTitle: data.propertyTitle || null,
+            vehicleTitle: data.vehicleTitle || null,
             level: data.level || null,
             title: data.title || null,
             icon: data.icon || '🎉',
@@ -484,7 +484,7 @@ const GamificationService = {
                 },
                 stats: {
                     totalSales: 0,
-                    propertiesPosted: 0
+                    vehiclesPosted: 0
                 },
                 rewards: {},
                 migrated: true,

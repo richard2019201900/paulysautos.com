@@ -28,30 +28,30 @@ const TIERS = {
 const MASTER_ADMIN_EMAIL = 'pauly@pma.network';
 
 /**
- * OwnershipService - SINGLE SOURCE OF TRUTH for property ownership
+ * OwnershipService - SINGLE SOURCE OF TRUTH for vehicle ownership
  * All ownership queries should go through this service to ensure consistency
  */
 const OwnershipService = {
     /**
-     * Get properties owned by a specific email
+     * Get vehicles owned by a specific email
      * Priority:
      * 1. prop.ownerEmail field (Firestore data)
-     * 2. propertyOwnerEmail map (for static properties without ownerEmail)
+     * 2. vehicleOwnerEmail map (for static vehicles without ownerEmail)
      * @param {string} email - Owner email
-     * @returns {Array} - Array of property objects owned by this email
+     * @returns {Array} - Array of vehicle objects owned by this email
      */
-    getPropertiesForOwner(email) {
+    getVehiclesForOwner(email) {
         if (!email) return [];
         const normalizedEmail = email.toLowerCase();
-        return properties.filter(p => {
-            // Primary check: ownerEmail field on property
+        return vehicles.filter(p => {
+            // Primary check: ownerEmail field on vehicle
             const propOwner = (p.ownerEmail || '').toLowerCase();
             if (propOwner) {
                 return propOwner === normalizedEmail;
             }
             
-            // Secondary check: propertyOwnerEmail reverse map (for static properties)
-            const mappedOwner = (propertyOwnerEmail[p.id] || '').toLowerCase();
+            // Secondary check: vehicleOwnerEmail reverse map (for static vehicles)
+            const mappedOwner = (vehicleOwnerEmail[p.id] || '').toLowerCase();
             return mappedOwner === normalizedEmail;
         });
     },
@@ -59,22 +59,22 @@ const OwnershipService = {
     /**
      * Count listings for an owner
      * @param {string} email - Owner email
-     * @returns {number} - Number of properties owned
+     * @returns {number} - Number of vehicles owned
      */
     getListingCount(email) {
-        return this.getPropertiesForOwner(email).length;
+        return this.getVehiclesForOwner(email).length;
     },
     
     /**
-     * Check if a user owns a specific property
+     * Check if a user owns a specific vehicle
      * @param {string} email - User email
-     * @param {number} propertyId - Property ID
+     * @param {number} vehicleId - Vehicle ID
      * @returns {boolean}
      */
-    ownsProperty(email, propertyId) {
+    ownsProperty(email, vehicleId) {
         if (!email) return false;
         const normalizedEmail = email.toLowerCase();
-        const prop = properties.find(p => p.id === propertyId);
+        const prop = vehicles.find(p => p.id === vehicleId);
         if (!prop) return false;
         
         // Primary check: ownerEmail field
@@ -83,58 +83,58 @@ const OwnershipService = {
             return propOwner === normalizedEmail;
         }
         
-        // Secondary check: propertyOwnerEmail map
-        const mappedOwner = (propertyOwnerEmail[propertyId] || '').toLowerCase();
+        // Secondary check: vehicleOwnerEmail map
+        const mappedOwner = (vehicleOwnerEmail[vehicleId] || '').toLowerCase();
         return mappedOwner === normalizedEmail;
     },
     
     /**
-     * Rebuild ownerPropertyMap from properties array
-     * This ensures the cached map stays in sync with actual property data
+     * Rebuild ownerVehicleMap from vehicles array
+     * This ensures the cached map stays in sync with actual vehicle data
      */
     rebuildOwnerPropertyMap() {
         // Clear existing entries for emails we've seen
-        const emailsToClean = new Set(Object.keys(ownerPropertyMap));
+        const emailsToClean = new Set(Object.keys(ownerVehicleMap));
         
-        // Rebuild from properties
-        properties.forEach(p => {
+        // Rebuild from vehicles
+        vehicles.forEach(p => {
             if (p) {
                 // Check ownerEmail first (Firestore data)
                 let email = (p.ownerEmail || '').toLowerCase();
                 
-                // Fallback to propertyOwnerEmail map (for static properties)
-                if (!email && propertyOwnerEmail[p.id]) {
-                    email = propertyOwnerEmail[p.id].toLowerCase();
+                // Fallback to vehicleOwnerEmail map (for static vehicles)
+                if (!email && vehicleOwnerEmail[p.id]) {
+                    email = vehicleOwnerEmail[p.id].toLowerCase();
                 }
                 
                 if (email) {
-                    if (!ownerPropertyMap[email]) {
-                        ownerPropertyMap[email] = [];
+                    if (!ownerVehicleMap[email]) {
+                        ownerVehicleMap[email] = [];
                     }
-                    if (!ownerPropertyMap[email].includes(p.id)) {
-                        ownerPropertyMap[email].push(p.id);
+                    if (!ownerVehicleMap[email].includes(p.id)) {
+                        ownerVehicleMap[email].push(p.id);
                     }
                     emailsToClean.delete(email);
                     
                     // Update reverse map
-                    propertyOwnerEmail[p.id] = email;
+                    vehicleOwnerEmail[p.id] = email;
                 }
             }
         });
         
-        // Clean up ownerPropertyMap entries for emails that no longer own anything
-        // But preserve the admin email's static properties
+        // Clean up ownerVehicleMap entries for emails that no longer own anything
+        // But preserve the admin email's static vehicles
         emailsToClean.forEach(email => {
             const adminEmail = 'richard2019201900@gmail.com';
             if (email !== adminEmail) {
-                // Filter out properties this email doesn't actually own
-                ownerPropertyMap[email] = (ownerPropertyMap[email] || []).filter(propId => {
-                    const prop = properties.find(p => p.id === propId);
+                // Filter out vehicles this email doesn't actually own
+                ownerVehicleMap[email] = (ownerVehicleMap[email] || []).filter(propId => {
+                    const prop = vehicles.find(p => p.id === propId);
                     if (prop && prop.ownerEmail) {
                         return prop.ownerEmail.toLowerCase() === email;
                     }
-                    // Keep if propertyOwnerEmail says so
-                    return propertyOwnerEmail[propId]?.toLowerCase() === email;
+                    // Keep if vehicleOwnerEmail says so
+                    return vehicleOwnerEmail[propId]?.toLowerCase() === email;
                 });
             }
         });
@@ -170,7 +170,7 @@ const TierService = {
             // This ensures accurate count even after deletions
             let listingCount = 0;
             try {
-                const propsDoc = await db.collection('settings').doc('properties').get();
+                const propsDoc = await db.collection('settings').doc('vehicles').get();
                 if (propsDoc.exists) {
                     const propsData = propsDoc.data();
                     listingCount = Object.values(propsData).filter(p => 
@@ -179,7 +179,7 @@ const TierService = {
                 }
             } catch (e) {
                 // Fallback to cached map if Firestore query fails
-                listingCount = (ownerPropertyMap[normalizedEmail] || []).length;
+                listingCount = (ownerVehicleMap[normalizedEmail] || []).length;
                 console.warn('[TierService] Using cached listing count:', listingCount);
             }
             
@@ -415,47 +415,47 @@ window.MASTER_ADMIN_EMAIL = MASTER_ADMIN_EMAIL;
  *   "2": { ... },
  * }
  */
-const PropertyDataService = {
+const VehicleDataService = {
     collectionName: 'settings',
-    docName: 'vehicles',  // Changed from 'properties' for PaulysAutos
+    docName: 'vehicles',  // Changed from 'vehicles' for PaulysAutos
     
     // Active listener for cleanup
     unsubscribeListener: null,
     
     /**
-     * READ: Fetch fresh property data from Firestore
-     * @param {number} propertyId - The property ID to read
-     * @returns {Promise<Object>} - Fresh property data
+     * READ: Fetch fresh vehicle data from Firestore
+     * @param {number} vehicleId - The vehicle ID to read
+     * @returns {Promise<Object>} - Fresh vehicle data
      */
-    async read(propertyId) {
-        const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
+    async read(vehicleId) {
+        const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
         
         try {
             const doc = await db.collection(this.collectionName).doc(this.docName).get();
             if (doc.exists) {
                 const allData = doc.data();
-                const propertyData = allData[String(numericId)] || null;
+                const vehicleData = allData[String(numericId)] || null;
                 
-                // Update local properties array if data exists
-                if (propertyData) {
-                    const prop = properties.find(p => p.id === numericId);
+                // Update local vehicles array if data exists
+                if (vehicleData) {
+                    const prop = vehicles.find(p => p.id === numericId);
                     if (prop) {
-                        Object.assign(prop, propertyData);
+                        Object.assign(prop, vehicleData);
                     }
                 }
                 
-                return { exists: propertyData !== null, data: propertyData };
+                return { exists: vehicleData !== null, data: vehicleData };
             }
             return { exists: false, data: null };
         } catch (error) {
-            console.error('[PropertyDataService] READ error:', error);
+            console.error('[VehicleDataService] READ error:', error);
             throw error;
         }
     },
     
     /**
-     * READ ALL: Fetch all properties
-     * @returns {Promise<Object>} - All property data
+     * READ ALL: Fetch all vehicles
+     * @returns {Promise<Object>} - All vehicle data
      */
     async readAll() {
         try {
@@ -465,25 +465,25 @@ const PropertyDataService = {
             }
             return {};
         } catch (error) {
-            console.error('[PropertyDataService] READ ALL error:', error);
+            console.error('[VehicleDataService] READ ALL error:', error);
             return {};
         }
     },
     
     /**
-     * WRITE: Update property data in Firestore
-     * UNIFIED: All properties write to settings/properties
-     * @param {number} propertyId - The property ID to update
+     * WRITE: Update vehicle data in Firestore
+     * UNIFIED: All vehicles write to settings/vehicles
+     * @param {number} vehicleId - The vehicle ID to update
      * @param {string} field - The field name to update
      * @param {any} value - The new value
      * @returns {Promise<boolean>} - Success status
      */
-    async write(propertyId, field, value) {
-        const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
-        const prop = properties.find(p => p.id === numericId);
+    async write(vehicleId, field, value) {
+        const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+        const prop = vehicles.find(p => p.id === numericId);
         
         try {
-            // UNIFIED: Always write to settings/properties (or settings/vehicles for PaulysAutos)
+            // UNIFIED: Always write to settings/vehicles (or settings/vehicles for PaulysAutos)
             const updateData = {
                 [`${numericId}.${field}`]: value,
                 [`${numericId}.updatedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
@@ -493,28 +493,28 @@ const PropertyDataService = {
             // Use set with merge to auto-create document if it doesn't exist
             await db.collection(this.collectionName).doc(this.docName).set(updateData, { merge: true });
             
-            // Update local property object immediately
+            // Update local vehicle object immediately
             if (prop) {
                 prop[field] = value;
             }
             
-            console.log(`[PropertyDataService] Wrote ${field}=${value} for property ${numericId}`);
+            console.log(`[VehicleDataService] Wrote ${field}=${value} for vehicle ${numericId}`);
             return true;
         } catch (error) {
-            console.error('[PropertyDataService] WRITE error:', error);
+            console.error('[VehicleDataService] WRITE error:', error);
             throw error;
         }
     },
     
     /**
      * WRITE MULTIPLE: Update multiple fields at once
-     * @param {number} propertyId - The property ID to update
+     * @param {number} vehicleId - The vehicle ID to update
      * @param {Object} fields - Object with field:value pairs
      * @returns {Promise<boolean>} - Success status
      */
-    async writeMultiple(propertyId, fields) {
-        const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
-        const prop = properties.find(p => p.id === numericId);
+    async writeMultiple(vehicleId, fields) {
+        const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+        const prop = vehicles.find(p => p.id === numericId);
         
         try {
             const updateData = {
@@ -529,21 +529,21 @@ const PropertyDataService = {
             // Use set with merge to auto-create document if it doesn't exist
             await db.collection(this.collectionName).doc(this.docName).set(updateData, { merge: true });
             
-            // Update local property object
+            // Update local vehicle object
             if (prop) {
                 Object.assign(prop, fields);
             }
             
-            console.log(`[PropertyDataService] Wrote ${Object.keys(fields).length} fields for property ${numericId}`);
+            console.log(`[VehicleDataService] Wrote ${Object.keys(fields).length} fields for vehicle ${numericId}`);
             return true;
         } catch (error) {
-            console.error('[PropertyDataService] WRITE MULTIPLE error:', error);
+            console.error('[VehicleDataService] WRITE MULTIPLE error:', error);
             throw error;
         }
     },
     
     /**
-     * Subscribe to real-time updates for ALL properties
+     * Subscribe to real-time updates for ALL vehicles
      * @param {Function} callback - Called when any data changes
      * @returns {Function} - Unsubscribe function
      */
@@ -557,18 +557,18 @@ const PropertyDataService = {
                 if (doc.exists) {
                     const data = doc.data();
                     
-                    // Update properties array from Firestore
+                    // Update vehicles array from Firestore
                     Object.keys(data).forEach(propId => {
                         const numericId = parseInt(propId);
                         if (!isNaN(numericId) && data[propId] && data[propId].title) {
-                            const existingIndex = properties.findIndex(p => p.id === numericId);
+                            const existingIndex = vehicles.findIndex(p => p.id === numericId);
                             if (existingIndex !== -1) {
-                                // Update existing property
-                                Object.assign(properties[existingIndex], data[propId]);
+                                // Update existing vehicle
+                                Object.assign(vehicles[existingIndex], data[propId]);
                             } else {
-                                // Add new property
+                                // Add new vehicle
                                 const newProp = { ...data[propId], id: numericId };
-                                properties.push(newProp);
+                                vehicles.push(newProp);
                             }
                         }
                     });
@@ -576,24 +576,24 @@ const PropertyDataService = {
                     if (callback) callback(data);
                 }
             }, error => {
-                console.error('[PropertyDataService] SUBSCRIBE error:', error);
+                console.error('[VehicleDataService] SUBSCRIBE error:', error);
             });
         
         return this.unsubscribeListener;
     },
     
     /**
-     * Get the effective value for a property field
-     * UNIFIED: Always reads from properties array (synced from Firestore)
-     * @param {number} propertyId - The property ID
+     * Get the effective value for a vehicle field
+     * UNIFIED: Always reads from vehicles array (synced from Firestore)
+     * @param {number} vehicleId - The vehicle ID
      * @param {string} field - The field name
      * @param {any} defaultValue - Default value if not found
      */
-    getValue(propertyId, field, defaultValue) {
-        const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
-        const prop = properties.find(p => p.id === numericId);
+    getValue(vehicleId, field, defaultValue) {
+        const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+        const prop = vehicles.find(p => p.id === numericId);
         
-        // Single source: properties array (synced from Firestore)
+        // Single source: vehicles array (synced from Firestore)
         if (prop && prop[field] !== undefined && prop[field] !== null && prop[field] !== '') {
             return prop[field];
         }
@@ -622,15 +622,15 @@ window.viewFirestoreState = async function() {
     
     try {
         const [propsDoc, availDoc] = await Promise.all([
-            db.collection('settings').doc('properties').get(),
-            db.collection('settings').doc('propertyAvailability').get()
+            db.collection('settings').doc('vehicles').get(),
+            db.collection('settings').doc('vehicleAvailability').get()
         ]);
         
-        console.log('\n📁 settings/properties (SINGLE SOURCE OF TRUTH):');
+        console.log('\n📁 settings/vehicles (SINGLE SOURCE OF TRUTH):');
         if (propsDoc.exists) {
             const data = propsDoc.data();
             const propIds = Object.keys(data).filter(k => data[k]?.title).sort((a,b) => parseInt(a) - parseInt(b));
-            console.log(`   Total properties: ${propIds.length}`);
+            console.log(`   Total vehicles: ${propIds.length}`);
             propIds.forEach(id => {
                 const p = data[id];
                 console.log(`   ${id}: ${p.title} | Owner: ${p.ownerEmail || 'master'} | Premium: ${p.isPremium || false}`);
@@ -639,7 +639,7 @@ window.viewFirestoreState = async function() {
             console.log('   (does not exist - run migration first!)');
         }
         
-        console.log('\n📁 settings/propertyAvailability:');
+        console.log('\n📁 settings/vehicleAvailability:');
         if (availDoc.exists) {
             const data = availDoc.data();
             console.log(`   Entries: ${Object.keys(data).length}`);
@@ -650,13 +650,13 @@ window.viewFirestoreState = async function() {
             console.log('   (does not exist)');
         }
         
-        // Check for old propertyOverrides (should be deleted after migration)
-        const overridesDoc = await db.collection('settings').doc('propertyOverrides').get();
+        // Check for old vehicleOverrides (should be deleted after migration)
+        const overridesDoc = await db.collection('settings').doc('vehicleOverrides').get();
         if (overridesDoc.exists) {
-            console.log('\n⚠️  OLD DATA DETECTED: settings/propertyOverrides still exists!');
+            console.log('\n⚠️  OLD DATA DETECTED: settings/vehicleOverrides still exists!');
             console.log('   Run migration.js deleteOldOverrides() to clean up.');
         } else {
-            console.log('\n✅ Clean: No old propertyOverrides document');
+            console.log('\n✅ Clean: No old vehicleOverrides document');
         }
         
     } catch (error) {
@@ -665,24 +665,24 @@ window.viewFirestoreState = async function() {
 };
 
 /**
- * Show all data for a specific property
+ * Show all data for a specific vehicle
  * Call from console: await showPropertyData(7)
  */
-window.showPropertyData = async function(propertyId) {
-    const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
+window.showPropertyData = async function(vehicleId) {
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
     
     console.log(`========== PROPERTY ${numericId} DATA ==========`);
     
     // Local data
-    const prop = properties.find(p => p.id === numericId);
-    console.log('\n📦 Local properties array:');
+    const prop = vehicles.find(p => p.id === numericId);
+    console.log('\n📦 Local vehicles array:');
     console.log(prop ? JSON.stringify(prop, null, 2) : 'Not found');
     
     // Firestore data
     try {
-        const doc = await db.collection('settings').doc('properties').get();
+        const doc = await db.collection('settings').doc('vehicles').get();
         if (doc.exists && doc.data()[numericId]) {
-            console.log('\n☁️  Firestore settings/properties:');
+            console.log('\n☁️  Firestore settings/vehicles:');
             console.log(JSON.stringify(doc.data()[numericId], null, 2));
         } else {
             console.log('\n☁️  Firestore: Not found');
@@ -719,7 +719,7 @@ function setupRealtimeListener() {
             if (typeof applyAllFilters === 'function') {
                 applyAllFilters();
             } else {
-                renderProperties(state.filteredProperties);
+                renderVehicles(state.filteredVehicles);
             }
             if (state.currentUser === 'owner') renderOwnerDashboard();
         }, error => {
@@ -766,12 +766,12 @@ function setupRealtimeListener() {
                 OwnershipService.rebuildOwnerPropertyMap();
                 
                 if (hasChanges) {
-                    state.filteredProperties = [...vehicles];
+                    state.filteredVehicles = [...vehicles];
                     // Apply filters including hideUnavailable if checked
                     if (typeof applyAllFilters === 'function') {
                         applyAllFilters();
                     } else {
-                        renderProperties(state.filteredProperties);
+                        renderVehicles(state.filteredVehicles);
                     }
                     if (state.currentUser === 'owner') renderOwnerDashboard();
                 }
@@ -783,7 +783,7 @@ function setupRealtimeListener() {
 
 window.saveAvailability = async function(id, isAvailable) {
     try {
-        await db.collection('settings').doc('propertyAvailability').set({ [id]: isAvailable }, { merge: true });
+        await db.collection('settings').doc('vehicleAvailability').set({ [id]: isAvailable }, { merge: true });
         console.log('[Availability] Saved to Firestore:', id, isAvailable);
         return true;
     } catch (error) {
@@ -795,18 +795,18 @@ window.saveAvailability = async function(id, isAvailable) {
 window.toggleAvailability = async function(id) {
     const currentlySold = state.availability[id] === false;
     
-    // If trying to mark as Available, check if renter info or payment date exists
+    // If trying to mark as Available, check if buyer info or payment date exists
     if (currentlySold) {
-        const buyerName = PropertyDataService.getValue(id, 'buyerName', '');
-        const buyerPhone = PropertyDataService.getValue(id, 'buyerPhone', '');
-        const lastPaymentDate = PropertyDataService.getValue(id, 'lastPaymentDate', '');
+        const buyerName = VehicleDataService.getValue(id, 'buyerName', '');
+        const buyerPhone = VehicleDataService.getValue(id, 'buyerPhone', '');
+        const lastPaymentDate = VehicleDataService.getValue(id, 'lastPaymentDate', '');
         
         if (buyerName || buyerPhone || lastPaymentDate) {
-            let message = '⚠️ Cannot mark as Available\n\nThis property has renter/payment information set:\n';
-            if (buyerName) message += `• Renter Name: ${buyerName}\n`;
-            if (buyerPhone) message += `• Renter Phone: ${buyerPhone}\n`;
+            let message = '⚠️ Cannot mark as Available\n\nThis vehicle has buyer/payment information set:\n';
+            if (buyerName) message += `• Buyer Name: ${buyerName}\n`;
+            if (buyerPhone) message += `• Buyer Phone: ${buyerPhone}\n`;
             if (lastPaymentDate) message += `• Last Payment Date: ${lastPaymentDate}\n`;
-            message += '\nTo mark this property as Available, first clear these fields by clicking on them and deleting the values.';
+            message += '\nTo mark this vehicle as Available, first clear these fields by clicking on them and deleting the values.';
             
             alert(message);
             return;
@@ -815,7 +815,7 @@ window.toggleAvailability = async function(id) {
     
     state.availability[id] = !state.availability[id];
     renderOwnerDashboard();
-    renderProperties(state.filteredProperties);
+    renderVehicles(state.filteredVehicles);
     
     const success = await saveAvailability(id, state.availability[id]);
     if (!success) {
@@ -831,13 +831,13 @@ window.toggleAvailability = async function(id) {
 
 async function initFirestore() {
     try {
-        const doc = await db.collection('settings').doc('propertyAvailability').get();
+        const doc = await db.collection('settings').doc('vehicleAvailability').get();
         const data = doc.exists ? doc.data() : {};
         const updates = {};
         let needsUpdate = false;
         
         // IMPORTANT: Firestore returns string keys, so we must use String(p.id) to access
-        properties.forEach(p => {
+        vehicles.forEach(p => {
             const keyStr = String(p.id);
             const firestoreValue = data[keyStr];
             
@@ -850,11 +850,11 @@ async function initFirestore() {
         });
         
         if (needsUpdate || !doc.exists) {
-            await db.collection('settings').doc('propertyAvailability').set(updates, { merge: true });
+            await db.collection('settings').doc('vehicleAvailability').set(updates, { merge: true });
         }
         
-        // Load user-created properties
-        const propsDoc = await db.collection('settings').doc('properties').get();
+        // Load user-created vehicles
+        const propsDoc = await db.collection('settings').doc('vehicles').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
             Object.keys(propsData).forEach(key => {
@@ -874,14 +874,14 @@ async function initFirestore() {
                     prop.images = [];
                 }
                 
-                // Check if this property already exists in the array
-                const existingIndex = properties.findIndex(p => p.id === propId);
+                // Check if this vehicle already exists in the array
+                const existingIndex = vehicles.findIndex(p => p.id === propId);
                 if (existingIndex === -1) {
-                    // New property - add to array
-                    properties.push(prop);
+                    // New vehicle - add to array
+                    vehicles.push(prop);
                 } else {
-                    // Existing property - update with Firestore data (single source of truth)
-                    Object.assign(properties[existingIndex], prop);
+                    // Existing vehicle - update with Firestore data (single source of truth)
+                    Object.assign(vehicles[existingIndex], prop);
                 }
                 
                 // Set availability
@@ -895,27 +895,27 @@ async function initFirestore() {
                 // Set up owner mapping
                 if (prop.ownerEmail) {
                     const email = prop.ownerEmail.toLowerCase();
-                    if (!ownerPropertyMap[email]) {
-                        ownerPropertyMap[email] = [];
+                    if (!ownerVehicleMap[email]) {
+                        ownerVehicleMap[email] = [];
                     }
-                    if (!ownerPropertyMap[email].includes(propId)) {
-                        ownerPropertyMap[email].push(propId);
+                    if (!ownerVehicleMap[email].includes(propId)) {
+                        ownerVehicleMap[email].push(propId);
                     }
-                    propertyOwnerEmail[propId] = email;
+                    vehicleOwnerEmail[propId] = email;
                 }
             });
             
-            // Update filtered properties
-            state.filteredProperties = [...properties];
+            // Update filtered vehicles
+            state.filteredVehicles = [...vehicles];
         }
         
-        // Rebuild ownerPropertyMap from properties array (single source of truth)
+        // Rebuild ownerVehicleMap from vehicles array (single source of truth)
         OwnershipService.rebuildOwnerPropertyMap();
         
-        // NOTE: propertyOverrides loading removed - unified architecture uses settings/properties only
-        // Old propertyOverrides document should be deleted after migration
+        // NOTE: vehicleOverrides loading removed - unified architecture uses settings/vehicles only
+        // Old vehicleOverrides document should be deleted after migration
         
-        // Sync all property owner mappings to ensure consistency
+        // Sync all vehicle owner mappings to ensure consistency
         syncPropertyOwnerMappings();
         
         // Preload owner usernames in background for faster display
@@ -925,65 +925,63 @@ async function initFirestore() {
     }
 }
 
-// Ensure all property owner mappings are synchronized
+// Ensure all vehicle owner mappings are synchronized
 function syncPropertyOwnerMappings() {
-    // 1. First, sync from property objects (highest priority - these come from Firestore)
-    properties.forEach(prop => {
+    // 1. First, sync from vehicle objects (highest priority - these come from Firestore)
+    vehicles.forEach(prop => {
         if (prop.ownerEmail) {
             const lowerEmail = prop.ownerEmail.toLowerCase();
-            propertyOwnerEmail[prop.id] = lowerEmail;
+            vehicleOwnerEmail[prop.id] = lowerEmail;
             
-            if (!ownerPropertyMap[lowerEmail]) {
-                ownerPropertyMap[lowerEmail] = [];
+            if (!ownerVehicleMap[lowerEmail]) {
+                ownerVehicleMap[lowerEmail] = [];
             }
-            if (!ownerPropertyMap[lowerEmail].includes(prop.id)) {
-                ownerPropertyMap[lowerEmail].push(prop.id);
+            if (!ownerVehicleMap[lowerEmail].includes(prop.id)) {
+                ownerVehicleMap[lowerEmail].push(prop.id);
             }
         }
     });
     
-    // 2. Then fill in any gaps from ownerPropertyMap
-    Object.keys(ownerPropertyMap).forEach(email => {
+    // 2. Then fill in any gaps from ownerVehicleMap
+    Object.keys(ownerVehicleMap).forEach(email => {
         const lowerEmail = email.toLowerCase();
-        (ownerPropertyMap[email] || []).forEach(propId => {
-            if (!propertyOwnerEmail[propId]) {
-                propertyOwnerEmail[propId] = lowerEmail;
+        (ownerVehicleMap[email] || []).forEach(propId => {
+            if (!vehicleOwnerEmail[propId]) {
+                vehicleOwnerEmail[propId] = lowerEmail;
             }
         });
     });
 }
 
 // ==================== REAL-TIME PROPERTY SYNC (ALL USERS) ====================
-// This listener keeps the properties array in sync for ALL logged-in users (not just admin)
-window.propertySyncUnsubscribe = null;
+// This listener keeps the vehicles array in sync for ALL logged-in users (not just admin)
+window.vehicleSyncUnsubscribe = null;
 
-// Load properties for public/unauthenticated users (one-time fetch)
+// Load vehicles for public/unauthenticated users (one-time fetch)
 // Flag to prevent duplicate loads
-window._publicPropertiesLoaded = false;
+window._publicVehiclesLoaded = false;
 
-window.loadPublicProperties = async function() {
-    // Prevent duplicate loads
-    if (window._publicPropertiesLoaded && properties.length > 0) {
-        console.log('[Public] Properties already loaded, skipping');
+window.loadPublicProperties = async function(forceReload = false) {
+    // Prevent duplicate loads (unless forced or array is empty)
+    if (!forceReload && window._publicVehiclesLoaded && vehicles.length > 0) {
+        console.log('[Public] Vehicles already loaded, skipping');
         return;
     }
     
     try {
-        console.log('[Public] Loading properties for public view...');
-        const doc = await db.collection('settings').doc('properties').get();
+        console.log('[Public] Loading vehicles for public view...');
+        const doc = await db.collection('settings').doc('vehicles').get();
         
         if (!doc.exists) {
-            console.log('[Public] No properties document found');
+            console.log('[Public] No vehicles document found');
             return;
         }
         
         const propsData = doc.data();
         let loadedCount = 0;
         
-        // Only clear if this is a fresh load
-        if (!window._publicPropertiesLoaded) {
-            properties.length = 0;
-        }
+        // Clear array for fresh load
+        vehicles.length = 0;
         
         Object.keys(propsData).forEach(key => {
             const propId = parseInt(key);
@@ -991,7 +989,7 @@ window.loadPublicProperties = async function() {
             
             const prop = propsData[key];
             
-            // Only include valid properties with a title
+            // Only include valid vehicles with a title
             if (!prop || !prop.title) {
                 return;
             }
@@ -1004,25 +1002,25 @@ window.loadPublicProperties = async function() {
             prop.id = propId;
             
             // Check if already exists
-            const existingIndex = properties.findIndex(p => p.id === propId);
+            const existingIndex = vehicles.findIndex(p => p.id === propId);
             if (existingIndex === -1) {
-                properties.push(prop);
+                vehicles.push(prop);
                 loadedCount++;
             } else {
                 // Update existing
-                properties[existingIndex] = { ...properties[existingIndex], ...prop };
+                vehicles[existingIndex] = { ...vehicles[existingIndex], ...prop };
             }
             
             // Set up owner mappings
             if (prop.ownerEmail) {
                 const email = prop.ownerEmail.toLowerCase();
-                if (!ownerPropertyMap[email]) {
-                    ownerPropertyMap[email] = [];
+                if (!ownerVehicleMap[email]) {
+                    ownerVehicleMap[email] = [];
                 }
-                if (!ownerPropertyMap[email].includes(propId)) {
-                    ownerPropertyMap[email].push(propId);
+                if (!ownerVehicleMap[email].includes(propId)) {
+                    ownerVehicleMap[email].push(propId);
                 }
-                propertyOwnerEmail[propId] = email;
+                vehicleOwnerEmail[propId] = email;
             }
             
             // Default availability to true
@@ -1031,24 +1029,24 @@ window.loadPublicProperties = async function() {
             }
         });
         
-        window._publicPropertiesLoaded = true;
-        console.log('[Public] Loaded', loadedCount, 'new properties, total:', properties.length);
+        window._publicVehiclesLoaded = true;
+        console.log('[Public] Loaded', loadedCount, 'vehicles, total:', vehicles.length);
         
-        // Update filtered properties and render
-        state.filteredProperties = [...properties];
+        // Update filtered vehicles and render
+        state.filteredVehicles = [...vehicles];
         
         if (typeof applyAllFilters === 'function') {
             applyAllFilters();
-        } else if (typeof renderProperties === 'function') {
-            renderProperties(state.filteredProperties);
+        } else if (typeof renderVehicles === 'function') {
+            renderVehicles(state.filteredVehicles);
         }
         
     } catch (error) {
-        console.error('[Public] Error loading properties:', error);
+        console.error('[Public] Error loading vehicles:', error);
     }
 };
 
-window.startPropertySyncListener = function() {
+window.startVehicleSyncListener = function() {
     const user = auth.currentUser;
     
     // For unauthenticated users, do a one-time load instead of real-time sync
@@ -1058,30 +1056,50 @@ window.startPropertySyncListener = function() {
     }
     
     // Clean up existing listener
-    if (window.propertySyncUnsubscribe) {
-        window.propertySyncUnsubscribe();
-        window.propertySyncUnsubscribe = null;
+    if (window.vehicleSyncUnsubscribe) {
+        window.vehicleSyncUnsubscribe();
+        window.vehicleSyncUnsubscribe = null;
     }
     
     let isFirstSnapshot = true;
     
-    window.propertySyncUnsubscribe = db.collection('settings').doc('properties')
+    window.vehicleSyncUnsubscribe = db.collection('settings').doc('vehicles')
         .onSnapshot((doc) => {
             if (!doc.exists) {
+                console.log('[VehicleSync] Document does not exist');
                 return;
             }
             
             const propsData = doc.data();
             let hasChanges = false;
+            let processedCount = 0;
+            
+            // Store current vehicle count before processing
+            const propCountBefore = vehicles.length;
             
             Object.keys(propsData).forEach(key => {
                 const propId = parseInt(key);
-                const prop = propsData[key];
                 
-                // Only skip if property is completely invalid (must have at least a title)
-                if (!prop || !prop.title) {
+                // Skip non-numeric keys (like metadata fields)
+                if (isNaN(propId)) {
                     return;
                 }
+                
+                const prop = propsData[key];
+                
+                // Skip if vehicle data is invalid or missing
+                if (!prop || typeof prop !== 'object') {
+                    console.log('[VehicleSync] Skipping invalid vehicle data for key:', key);
+                    return;
+                }
+                
+                // Only skip if vehicle is completely invalid (must have at least a title)
+                if (!prop.title) {
+                    console.log('[VehicleSync] Vehicle has no title, skipping');
+                    return;
+                }
+                
+                processedCount++;
                 
                 // Ensure images array exists (even if empty)
                 if (!prop.images || !Array.isArray(prop.images)) {
@@ -1090,122 +1108,131 @@ window.startPropertySyncListener = function() {
                 
                 prop.id = propId;
                 
-                const existingIndex = properties.findIndex(p => p.id === propId);
+                const existingIndex = vehicles.findIndex(p => p.id === propId);
                 
                 if (existingIndex === -1) {
-                    properties.push(prop);
+                    vehicles.push(prop);
                     hasChanges = true;
                     
                     if (prop.ownerEmail) {
                         const email = prop.ownerEmail.toLowerCase();
-                        if (!ownerPropertyMap[email]) {
-                            ownerPropertyMap[email] = [];
+                        if (!ownerVehicleMap[email]) {
+                            ownerVehicleMap[email] = [];
                         }
-                        if (!ownerPropertyMap[email].includes(propId)) {
-                            ownerPropertyMap[email].push(propId);
+                        if (!ownerVehicleMap[email].includes(propId)) {
+                            ownerVehicleMap[email].push(propId);
                         }
-                        propertyOwnerEmail[propId] = email;
+                        vehicleOwnerEmail[propId] = email;
                     }
                     
                     if (state.availability[propId] === undefined) {
                         state.availability[propId] = true;
                     }
                 } else {
-                    const existing = properties[existingIndex];
+                    const existing = vehicles[existingIndex];
                     const hasUpdates = JSON.stringify(existing) !== JSON.stringify({ ...existing, ...prop });
                     
                     if (hasUpdates) {
                         if (prop.ownerEmail && prop.ownerEmail.toLowerCase() !== existing.ownerEmail?.toLowerCase()) {
                             if (existing.ownerEmail) {
                                 const oldEmail = existing.ownerEmail.toLowerCase();
-                                if (ownerPropertyMap[oldEmail]) {
-                                    ownerPropertyMap[oldEmail] = ownerPropertyMap[oldEmail].filter(id => id !== propId);
+                                if (ownerVehicleMap[oldEmail]) {
+                                    ownerVehicleMap[oldEmail] = ownerVehicleMap[oldEmail].filter(id => id !== propId);
                                 }
                             }
                             
                             const newEmail = prop.ownerEmail.toLowerCase();
-                            if (!ownerPropertyMap[newEmail]) {
-                                ownerPropertyMap[newEmail] = [];
+                            if (!ownerVehicleMap[newEmail]) {
+                                ownerVehicleMap[newEmail] = [];
                             }
-                            if (!ownerPropertyMap[newEmail].includes(propId)) {
-                                ownerPropertyMap[newEmail].push(propId);
+                            if (!ownerVehicleMap[newEmail].includes(propId)) {
+                                ownerVehicleMap[newEmail].push(propId);
                             }
-                            propertyOwnerEmail[propId] = newEmail;
+                            vehicleOwnerEmail[propId] = newEmail;
                         }
                         
-                        properties[existingIndex] = { ...existing, ...prop };
+                        vehicles[existingIndex] = { ...existing, ...prop };
                         hasChanges = true;
                     }
                 }
             });
             
-            // Check for deleted properties
-            const firestoreIds = new Set(Object.keys(propsData).map(k => parseInt(k)));
-            const localUserCreatedProps = properties.filter(p => p.id >= 1000);
+            // Check for deleted vehicles (only user-created ones with id >= 1000)
+            const firestoreIds = new Set(
+                Object.keys(propsData)
+                    .map(k => parseInt(k))
+                    .filter(id => !isNaN(id))
+            );
+            const localUserCreatedProps = vehicles.filter(p => p.id >= 1000);
             
             localUserCreatedProps.forEach(prop => {
                 if (!firestoreIds.has(prop.id)) {
-                    const index = properties.findIndex(p => p.id === prop.id);
+                    const index = vehicles.findIndex(p => p.id === prop.id);
                     if (index !== -1) {
-                        properties.splice(index, 1);
+                        vehicles.splice(index, 1);
                         hasChanges = true;
                         
                         if (prop.ownerEmail) {
                             const email = prop.ownerEmail.toLowerCase();
-                            if (ownerPropertyMap[email]) {
-                                ownerPropertyMap[email] = ownerPropertyMap[email].filter(id => id !== prop.id);
+                            if (ownerVehicleMap[email]) {
+                                ownerVehicleMap[email] = ownerVehicleMap[email].filter(id => id !== prop.id);
                             }
-                            delete propertyOwnerEmail[prop.id];
+                            delete vehicleOwnerEmail[prop.id];
                         }
                     }
                 }
             });
             
-            state.filteredProperties = [...properties];
+            // Update filtered vehicles
+            state.filteredVehicles = [...vehicles];
             
-            // Always apply filters and render (including first snapshot)
-            if (hasChanges || isFirstSnapshot) {
-                // Apply filters including hideUnavailable if checked
-                if (typeof applyAllFilters === 'function') {
-                    applyAllFilters();
-                } else if (typeof renderProperties === 'function') {
-                    renderProperties(state.filteredProperties);
-                }
-                
-                // Only update dashboard on subsequent changes, not first load
-                if (!isFirstSnapshot) {
-                    const dashboardEl = $('ownerDashboard');
-                    if (dashboardEl && !dashboardEl.classList.contains('hidden') && typeof renderOwnerDashboard === 'function') {
-                        renderOwnerDashboard();
-                    }
-                    
-                    if (TierService.isMasterAdmin(user.email) && window.adminUsersData && window.adminUsersData.length > 0) {
-                        updateAdminStats(window.adminUsersData);
-                        renderAdminUsersList(window.adminUsersData);
-                    }
-                }
-            }
+            console.log('[VehicleSync] Processed', processedCount, 'vehicles, array count:', vehicles.length, '(was', propCountBefore, ')');
+            
+            // Only render on first snapshot or if there are actual changes
+            // Skip re-render if user is on Owner Stats page (to avoid interrupting edits)
+            const statsPageVisible = $('vehicleStatsPage') && !$('vehicleStatsPage').classList.contains('hidden');
+            const ownerDashVisible = $('ownerDashboard') && !$('ownerDashboard').classList.contains('hidden');
             
             if (isFirstSnapshot) {
+                // First load - always render
+                if (typeof applyAllFilters === 'function') {
+                    applyAllFilters();
+                } else if (typeof renderVehicles === 'function') {
+                    renderVehicles(state.filteredVehicles);
+                }
                 isFirstSnapshot = false;
-                console.log('[PropertySync] Initial load complete, total properties:', properties.length);
+                console.log('[VehicleSync] Initial load complete, total vehicles:', vehicles.length);
+            } else if (hasChanges && !statsPageVisible) {
+                // Subsequent changes - only render if not on stats page
+                if (typeof applyAllFilters === 'function') {
+                    applyAllFilters();
+                }
+                
+                // Update owner dashboard if visible
+                if (ownerDashVisible && typeof renderOwnerDashboard === 'function') {
+                    renderOwnerDashboard();
+                }
+                
+                if (TierService.isMasterAdmin(user.email) && window.adminUsersData && window.adminUsersData.length > 0) {
+                    updateAdminStats(window.adminUsersData);
+                    renderAdminUsersList(window.adminUsersData);
+                }
             }
             
         }, (error) => {
-            console.error('[PropertySync] Listener error:', error);
+            console.error('[VehicleSync] Listener error:', error);
         });
 };
 
-// Stop property sync listener (call on logout)
-window.stopPropertySyncListener = function() {
-    if (window.propertySyncUnsubscribe) {
-        window.propertySyncUnsubscribe();
-        window.propertySyncUnsubscribe = null;
+// Stop vehicle sync listener (call on logout)
+window.stopVehicleSyncListener = function() {
+    if (window.vehicleSyncUnsubscribe) {
+        window.vehicleSyncUnsubscribe();
+        window.vehicleSyncUnsubscribe = null;
     }
 };
 
-// Alias for vehicle-based code
-const VehicleDataService = PropertyDataService;
+// Export VehicleDataService globally
 window.VehicleDataService = VehicleDataService;
 
 console.log('[Services] PaulysAutos services module loaded');

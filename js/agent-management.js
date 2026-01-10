@@ -5,13 +5,13 @@
  * 
  * Features:
  * - Agent role management (promote/demote users)
- * - Property agent assignments (multiple agents per property)
+ * - Vehicle agent assignments (multiple agents per vehicle)
  * - Commission tracking (10% of sale price, split evenly)
  * - Contact override for Make an Offer
  * 
  * Data Model:
  * - users/{odId}: isAgent (boolean), agentPhone (string)
- * - settings/properties: agents[] (array of agent emails per property)
+ * - settings/vehicles: agents[] (array of agent emails per vehicle)
  * 
  * ============================================================================
  */
@@ -31,16 +31,16 @@ function canManageAgentRole() {
 
 /**
  * Check if current user can assign agents to a vehicle
- * Master Admin or Property Owner
+ * Master Admin or Vehicle Owner
  */
-function canAssignAgents(propertyId) {
+function canAssignAgents(vehicleId) {
     if (!auth.currentUser) return false;
     if (TierService.isMasterAdmin(auth.currentUser.email)) return true;
     
     // Check if user owns this vehicle
-    var ownerEmail = PropertyDataService.getValue(propertyId, 'ownerEmail', null);
+    var ownerEmail = VehicleDataService.getValue(vehicleId, 'ownerEmail', null);
     if (!ownerEmail) {
-        ownerEmail = propertyOwnerEmail[propertyId];
+        ownerEmail = vehicleOwnerEmail[vehicleId];
     }
     return ownerEmail && ownerEmail.toLowerCase() === auth.currentUser.email.toLowerCase();
 }
@@ -176,15 +176,15 @@ window.demoteFromAgent = async function(odId, email) {
     }
     
     try {
-        // Remove from all property assignments first
-        var propsDoc = await db.collection('settings').doc('properties').get();
+        // Remove from all vehicle assignments first
+        var propsDoc = await db.collection('settings').doc('vehicles').get();
         if (propsDoc.exists) {
-            var properties = propsDoc.data();
+            var vehicles = propsDoc.data();
             var updates = {};
             var removedCount = 0;
             
-            Object.keys(properties).forEach(function(propId) {
-                var prop = properties[propId];
+            Object.keys(vehicles).forEach(function(propId) {
+                var prop = vehicles[propId];
                 if (prop.agents && Array.isArray(prop.agents)) {
                     var idx = prop.agents.findIndex(function(a) {
                         return a.toLowerCase() === email.toLowerCase();
@@ -200,11 +200,11 @@ window.demoteFromAgent = async function(odId, email) {
             });
             
             if (Object.keys(updates).length > 0) {
-                await db.collection('settings').doc('properties').update(updates);
+                await db.collection('settings').doc('vehicles').update(updates);
             }
             
             if (removedCount > 0) {
-                console.log('[Agents] Removed agent from', removedCount, 'properties');
+                console.log('[Agents] Removed agent from vehicles');
             }
         }
         
@@ -234,22 +234,22 @@ window.demoteFromAgent = async function(odId, email) {
 /**
  * Assign agent to vehicle
  */
-window.assignAgentToProperty = async function(propertyId, agentEmail) {
-    if (!canAssignAgents(propertyId)) {
+window.assignAgentToProperty = async function(vehicleId, agentEmail) {
+    if (!canAssignAgents(vehicleId)) {
         showToast('You do not have permission to assign agents to this vehicle', 'error');
         return false;
     }
     
     try {
-        var propsDoc = await db.collection('settings').doc('properties').get();
-        var properties = propsDoc.exists ? propsDoc.data() : {};
-        var propKey = String(propertyId);
+        var propsDoc = await db.collection('settings').doc('vehicles').get();
+        var vehicles = propsDoc.exists ? propsDoc.data() : {};
+        var propKey = String(vehicleId);
         
-        if (!properties[propKey]) {
-            properties[propKey] = {};
+        if (!vehicles[propKey]) {
+            vehicles[propKey] = {};
         }
         
-        var currentAgents = properties[propKey].agents || [];
+        var currentAgents = vehicles[propKey].agents || [];
         
         // Check if already assigned
         var alreadyAssigned = currentAgents.some(function(a) {
@@ -284,19 +284,19 @@ window.assignAgentToProperty = async function(propertyId, agentEmail) {
         }
         
         // Store agent display names AND phones map for public view
-        var agentDisplayNames = properties[propKey].agentDisplayNames || {};
-        var agentPhones = properties[propKey].agentPhones || {};
+        var agentDisplayNames = vehicles[propKey].agentDisplayNames || {};
+        var agentPhones = vehicles[propKey].agentPhones || {};
         agentDisplayNames[agentEmail.toLowerCase()] = agentDisplayName;
         agentPhones[agentEmail.toLowerCase()] = agentPhone;
         
-        await db.collection('settings').doc('properties').update({
+        await db.collection('settings').doc('vehicles').update({
             [propKey + '.agents']: currentAgents,
             [propKey + '.agentDisplayNames']: agentDisplayNames,
             [propKey + '.agentPhones']: agentPhones
         });
         
         // Update local cache
-        var localProp = window.properties?.find(function(p) { return p.id == propertyId; });
+        var localProp = window.vehicles?.find(function(p) { return p.id == vehicleId; });
         if (localProp) {
             localProp.agents = currentAgents;
             localProp.agentDisplayNames = agentDisplayNames;
@@ -305,8 +305,8 @@ window.assignAgentToProperty = async function(propertyId, agentEmail) {
         
         // Log activity
         if (typeof logActivity === 'function') {
-            var prop = properties.find(function(p) { return p.id == propertyId; }) || { title: 'Property ' + propertyId };
-            logActivity('agent_assign', 'Assigned ' + agentEmail + ' to ' + (prop.title || 'Property ' + propertyId));
+            var prop = vehicles.find(function(p) { return p.id == vehicleId; }) || { title: 'Vehicle ' + vehicleId };
+            logActivity('agent_assign', 'Assigned ' + agentEmail + ' to ' + (prop.title || 'Vehicle ' + vehicleId));
         }
         
         showToast('✅ Agent assigned to vehicle', 'success');
@@ -323,12 +323,12 @@ window.assignAgentToProperty = async function(propertyId, agentEmail) {
  * @param {boolean} selfRemoval - True if agent is removing themselves
  * @param {string} reason - Required reason when owner removes agent
  */
-window.removeAgentFromProperty = async function(propertyId, agentEmail, selfRemoval, reason) {
+window.removeAgentFromProperty = async function(vehicleId, agentEmail, selfRemoval, reason) {
     var isMasterAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     var isSelf = auth.currentUser?.email.toLowerCase() === agentEmail.toLowerCase();
     
     // Permission check
-    if (!isMasterAdmin && !isSelf && !canAssignAgents(propertyId)) {
+    if (!isMasterAdmin && !isSelf && !canAssignAgents(vehicleId)) {
         showToast('You do not have permission to remove agents from this vehicle', 'error');
         return false;
     }
@@ -340,29 +340,29 @@ window.removeAgentFromProperty = async function(propertyId, agentEmail, selfRemo
     }
     
     try {
-        var propsDoc = await db.collection('settings').doc('properties').get();
+        var propsDoc = await db.collection('settings').doc('vehicles').get();
         if (!propsDoc.exists) return false;
         
-        var properties = propsDoc.data();
-        var propKey = String(propertyId);
+        var vehicles = propsDoc.data();
+        var propKey = String(vehicleId);
         
-        if (!properties[propKey] || !properties[propKey].agents) {
+        if (!vehicles[propKey] || !vehicles[propKey].agents) {
             showToast('No agents assigned to this vehicle', 'info');
             return false;
         }
         
-        var newAgents = properties[propKey].agents.filter(function(a) {
+        var newAgents = vehicles[propKey].agents.filter(function(a) {
             return a.toLowerCase() !== agentEmail.toLowerCase();
         });
         
-        await db.collection('settings').doc('properties').update({
+        await db.collection('settings').doc('vehicles').update({
             [propKey + '.agents']: newAgents
         });
         
         // Log activity with reason if provided
         if (typeof logActivity === 'function') {
             var action = isSelf ? 'agent_self_remove' : 'agent_remove';
-            var msg = (isSelf ? 'Self-removed from' : 'Removed ' + agentEmail + ' from') + ' property ' + propertyId;
+            var msg = (isSelf ? 'Self-removed from' : 'Removed ' + agentEmail + ' from') + ' vehicle ' + vehicleId;
             if (reason) msg += ' - Reason: ' + reason;
             logActivity(action, msg);
         }
@@ -379,8 +379,8 @@ window.removeAgentFromProperty = async function(propertyId, agentEmail, selfRemo
 /**
  * Get agents assigned to a vehicle
  */
-window.getPropertyAgents = function(propertyId) {
-    var agents = PropertyDataService.getValue(propertyId, 'agents', []);
+window.getPropertyAgents = function(vehicleId) {
+    var agents = VehicleDataService.getValue(vehicleId, 'agents', []);
     if (!Array.isArray(agents)) return [];
     return agents;
 };
@@ -390,15 +390,15 @@ window.getPropertyAgents = function(propertyId) {
  * Returns array of {email, phone, username} for all assigned agents
  * Works for both authenticated AND anonymous users
  */
-window.getAgentContactsForProperty = async function(propertyId) {
-    var agentEmails = getPropertyAgents(propertyId);
+window.getAgentContactsForProperty = async function(vehicleId) {
+    var agentEmails = getPropertyAgents(vehicleId);
     if (agentEmails.length === 0) return [];
     
     var contacts = [];
     
-    // First, try to get from vehicle data via PropertyDataService (works for anonymous users)
-    var agentDisplayNames = PropertyDataService.getValue(propertyId, 'agentDisplayNames', null);
-    var agentPhones = PropertyDataService.getValue(propertyId, 'agentPhones', null);
+    // First, try to get from vehicle data via VehicleDataService (works for anonymous users)
+    var agentDisplayNames = VehicleDataService.getValue(vehicleId, 'agentDisplayNames', null);
+    var agentPhones = VehicleDataService.getValue(vehicleId, 'agentPhones', null);
     
     if (agentDisplayNames && agentPhones) {
         // Use stored agent data from vehicle (no auth required)
@@ -463,11 +463,11 @@ window.getAgentContactsForProperty = async function(propertyId) {
  * Calculate potential commission for an agent on a vehicle
  * Commission = 10% of sale price, split evenly among agents
  */
-window.calculateAgentCommission = function(propertyId) {
-    var buyPrice = PropertyDataService.getValue(propertyId, 'buyPrice', 0);
+window.calculateAgentCommission = function(vehicleId) {
+    var buyPrice = VehicleDataService.getValue(vehicleId, 'buyPrice', 0);
     if (!buyPrice) return { total: 0, perAgent: 0, agentCount: 0 };
     
-    var agents = getPropertyAgents(propertyId);
+    var agents = getPropertyAgents(vehicleId);
     var agentCount = agents.length;
     if (agentCount === 0) return { total: 0, perAgent: 0, agentCount: 0 };
     
@@ -482,13 +482,13 @@ window.calculateAgentCommission = function(propertyId) {
 };
 
 /**
- * Get all properties an agent is assigned to
+ * Get all vehicles an agent is assigned to
  */
 window.getAgentProperties = function(agentEmail) {
     var assignedProperties = [];
     
-    properties.forEach(function(p) {
-        var agents = PropertyDataService.getValue(p.id, 'agents', []);
+    vehicles.forEach(function(p) {
+        var agents = VehicleDataService.getValue(p.id, 'agents', []);
         if (Array.isArray(agents)) {
             var isAssigned = agents.some(function(a) {
                 return a.toLowerCase() === agentEmail.toLowerCase();
@@ -690,12 +690,12 @@ window.confirmDemoteAgent = function(odId, email) {
 };
 
 /**
- * Render agent management section for Property Stats page
+ * Render agent management section for Vehicle Stats page
  * Returns HTML string to be inserted into container
  */
-window.renderPropertyAgentSection = async function(propertyId) {
-    var canAssign = canAssignAgents(propertyId);
-    var currentAgents = getPropertyAgents(propertyId);
+window.renderPropertyAgentSection = async function(vehicleId) {
+    var canAssign = canAssignAgents(vehicleId);
+    var currentAgents = getPropertyAgents(vehicleId);
     var allAgents = await loadAgents();
     var isMasterAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     var userEmail = auth.currentUser?.email?.toLowerCase();
@@ -723,7 +723,7 @@ window.renderPropertyAgentSection = async function(propertyId) {
                     '</div>' +
                 '</div>' +
                 (canRemove ? 
-                    '<button onclick="promptRemoveAgentFromProperty(' + propertyId + ', \'' + agentEmail + '\', ' + isSelf + ')" ' +
+                    '<button onclick="promptRemoveAgentFromProperty(' + vehicleId + ', \'' + agentEmail + '\', ' + isSelf + ')" ' +
                         'class="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold transition">' +
                         '✕ Remove Agent' +
                     '</button>' 
@@ -733,7 +733,7 @@ window.renderPropertyAgentSection = async function(propertyId) {
         html += '</div>';
         
         // Commission info
-        var commission = calculateAgentCommission(propertyId);
+        var commission = calculateAgentCommission(vehicleId);
         if (commission.total > 0) {
             html += '<div class="bg-green-900/30 border border-green-700 rounded-lg p-3 mb-4">' +
                 '<div class="text-green-400 text-sm font-bold">💰 Agent Commission (10% of sale)</div>' +
@@ -760,7 +760,7 @@ window.renderPropertyAgentSection = async function(propertyId) {
                         return '<option value="' + a.email + '">' + a.username + ' (' + a.phone + ')</option>';
                     }).join('') +
                 '</select>' +
-                '<button onclick="addAgentToPropertyFromDropdown(' + propertyId + ')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold">Add</button>' +
+                '<button onclick="addAgentToPropertyFromDropdown(' + vehicleId + ')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold">Add</button>' +
             '</div>' +
         '</div>';
     }
@@ -771,18 +771,18 @@ window.renderPropertyAgentSection = async function(propertyId) {
 /**
  * Add agent from dropdown selection
  */
-window.addAgentToPropertyFromDropdown = async function(propertyId) {
+window.addAgentToPropertyFromDropdown = async function(vehicleId) {
     var select = $('addAgentSelect');
     if (!select || !select.value) {
         showToast('Please select an agent', 'error');
         return;
     }
     
-    var success = await assignAgentToProperty(propertyId, select.value);
+    var success = await assignAgentToProperty(vehicleId, select.value);
     if (success) {
         // Refresh the vehicle stats view
-        if (typeof renderPropertyStatsContent === 'function') {
-            renderPropertyStatsContent(propertyId);
+        if (typeof renderVehicleStatsContent === 'function') {
+            renderVehicleStatsContent(vehicleId);
         }
     }
 };
@@ -790,14 +790,14 @@ window.addAgentToPropertyFromDropdown = async function(propertyId) {
 /**
  * Prompt to remove agent with reason (for owner removing agent)
  */
-window.promptRemoveAgentFromProperty = function(propertyId, agentEmail, isSelf) {
+window.promptRemoveAgentFromProperty = function(vehicleId, agentEmail, isSelf) {
     var isMasterAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     
     if (isSelf) {
         if (confirm('Are you sure you want to remove yourself from this vehicle?\n\nYou will no longer receive offer inquiries for this vehicle.')) {
-            removeAgentFromProperty(propertyId, agentEmail, true, null).then(function(success) {
-                if (success && typeof renderPropertyStatsContent === 'function') {
-                    renderPropertyStatsContent(propertyId);
+            removeAgentFromProperty(vehicleId, agentEmail, true, null).then(function(success) {
+                if (success && typeof renderVehicleStatsContent === 'function') {
+                    renderVehicleStatsContent(vehicleId);
                 }
             });
         }
@@ -806,9 +806,9 @@ window.promptRemoveAgentFromProperty = function(propertyId, agentEmail, isSelf) 
     
     if (isMasterAdmin) {
         if (confirm('Remove ' + agentEmail + ' from this vehicle?')) {
-            removeAgentFromProperty(propertyId, agentEmail, false, 'Admin removal').then(function(success) {
-                if (success && typeof renderPropertyStatsContent === 'function') {
-                    renderPropertyStatsContent(propertyId);
+            removeAgentFromProperty(vehicleId, agentEmail, false, 'Admin removal').then(function(success) {
+                if (success && typeof renderVehicleStatsContent === 'function') {
+                    renderVehicleStatsContent(vehicleId);
                 }
             });
         }
@@ -829,15 +829,15 @@ window.promptRemoveAgentFromProperty = function(propertyId, agentEmail, isSelf) 
         return;
     }
     
-    removeAgentFromProperty(propertyId, agentEmail, false, reason.trim()).then(function(success) {
-        if (success && typeof renderPropertyStatsContent === 'function') {
-            renderPropertyStatsContent(propertyId);
+    removeAgentFromProperty(vehicleId, agentEmail, false, reason.trim()).then(function(success) {
+        if (success && typeof renderVehicleStatsContent === 'function') {
+            renderVehicleStatsContent(vehicleId);
         }
     });
 };
 
 /**
- * One-time migration: Populate agentDisplayNames for properties that already have agents
+ * One-time migration: Populate agentDisplayNames for vehicles that already have agents
  * Run from console: migrateAgentDisplayNames()
  */
 window.migrateAgentDisplayNames = async function() {
@@ -852,17 +852,17 @@ window.migrateAgentDisplayNames = async function() {
         // Load agents first
         await loadAgents();
         
-        var propsDoc = await db.collection('settings').doc('properties').get();
+        var propsDoc = await db.collection('settings').doc('vehicles').get();
         if (!propsDoc.exists) {
-            console.log('[Agents] No properties found');
+            console.log('[Agents] No vehicles found');
             return;
         }
         
-        var allProperties = propsDoc.data();
+        var allVehicles = propsDoc.data();
         var updates = {};
         var migratedCount = 0;
         
-        Object.entries(allProperties).forEach(function([propId, prop]) {
+        Object.entries(allVehicles).forEach(function([propId, prop]) {
             if (!prop || !prop.agents || prop.agents.length === 0) return;
             
             // Check if already has BOTH agentDisplayNames AND agentPhones
@@ -870,7 +870,7 @@ window.migrateAgentDisplayNames = async function() {
             var hasPhones = prop.agentPhones && Object.keys(prop.agentPhones).length > 0;
             
             if (hasDisplayNames && hasPhones) {
-                console.log('[Agents] Property', propId, 'already has agentDisplayNames and agentPhones');
+                console.log('[Agents] Vehicle already has agentDisplayNames and agentPhones');
                 return;
             }
             
@@ -902,17 +902,17 @@ window.migrateAgentDisplayNames = async function() {
             updates[propId + '.agentDisplayNames'] = displayNames;
             updates[propId + '.agentPhones'] = phones;
             migratedCount++;
-            console.log('[Agents] Will migrate property', propId, ':', { displayNames, phones });
+            console.log('[Agents] Will migrate vehicle', propId, ':', { displayNames, phones });
         });
         
         if (Object.keys(updates).length === 0) {
-            console.log('[Agents] No properties need migration');
+            console.log('[Agents] No vehicles need migration');
             return;
         }
         
-        await db.collection('settings').doc('properties').update(updates);
-        console.log('[Agents] ✅ Migration complete! Updated', migratedCount, 'properties');
-        showToast('Migration complete! Updated ' + migratedCount + ' properties', 'success');
+        await db.collection('settings').doc('vehicles').update(updates);
+        console.log('[Agents] ✅ Migration complete! Updated vehicles');
+        showToast('Migration complete! Updated vehicles', 'success');
         
     } catch (error) {
         console.error('[Agents] Migration error:', error);

@@ -1,16 +1,16 @@
 // ==================== STATE ====================
 let state = {
-    filteredProperties: [...properties],
+    filteredVehicles: [...vehicles],
     currentUser: null,
-    currentPropertyId: null,
+    currentVehicleId: null,
     currentImageIndex: 0,
     currentImages: [],
     availability: {},
-    propertyOverrides: {} // Stores custom property values from Firestore
+    vehicleOverrides: {} // Stores custom vehicle values from Firestore
 };
 
 // Initialize availability defaults
-properties.forEach(p => { state.availability[p.id] = true; });
+vehicles.forEach(p => { state.availability[p.id] = true; });
 
 // Make state accessible globally
 window.state = state;

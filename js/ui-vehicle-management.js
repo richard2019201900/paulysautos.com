@@ -1,14 +1,14 @@
 /**
  * ============================================================================
- * UI PROPERTY MANAGEMENT - Property creation, deletion, and management
+ * UI PROPERTY MANAGEMENT - Vehicle creation, deletion, and management
  * ============================================================================
  * 
  * CONTENTS:
  * - Create listing modal
- * - Delete property
+ * - Delete vehicle
  * - Copy dashboard reminder
  * 
- * DEPENDENCIES: TierService, PropertyDataService, OwnershipService
+ * DEPENDENCIES: TierService, VehicleDataService, OwnershipService
  * ============================================================================
  */
 
@@ -166,14 +166,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             try {
                 // Generate new ID (find max ID + 1)
-                const maxId = properties.reduce((max, p) => Math.max(max, p.id), 0);
+                const maxId = vehicles.reduce((max, p) => Math.max(max, p.id), 0);
                 const newId = maxId + 1;
                 
                 // Get owner email first (lowercase for consistency)
                 const ownerEmail = (auth.currentUser?.email || 'richard2019201900@gmail.com').toLowerCase();
                 
                 // Create new vehicle object - Benny's app style
-                const newProperty = {
+                const newVehicle = {
                     id: newId,
                     title: title, // Model name
                     plate: plate, // License plate
@@ -194,26 +194,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     createdAtTimestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 
-                // Add to local properties array
-                properties.push(newProperty);
+                // Add to local vehicles array
+                vehicles.push(newVehicle);
                 
                 // Add to owner map
-                if (!ownerPropertyMap[ownerEmail]) {
-                    ownerPropertyMap[ownerEmail] = [];
+                if (!ownerVehicleMap[ownerEmail]) {
+                    ownerVehicleMap[ownerEmail] = [];
                 }
-                ownerPropertyMap[ownerEmail].push(newId);
-                propertyOwnerEmail[newId] = ownerEmail;
+                ownerVehicleMap[ownerEmail].push(newId);
+                vehicleOwnerEmail[newId] = ownerEmail;
                 
                 // Set availability to true
                 state.availability[newId] = true;
-                await db.collection('settings').doc('propertyAvailability').set({ [newId]: true }, { merge: true });
+                await db.collection('settings').doc('vehicleAvailability').set({ [newId]: true }, { merge: true });
                 
-                // Save property to Firestore (ownerEmail field is the source of truth)
-                await db.collection('settings').doc('properties').set({
-                    [newId]: newProperty
+                // Save vehicle to Firestore (ownerEmail field is the source of truth)
+                await db.collection('settings').doc('vehicles').set({
+                    [newId]: newVehicle
                 }, { merge: true });
                 
-                // Track last property posted time for this user
+                // Track last vehicle posted time for this user
                 try {
                     const user = auth.currentUser;
                     if (user) {
@@ -243,11 +243,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Update filtered properties
-                state.filteredProperties = [...properties];
+                // Update filtered vehicles
+                state.filteredVehicles = [...vehicles];
                 
                 // Re-render
-                renderProperties(state.filteredProperties);
+                renderVehicles(state.filteredVehicles);
                 renderOwnerDashboard();
                 
                 // Update tier badge to reflect new listing count
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (currentListingCount === 1) {
                             // First listing - award 500 XP
                             GamificationService.awardAchievement(user.uid, 'first_listing', 500, {
-                                statUpdate: { propertiesPosted: 1 }
+                                statUpdate: { vehiclesPosted: 1 }
                             }).then(result => {
                                 if (result && !result.alreadyEarned) {
                                     console.log('[Gamification] Awarded 500 XP for first listing');
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 console.log('[Gamification] Awarded 250 XP for additional listing');
                                 // Update stats
                                 db.collection('users').doc(user.uid).update({
-                                    'gamification.stats.propertiesPosted': firebase.firestore.FieldValue.increment(1)
+                                    'gamification.stats.vehiclesPosted': firebase.firestore.FieldValue.increment(1)
                                 }).catch(e => console.warn('[Gamification] Could not update stats:', e));
                             }).catch(err => console.error('[Gamification] Error:', err));
                         }
@@ -325,67 +325,67 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==================== DELETE PROPERTY ====================
-window.confirmDeleteProperty = function(propertyId, propertyTitle) {
-    // Store the property info for deletion
-    window.pendingDeleteProperty = { id: propertyId, title: propertyTitle };
+window.confirmDeleteProperty = function(vehicleId, vehicleTitle) {
+    // Store the vehicle info for deletion
+    window.pendingDeleteVehicle = { id: vehicleId, title: vehicleTitle };
     
     // Update modal content
-    $('deletePropertyName').textContent = propertyTitle;
+    $('deletePropertyName').textContent = vehicleTitle;
     
     // Show the modal
     openModal('deleteConfirmModal');
 };
 
 window.cancelDelete = function() {
-    window.pendingDeleteProperty = null;
+    window.pendingDeleteVehicle = null;
     closeModal('deleteConfirmModal');
 };
 
 window.executeDeleteProperty = async function() {
-    if (!window.pendingDeleteProperty) return;
+    if (!window.pendingDeleteVehicle) return;
     
-    const propertyId = window.pendingDeleteProperty.id;
-    const propertyTitle = window.pendingDeleteProperty.title;
+    const vehicleId = window.pendingDeleteVehicle.id;
+    const vehicleTitle = window.pendingDeleteVehicle.title;
     const btn = $('confirmDeleteBtn');
     
     btn.disabled = true;
     btn.textContent = 'Deleting...';
     
     try {
-        // Get the ACTUAL property owner's email (not the current user - could be admin)
-        const actualOwnerEmail = (propertyOwnerEmail[propertyId] || '').toLowerCase();
+        // Get the ACTUAL vehicle owner's email (not the current user - could be admin)
+        const actualOwnerEmail = (vehicleOwnerEmail[vehicleId] || '').toLowerCase();
         const currentUserEmail = (auth.currentUser?.email || '').toLowerCase();
         const isAdminDeleting = currentUserEmail !== actualOwnerEmail && actualOwnerEmail !== '';
-        // Remove from local properties array
-        const propIndex = properties.findIndex(p => p.id === propertyId);
+        // Remove from local vehicles array
+        const propIndex = vehicles.findIndex(p => p.id === vehicleId);
         if (propIndex !== -1) {
-            properties.splice(propIndex, 1);
+            vehicles.splice(propIndex, 1);
         }
         
         // Remove from owner map (use actual owner's email)
         const ownerForMap = actualOwnerEmail || currentUserEmail;
-        if (ownerPropertyMap[ownerForMap]) {
-            const idx = ownerPropertyMap[ownerForMap].indexOf(propertyId);
+        if (ownerVehicleMap[ownerForMap]) {
+            const idx = ownerVehicleMap[ownerForMap].indexOf(vehicleId);
             if (idx !== -1) {
-                ownerPropertyMap[ownerForMap].splice(idx, 1);
+                ownerVehicleMap[ownerForMap].splice(idx, 1);
             }
         }
-        delete propertyOwnerEmail[propertyId];
+        delete vehicleOwnerEmail[vehicleId];
         
         // Remove from availability
-        delete state.availability[propertyId];
+        delete state.availability[vehicleId];
         
-        // Remove from Firestore - properties doc (single source of truth)
-        await db.collection('settings').doc('properties').update({
-            [propertyId]: firebase.firestore.FieldValue.delete()
+        // Remove from Firestore - vehicles doc (single source of truth)
+        await db.collection('settings').doc('vehicles').update({
+            [vehicleId]: firebase.firestore.FieldValue.delete()
         });
         
         // Remove availability
-        await db.collection('settings').doc('propertyAvailability').update({
-            [propertyId]: firebase.firestore.FieldValue.delete()
+        await db.collection('settings').doc('vehicleAvailability').update({
+            [vehicleId]: firebase.firestore.FieldValue.delete()
         });
         
-        // CREATE DELETION NOTIFICATION for the property owner (if admin is deleting someone else's property)
+        // CREATE DELETION NOTIFICATION for the vehicle owner (if admin is deleting someone else's vehicle)
         if (isAdminDeleting && actualOwnerEmail) {
             // Find the owner's user document and set deletedProperty field
             // This triggers their existing user document listener
@@ -397,8 +397,8 @@ window.executeDeleteProperty = async function() {
                 const ownerDoc = ownerSnapshot.docs[0];
                 await db.collection('users').doc(ownerDoc.id).update({
                     deletedProperty: {
-                        propertyId: propertyId,
-                        propertyTitle: propertyTitle,
+                        vehicleId: vehicleId,
+                        vehicleTitle: vehicleTitle,
                         deletedBy: currentUserEmail,
                         deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
                         acknowledged: false
@@ -407,11 +407,11 @@ window.executeDeleteProperty = async function() {
             }
         }
         
-        // Update filtered properties
-        state.filteredProperties = [...properties];
+        // Update filtered vehicles
+        state.filteredVehicles = [...vehicles];
         
         // Re-render
-        renderProperties(state.filteredProperties);
+        renderVehicles(state.filteredVehicles);
         renderOwnerDashboard();
         
         // Update tier badge to reflect new listing count
@@ -419,16 +419,16 @@ window.executeDeleteProperty = async function() {
         
         // Close modal and go to dashboard
         closeModal('deleteConfirmModal');
-        window.pendingDeleteProperty = null;
+        window.pendingDeleteVehicle = null;
         
-        // If we're on the stats page for this property, go back to dashboard
-        if (state.currentPropertyId === propertyId) {
+        // If we're on the stats page for this vehicle, go back to dashboard
+        if (state.currentVehicleId === vehicleId) {
             goToDashboard();
         }
         
     } catch (error) {
-        console.error('Error deleting property:', error);
-        alert('Failed to delete property. Please try again.');
+        console.error('Error deleting vehicle:', error);
+        alert('Failed to delete vehicle. Please try again.');
     } finally {
         btn.disabled = false;
         btn.textContent = '🗑️ Yes, Delete';
@@ -436,8 +436,8 @@ window.executeDeleteProperty = async function() {
 };
 
 // ==================== COPY DASHBOARD REMINDER ====================
-window.copyDashboardReminder = function(propertyId, btn) {
-    const reminderText = window.dashboardReminders && window.dashboardReminders[propertyId];
+window.copyDashboardReminder = function(vehicleId, btn) {
+    const reminderText = window.dashboardReminders && window.dashboardReminders[vehicleId];
     if (!reminderText) {
         alert('No reminder text found.');
         return;

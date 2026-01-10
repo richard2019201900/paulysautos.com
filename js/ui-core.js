@@ -109,9 +109,9 @@ window.dismissSiteUpdateNotification = function() {
 
 // ==================== DASHBOARD TAB SWITCHING ====================
 // Track current dashboard tab
-window.currentDashboardTab = 'myProperties';
+window.currentDashboardTab = 'myVehicles';
 
-// Switch between My Properties and Admin Panel tabs
+// Switch between My Vehicles and Admin Panel tabs
 window.switchDashboardTab = function(tabName) {
     const myVehiclesContent = $('myVehiclesTabContent');
     const adminContent = $('adminTabContent');
@@ -174,8 +174,8 @@ window.initDashboardTabs = function() {
         let savedTab = window.UserPreferencesService 
             ? UserPreferencesService.getDashboardTab() 
             : 'myVehicles';
-        // Convert old myProperties to myVehicles
-        if (savedTab === 'myProperties') savedTab = 'myVehicles';
+        // Convert old myVehicles to myVehicles
+        if (savedTab === 'myVehicles') savedTab = 'myVehicles';
         switchDashboardTab(savedTab);
         
         // Show admin content container (the inner adminSection visibility is handled separately)
@@ -232,13 +232,13 @@ window.showToast = function(message, type = 'info') {
 };
 
 // ==================== PRICING TIERS RENDERER ====================
-// Renders all pricing options with discount badges for property cards
+// Renders all pricing options with discount badges for vehicle cards
 window.renderPricingTiers = function(p, isPremium) {
-    const dailyPrice = PropertyDataService.getValue(p.id, 'dailyPrice', p.dailyPrice || 0);
-    const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
-    const biweeklyPrice = PropertyDataService.getValue(p.id, 'biweeklyPrice', p.biweeklyPrice || 0);
-    const monthlyPrice = PropertyDataService.getValue(p.id, 'monthlyPrice', p.monthlyPrice || 0);
-    const buyPrice = PropertyDataService.getValue(p.id, 'buyPrice', p.buyPrice || 0);
+    const dailyPrice = VehicleDataService.getValue(p.id, 'dailyPrice', p.dailyPrice || 0);
+    const weeklyPrice = VehicleDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
+    const biweeklyPrice = VehicleDataService.getValue(p.id, 'biweeklyPrice', p.biweeklyPrice || 0);
+    const monthlyPrice = VehicleDataService.getValue(p.id, 'monthlyPrice', p.monthlyPrice || 0);
+    const buyPrice = VehicleDataService.getValue(p.id, 'buyPrice', p.buyPrice || 0);
     
     // Calculate discounts based on daily rate (or weekly/7 if no daily)
     const baseDaily = dailyPrice > 0 ? dailyPrice : Math.round(weeklyPrice / 7);
@@ -392,10 +392,10 @@ window.validatePriceLogic = function(weekly, biweekly, monthly) {
 };
 
 // ==================== BUY PRICE VALIDATION ====================
-// Validates buy price against city minimums based on property type and storage
+// Validates buy price against city minimums based on vehicle type and storage
 
 /**
- * Get minimum buy price based on property type and storage (for create listing form)
+ * Get minimum buy price based on vehicle type and storage (for create listing form)
  * Uses the same logic as getMinimumBuyPrice in app.js
  */
 window.getMinimumBuyPriceForForm = function() {

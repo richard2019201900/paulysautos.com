@@ -9,9 +9,9 @@
  * - Admin user field updates
  * - Owner profile sync
  * - Admin delete user
- * - Orphan property
- * - Property reassignment
- * - Complete property deletion
+ * - Orphan vehicle
+ * - Vehicle reassignment
+ * - Complete vehicle deletion
  * - Admin create user
  * - Upgrade history
  * - Admin upgrade/downgrade user
@@ -19,10 +19,10 @@
  * - Copy utilities (phone, premium reminder)
  * - Premium payment recording
  * - Export CSV
- * - Find user by property
+ * - Find user by vehicle
  * - Batch sync owner profiles
  * 
- * DEPENDENCIES: TierService, PropertyDataService, OwnershipService
+ * DEPENDENCIES: TierService, VehicleDataService, OwnershipService
  * ============================================================================
  */
 
@@ -161,7 +161,7 @@ window.editSubscriptionAmount = async function(userId, email, curpaymentAmount) 
 window.openSubscriptionReminderModal = function(userId, email, displayName, tier, price, daysUntilDue) {
     const tierName = tier === 'pro' ? 'Pro ⭐' : 'Elite 👑';
     const tierEmoji = tier === 'pro' ? '⭐' : '👑';
-    const benefits = tier === 'pro' ? '3 property listings' : 'Unlimited property listings';
+    const benefits = tier === 'pro' ? '3 vehicle listings' : 'Unlimited vehicle listings';
     
     // Determine reminder type based on days until due
     let reminderType, reminderTitle, reminderBg;
@@ -440,7 +440,7 @@ window.updateAdminUserField = async function(userId, email, field, value) {
                 if (ownerUsername) ownerUsername.value = value;
             }
             
-            // Update any property cards showing this owner
+            // Update any vehicle cards showing this owner
             syncOwnerNameEverywhere(email, value);
         }
     } catch (error) {
@@ -453,7 +453,7 @@ window.updateAdminUserField = async function(userId, email, field, value) {
 window.syncOwnerNameEverywhere = function(email, newName) {
     const normalizedEmail = email.toLowerCase();
     
-    // Update property cards with this owner
+    // Update vehicle cards with this owner
     document.querySelectorAll(`[data-owner-email="${normalizedEmail}"]`).forEach(el => {
         el.textContent = newName;
     });
@@ -467,28 +467,28 @@ window.syncOwnerNameEverywhere = function(email, newName) {
 };
 
 // ============================================================================
-// ENTERPRISE: Sync Owner Profile to Properties
+// ENTERPRISE: Sync Owner Profile to Vehicles
 // ============================================================================
-// Stores ownerDisplayName and ownerContactPhone on property documents
+// Stores ownerDisplayName and ownerContactPhone on vehicle documents
 // This is CRITICAL for public visibility - Firestore security rules only allow
-// users to read their own user doc, so we must store public info on properties
+// users to read their own user doc, so we must store public info on vehicles
 // ============================================================================
 
 window.syncOwnerProfileToProperties = async function(email, displayName, phone) {
     if (!email) return;
     
     const normalizedEmail = email.toLowerCase();
-    console.log('[ProfileSync] Syncing profile to properties for:', normalizedEmail);
+    console.log('[ProfileSync] Syncing profile to vehicles for:', normalizedEmail);
     
     try {
-        // Get all properties owned by this user
-        const userProperties = typeof OwnershipService !== 'undefined' 
-            ? OwnershipService.getPropertiesForOwner(normalizedEmail)
+        // Get all vehicles owned by this user
+        const userVehicles = typeof OwnershipService !== 'undefined' 
+            ? OwnershipService.getVehiclesForOwner(normalizedEmail)
             : [];
         
-        if (userProperties.length === 0) {
-            console.log('[ProfileSync] No properties found for user');
-            // Still update caches even if no properties
+        if (userVehicles.length === 0) {
+            console.log('[ProfileSync] No vehicles found for user');
+            // Still update caches even if no vehicles
             if (displayName) {
                 window.ownerUsernameCache = window.ownerUsernameCache || {};
                 window.ownerUsernameCache[normalizedEmail] = displayName;
@@ -496,9 +496,9 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
             return;
         }
         
-        // Build batch update for all properties
+        // Build batch update for all vehicles
         const updates = {};
-        userProperties.forEach(prop => {
+        userVehicles.forEach(prop => {
             const propUpdate = { ...prop };
             
             // Only update fields that have values
@@ -513,10 +513,10 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
         });
         
         // Save to Firestore
-        await db.collection('settings').doc('properties').set(updates, { merge: true });
+        await db.collection('settings').doc('vehicles').set(updates, { merge: true });
         
-        // Update local properties array
-        userProperties.forEach(prop => {
+        // Update local vehicles array
+        userVehicles.forEach(prop => {
             if (displayName) prop.ownerDisplayName = displayName;
             if (phone) prop.ownerContactPhone = phone;
         });
@@ -527,7 +527,7 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
             window.ownerUsernameCache[normalizedEmail] = displayName;
         }
         
-        console.log(`[ProfileSync] Updated ${userProperties.length} properties:`, {
+        console.log(`[ProfileSync] Updated ${userVehicles.length} vehicles:`, {
             displayName: displayName || '(not updated)',
             phone: phone ? '***' + phone.slice(-4) : '(not updated)'
         });
@@ -536,7 +536,7 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
         syncOwnerNameEverywhere(normalizedEmail, displayName);
         
     } catch (error) {
-        console.error('[ProfileSync] Error syncing profile to properties:', error);
+        console.error('[ProfileSync] Error syncing profile to vehicles:', error);
     }
 };
 
@@ -546,48 +546,48 @@ window.updateOwnerDisplayNameOnProperties = function(email, displayName) {
 };
 
 window.adminDeleteUser = async function(userId, email) {
-    // CRITICAL: Use OwnershipService for consistent property ownership
-    const userProperties = OwnershipService.getPropertiesForOwner(email);
-    const propertyCount = userProperties.length;
+    // CRITICAL: Use OwnershipService for consistent vehicle ownership
+    const userVehicles = OwnershipService.getVehiclesForOwner(email);
+    const vehicleCount = userVehicles.length;
     
     // Build confirmation message
     let message = `⚠️ DELETE USER: ${email}\n\n`;
     
-    if (propertyCount > 0) {
-        message += `This user has ${propertyCount} propert${propertyCount > 1 ? 'ies' : 'y'}:\n`;
-        userProperties.slice(0, 5).forEach((p, i) => {
+    if (vehicleCount > 0) {
+        message += `This user has ${vehicleCount} vehicle${vehicleCount > 1 ? 's' : ''}:\n`;
+        userVehicles.slice(0, 5).forEach((p, i) => {
             message += `  ${i + 1}. ${p.title}\n`;
         });
-        if (propertyCount > 5) {
-            message += `  ... and ${propertyCount - 5} more\n`;
+        if (vehicleCount > 5) {
+            message += `  ... and ${vehicleCount - 5} more\n`;
         }
-        message += `\nWhat would you like to do with their properties?\n\n`;
-        message += `Click OK to DELETE properties too\n`;
-        message += `Click Cancel to keep properties (unassigned)`;
+        message += `\nWhat would you like to do with their vehicles?\n\n`;
+        message += `Click OK to DELETE vehicles too\n`;
+        message += `Click Cancel to keep vehicles (unassigned)`;
     } else {
-        message += `This user has no properties.\n\nContinue with deletion?`;
+        message += `This user has no vehicles.\n\nContinue with deletion?`;
     }
     
-    const deleteProperties = propertyCount > 0 ? confirm(message) : null;
+    const deleteProperties = vehicleCount > 0 ? confirm(message) : null;
     
-    // If they clicked Cancel on property question, ask if they still want to delete user
-    if (propertyCount > 0 && !deleteProperties) {
-        if (!confirm(`Delete ${email} but KEEP their ${propertyCount} properties unassigned?\n\nClick OK to continue, Cancel to abort.`)) {
+    // If they clicked Cancel on vehicle question, ask if they still want to delete user
+    if (vehicleCount > 0 && !deleteProperties) {
+        if (!confirm(`Delete ${email} but KEEP their ${vehicleCount} vehicles unassigned?\n\nClick OK to continue, Cancel to abort.`)) {
             return;
         }
-    } else if (propertyCount === 0) {
+    } else if (vehicleCount === 0) {
         if (!confirm(message)) return;
     }
     
     try {
-        if (deleteProperties && propertyCount > 0) {
-            // Delete properties completely
-            for (const prop of userProperties) {
+        if (deleteProperties && vehicleCount > 0) {
+            // Delete vehicles completely
+            for (const prop of userVehicles) {
                 await deletePropertyCompletely(prop.id, email);
             }
-        } else if (propertyCount > 0) {
-            // Orphan properties - clear owner but keep property
-            for (const prop of userProperties) {
+        } else if (vehicleCount > 0) {
+            // Orphan vehicles - clear owner but keep vehicle
+            for (const prop of userVehicles) {
                 await orphanProperty(prop.id);
             }
         }
@@ -604,29 +604,29 @@ window.adminDeleteUser = async function(userId, email) {
             // Continue - Firestore deletion was successful
         }
         
-        // Remove from ownerPropertyMap
-        delete ownerPropertyMap[email.toLowerCase()];
+        // Remove from ownerVehicleMap
+        delete ownerVehicleMap[email.toLowerCase()];
         
         // Clear from username cache
         if (window.ownerUsernameCache) {
             delete window.ownerUsernameCache[email.toLowerCase()];
         }
         
-        const resultMsg = deleteProperties && propertyCount > 0
-            ? `✓ User ${email} and their ${propertyCount} properties deleted.`
-            : `✓ User ${email} deleted.${propertyCount > 0 ? ` Their ${propertyCount} properties are now unassigned.` : ''}`;
+        const resultMsg = deleteProperties && vehicleCount > 0
+            ? `✓ User ${email} and their ${vehicleCount} vehicles deleted.`
+            : `✓ User ${email} deleted.${vehicleCount > 0 ? ` Their ${vehicleCount} vehicles are now unassigned.` : ''}`;
         
         // Log to activity log
         logAdminActivity('deletion', {
             email: email,
-            propertiesDeleted: deleteProperties ? propertyCount : 0,
-            propertiesOrphaned: !deleteProperties ? propertyCount : 0,
+            vehiclesDeleted: deleteProperties ? vehicleCount : 0,
+            vehiclesOrphaned: !deleteProperties ? vehicleCount : 0,
             deletedBy: auth.currentUser?.email
         });
         
         alert(resultMsg);
         loadAllUsers();
-        renderProperties(properties);
+        renderVehicles(vehicles);
         loadActivityLog(); // Refresh activity log
         
     } catch (error) {
@@ -635,73 +635,73 @@ window.adminDeleteUser = async function(userId, email) {
     }
 };
 
-// Helper to orphan a property (clear owner but keep property)
-window.orphanProperty = async function(propertyId) {
+// Helper to orphan a vehicle (clear owner but keep vehicle)
+window.orphanProperty = async function(vehicleId) {
     try {
         // Get the old owner email before clearing
-        const prop = properties.find(p => p.id === propertyId);
+        const prop = vehicles.find(p => p.id === vehicleId);
         const oldOwnerEmail = prop?.ownerEmail;
         
-        // Update property in memory
+        // Update vehicle in memory
         if (prop) {
             prop.ownerEmail = null;
         }
         
         // Update in Firestore
-        const propsDoc = await db.collection('settings').doc('properties').get();
+        const propsDoc = await db.collection('settings').doc('vehicles').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
-            if (propsData[propertyId]) {
-                propsData[propertyId].ownerEmail = null;
-                await db.collection('settings').doc('properties').set(propsData);
+            if (propsData[vehicleId]) {
+                propsData[vehicleId].ownerEmail = null;
+                await db.collection('settings').doc('vehicles').set(propsData);
             }
         }
         
-        // Clear from propertyOwnerEmail mapping if it exists
-        if (typeof propertyOwnerEmail !== 'undefined' && propertyOwnerEmail[propertyId]) {
-            delete propertyOwnerEmail[propertyId];
+        // Clear from vehicleOwnerEmail mapping if it exists
+        if (typeof vehicleOwnerEmail !== 'undefined' && vehicleOwnerEmail[vehicleId]) {
+            delete vehicleOwnerEmail[vehicleId];
         }
         
-        // Remove from ownerPropertyMap for the old owner
+        // Remove from ownerVehicleMap for the old owner
         if (oldOwnerEmail) {
             const lowerEmail = oldOwnerEmail.toLowerCase();
-            if (ownerPropertyMap[lowerEmail]) {
-                ownerPropertyMap[lowerEmail] = ownerPropertyMap[lowerEmail].filter(id => id !== propertyId);
+            if (ownerVehicleMap[lowerEmail]) {
+                ownerVehicleMap[lowerEmail] = ownerVehicleMap[lowerEmail].filter(id => id !== vehicleId);
             }
         }
         return true;
     } catch (error) {
-        console.error(`Error orphaning property ${propertyId}:`, error);
+        console.error(`Error orphaning vehicle ${vehicleId}:`, error);
         throw error;
     }
 };
 
 // ==================== ADMIN PROPERTY REASSIGNMENT ====================
-// Store current property being reassigned
+// Store current vehicle being reassigned
 window.reassignPropertyId = null;
 
-window.openReassignModal = async function(propertyId) {
+window.openReassignModal = async function(vehicleId) {
     if (!TierService.isMasterAdmin(auth.currentUser?.email)) {
-        alert('Only the owner can reassign properties');
+        alert('Only the owner can reassign vehicles');
         return;
     }
     
-    window.reassignPropertyId = propertyId;
-    const prop = properties.find(p => p.id === propertyId);
+    window.reassignPropertyId = vehicleId;
+    const prop = vehicles.find(p => p.id === vehicleId);
     
     if (!prop) {
-        alert('Property not found');
+        alert('Vehicle not found');
         return;
     }
     
-    // Set property title in modal
+    // Set vehicle title in modal
     $('reassignPropertyTitle').textContent = prop.title;
     
     // Clear previous state
     hideElement($('reassignError'));
     hideElement($('reassignSuccess'));
     $('reassignBtn').disabled = false;
-    $('reassignBtn').textContent = '✓ Reassign Property';
+    $('reassignBtn').textContent = '✓ Reassign Vehicle';
     
     // Load users into dropdown
     const select = $('reassignOwnerSelect');
@@ -722,7 +722,7 @@ window.openReassignModal = async function(propertyId) {
         });
         
         // Pre-select current owner if exists
-        const currentOwnerEmail = prop.ownerEmail || getPropertyOwnerEmail(propertyId);
+        const currentOwnerEmail = prop.ownerEmail || getPropertyOwnerEmail(vehicleId);
         if (currentOwnerEmail) {
             select.value = currentOwnerEmail;
         }
@@ -736,7 +736,7 @@ window.openReassignModal = async function(propertyId) {
 };
 
 window.confirmReassignProperty = async function() {
-    const propertyId = window.reassignPropertyId;
+    const vehicleId = window.reassignPropertyId;
     const newOwnerEmail = $('reassignOwnerSelect').value;
     const errorDiv = $('reassignError');
     const successDiv = $('reassignSuccess');
@@ -755,8 +755,8 @@ window.confirmReassignProperty = async function() {
     btn.textContent = 'Reassigning...';
     
     try {
-        const prop = properties.find(p => p.id === propertyId);
-        const oldOwnerEmail = prop?.ownerEmail || getPropertyOwnerEmail(propertyId);
+        const prop = vehicles.find(p => p.id === vehicleId);
+        const oldOwnerEmail = prop?.ownerEmail || getPropertyOwnerEmail(vehicleId);
         
         // Handle "unassigned" selection
         const actualNewEmail = newOwnerEmail === 'unassigned' ? null : newOwnerEmail.toLowerCase();
@@ -789,7 +789,7 @@ window.confirmReassignProperty = async function() {
             }
         }
         
-        // Update property in memory
+        // Update vehicle in memory
         if (prop) {
             prop.ownerEmail = actualNewEmail;
             prop.ownerDisplayName = ownerDisplayName;
@@ -797,45 +797,45 @@ window.confirmReassignProperty = async function() {
         }
         
         // Update in Firestore
-        const propsDoc = await db.collection('settings').doc('properties').get();
+        const propsDoc = await db.collection('settings').doc('vehicles').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
-            if (propsData[propertyId]) {
-                propsData[propertyId].ownerEmail = actualNewEmail;
-                propsData[propertyId].ownerDisplayName = ownerDisplayName;
-                propsData[propertyId].ownerContactPhone = ownerContactPhone;
-                await db.collection('settings').doc('properties').set(propsData);
+            if (propsData[vehicleId]) {
+                propsData[vehicleId].ownerEmail = actualNewEmail;
+                propsData[vehicleId].ownerDisplayName = ownerDisplayName;
+                propsData[vehicleId].ownerContactPhone = ownerContactPhone;
+                await db.collection('settings').doc('vehicles').set(propsData);
             }
         }
         
-        // Update propertyOwnerEmail mapping
-        if (typeof propertyOwnerEmail !== 'undefined') {
+        // Update vehicleOwnerEmail mapping
+        if (typeof vehicleOwnerEmail !== 'undefined') {
             if (actualNewEmail) {
-                propertyOwnerEmail[propertyId] = actualNewEmail;
+                vehicleOwnerEmail[vehicleId] = actualNewEmail;
             } else {
-                delete propertyOwnerEmail[propertyId];
+                delete vehicleOwnerEmail[vehicleId];
             }
         }
         
-        // Remove from old owner's property list
+        // Remove from old owner's vehicle list
         if (oldOwnerEmail) {
             const oldLower = oldOwnerEmail.toLowerCase();
-            if (ownerPropertyMap[oldLower]) {
-                ownerPropertyMap[oldLower] = ownerPropertyMap[oldLower].filter(id => id !== propertyId);
+            if (ownerVehicleMap[oldLower]) {
+                ownerVehicleMap[oldLower] = ownerVehicleMap[oldLower].filter(id => id !== vehicleId);
             }
         }
         
-        // Add to new owner's property list (local cache only - will be rebuilt from properties)
+        // Add to new owner's vehicle list (local cache only - will be rebuilt from vehicles)
         if (actualNewEmail) {
-            if (!ownerPropertyMap[actualNewEmail]) {
-                ownerPropertyMap[actualNewEmail] = [];
+            if (!ownerVehicleMap[actualNewEmail]) {
+                ownerVehicleMap[actualNewEmail] = [];
             }
-            if (!ownerPropertyMap[actualNewEmail].includes(propertyId)) {
-                ownerPropertyMap[actualNewEmail].push(propertyId);
+            if (!ownerVehicleMap[actualNewEmail].includes(vehicleId)) {
+                ownerVehicleMap[actualNewEmail].push(vehicleId);
             }
         }
         
-        // Clear username cache for this property to force refresh
+        // Clear username cache for this vehicle to force refresh
         if (window.ownerUsernameCache && oldOwnerEmail) {
             delete window.ownerUsernameCache[oldOwnerEmail.toLowerCase()];
         }
@@ -844,70 +844,70 @@ window.confirmReassignProperty = async function() {
             window.ownerUsernameCache[actualNewEmail] = ownerDisplayName;
         }
         
-        successDiv.textContent = '✓ Property reassigned successfully!';
+        successDiv.textContent = '✓ Vehicle reassigned successfully!';
         showElement(successDiv);
         btn.textContent = '✓ Done!';
         btn.classList.remove('from-purple-600', 'to-purple-700');
         btn.classList.add('from-green-600', 'to-green-700');
         
-        // Refresh the property detail page after a short delay
+        // Refresh the vehicle detail page after a short delay
         setTimeout(() => {
             closeModal('reassignModal');
-            viewProperty(propertyId); // Reload property view
+            viewVehicle(vehicleId); // Reload vehicle view
         }, 1500);
         
     } catch (error) {
-        console.error('Error reassigning property:', error);
+        console.error('Error reassigning vehicle:', error);
         errorDiv.textContent = 'Error: ' + error.message;
         showElement(errorDiv);
         btn.disabled = false;
-        btn.textContent = '✓ Reassign Property';
+        btn.textContent = '✓ Reassign Vehicle';
     }
 };
 
 // Helper getPropertyOwnerEmail is defined in data.js - use that instead
 
-// Helper to completely delete a property
-window.deletePropertyCompletely = async function(propertyId, ownerEmail) {
+// Helper to completely delete a vehicle
+window.deletePropertyCompletely = async function(vehicleId, ownerEmail) {
     try {
-        // Get property title before deletion for notification
-        const prop = properties.find(p => p.id === propertyId);
-        const propertyTitle = prop?.title || `Property ${propertyId}`;
+        // Get vehicle title before deletion for notification
+        const prop = vehicles.find(p => p.id === vehicleId);
+        const vehicleTitle = prop?.title || `Vehicle ${vehicleId}`;
         
-        // Remove from properties array
-        const index = properties.findIndex(p => p.id === propertyId);
+        // Remove from vehicles array
+        const index = vehicles.findIndex(p => p.id === vehicleId);
         if (index !== -1) {
-            properties.splice(index, 1);
+            vehicles.splice(index, 1);
         }
         
-        // Remove from Firestore properties collection
-        const propsDoc = await db.collection('settings').doc('properties').get();
+        // Remove from Firestore vehicles collection
+        const propsDoc = await db.collection('settings').doc('vehicles').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
-            if (propsData[propertyId]) {
-                delete propsData[propertyId];
-                await db.collection('settings').doc('properties').set(propsData);
+            if (propsData[vehicleId]) {
+                delete propsData[vehicleId];
+                await db.collection('settings').doc('vehicles').set(propsData);
             }
         }
         
         // Remove availability entry
-        const availDoc = await db.collection('settings').doc('propertyAvailability').get();
+        const availDoc = await db.collection('settings').doc('vehicleAvailability').get();
         if (availDoc.exists) {
             const availData = availDoc.data();
-            if (availData[propertyId] !== undefined) {
-                delete availData[propertyId];
-                await db.collection('settings').doc('propertyAvailability').set(availData);
+            if (availData[vehicleId] !== undefined) {
+                delete availData[vehicleId];
+                await db.collection('settings').doc('vehicleAvailability').set(availData);
             }
         }
         
         // Remove from state
-        delete state.availability[propertyId];
+        delete state.availability[vehicleId];
         
         // Remove from owner map
         if (ownerEmail) {
             const lowerEmail = ownerEmail.toLowerCase();
-            if (ownerPropertyMap[lowerEmail]) {
-                ownerPropertyMap[lowerEmail] = ownerPropertyMap[lowerEmail].filter(id => id !== propertyId);
+            if (ownerVehicleMap[lowerEmail]) {
+                ownerVehicleMap[lowerEmail] = ownerVehicleMap[lowerEmail].filter(id => id !== vehicleId);
             }
             
             // CREATE DELETION NOTIFICATION on owner's user document
@@ -920,8 +920,8 @@ window.deletePropertyCompletely = async function(propertyId, ownerEmail) {
                 const ownerDoc = ownerSnapshot.docs[0];
                 await db.collection('users').doc(ownerDoc.id).update({
                     deletedProperty: {
-                        propertyId: propertyId,
-                        propertyTitle: propertyTitle,
+                        vehicleId: vehicleId,
+                        vehicleTitle: vehicleTitle,
                         deletedBy: auth.currentUser?.email || 'admin',
                         deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
                         acknowledged: false
@@ -931,7 +931,7 @@ window.deletePropertyCompletely = async function(propertyId, ownerEmail) {
         }
         return true;
     } catch (error) {
-        console.error(`Error deleting property ${propertyId}:`, error);
+        console.error(`Error deleting vehicle ${vehicleId}:`, error);
         throw error;
     }
 };
@@ -1618,7 +1618,7 @@ window.copyPremiumReminder = function(title, weeklyFee, nextDue) {
     
     let message;
     if (nextDue === 'today' || nextDue === 'tomorrow' || nextDue.includes('overdue')) {
-        message = `Hey! Your premium listing for "${decodedTitle}" is due ${nextDue}! Premium keeps you at the top of search results & featured section. $${weeklyFee.toLocaleString()} to keep the spotlight on your property! 👑🚗`;
+        message = `Hey! Your premium listing for "${decodedTitle}" is due ${nextDue}! Premium keeps you at the top of search results & featured section. $${weeklyFee.toLocaleString()} to keep the spotlight on your vehicle! 👑🚗`;
     } else if (nextDue === 'not yet set') {
         message = `Hey! Just checking in on your premium listing for "${decodedTitle}". Premium listings get 3x more views and stay at the top! $${weeklyFee.toLocaleString()}/week to keep the momentum going! 👑`;
     } else {
@@ -1639,7 +1639,7 @@ window.copyPremiumReminder = function(title, weeklyFee, nextDue) {
 };
 
 // Record premium listing payment - shows date picker modal
-window.recordPremiumPayment = function(propertyId, ownerEmail) {
+window.recordPremiumPayment = function(vehicleId, ownerEmail) {
     // Check if admin
     if (!TierService.isMasterAdmin(auth.currentUser?.email)) {
         showToast('Only admins can record premium payments', 'error');
@@ -1648,9 +1648,9 @@ window.recordPremiumPayment = function(propertyId, ownerEmail) {
     
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     
-    // Get property title for display
-    const prop = properties.find(p => p.id === propertyId);
-    const propertyTitle = prop?.title || `Property #${propertyId}`;
+    // Get vehicle title for display
+    const prop = vehicles.find(p => p.id === vehicleId);
+    const vehicleTitle = prop?.title || `Vehicle #${vehicleId}`;
     
     const modalHTML = `
         <div id="premiumPaymentModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="if(event.target.id === 'premiumPaymentModal') closePremiumPaymentModal()">
@@ -1658,7 +1658,7 @@ window.recordPremiumPayment = function(propertyId, ownerEmail) {
                 <h3 class="text-xl font-bold text-green-400 mb-4 flex items-center gap-2">💰 Record Premium Payment</h3>
                 
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
-                    <p class="text-gray-300 text-sm"><strong>Property:</strong> ${propertyTitle}</p>
+                    <p class="text-gray-300 text-sm"><strong>Vehicle:</strong> ${vehicleTitle}</p>
                     <p class="text-gray-300 text-sm"><strong>Fee:</strong> <span class="text-amber-400">$10,000/week</span></p>
                 </div>
                 
@@ -1670,7 +1670,7 @@ window.recordPremiumPayment = function(propertyId, ownerEmail) {
                 </div>
                 
                 <div class="flex gap-3">
-                    <button onclick="confirmPremiumPayment(${propertyId})" 
+                    <button onclick="confirmPremiumPayment(${vehicleId})" 
                             class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
                         ✓ Record Payment
                     </button>
@@ -1691,7 +1691,7 @@ window.closePremiumPaymentModal = function() {
     if (modal) modal.remove();
 };
 
-window.confirmPremiumPayment = async function(propertyId) {
+window.confirmPremiumPayment = async function(vehicleId) {
     const dateInput = $('premiumPaymentDate');
     const dateStr = dateInput?.value;
     
@@ -1711,8 +1711,8 @@ window.confirmPremiumPayment = async function(propertyId) {
     }
     
     try {
-        // Use PropertyDataService to write to the correct location (settings/properties)
-        await PropertyDataService.write(propertyId, 'premiumLastPayment', dateStr);
+        // Use VehicleDataService to write to the correct location (settings/vehicles)
+        await VehicleDataService.write(vehicleId, 'premiumLastPayment', dateStr);
         
         closePremiumPaymentModal();
         
@@ -1745,7 +1745,7 @@ window.exportUsersCSV = function() {
 
 window.exportListingsCSV = function() {
     const headers = ['Title', 'Location', 'Type', 'Owner Email', 'Weekly', 'Monthly', 'Available'];
-    const rows = properties.map(p => {
+    const rows = vehicles.map(p => {
         return [p.title, p.location, p.type, p.ownerEmail || '', p.weeklyPrice || '', p.monthlyPrice || '', state.availability[p.id] !== false ? 'Yes' : 'No'];
     });
     
@@ -1768,11 +1768,11 @@ window.findUserByProperty = function() {
     const resultDiv = $('adminFindResult');
     
     if (!searchTerm) {
-        resultDiv.innerHTML = '<span class="text-yellow-400">Enter a property name or address.</span>';
+        resultDiv.innerHTML = '<span class="text-yellow-400">Enter a vehicle name or address.</span>';
         return;
     }
     
-    const found = properties.find(p => 
+    const found = vehicles.find(p => 
         p.title.toLowerCase().includes(searchTerm) || 
         (p.location || '').toLowerCase().includes(searchTerm)
     );
@@ -1781,14 +1781,14 @@ window.findUserByProperty = function() {
         const ownerDisplay = found.ownerEmail || getPropertyOwnerEmail(found.id) || 'Unknown';
         resultDiv.innerHTML = `<span class="text-green-400">Found: <strong>${found.title}</strong><br>Owner: ${ownerDisplay}</span>`;
     } else {
-        resultDiv.innerHTML = '<span class="text-red-400">No property found matching that search.</span>';
+        resultDiv.innerHTML = '<span class="text-red-400">No vehicle found matching that search.</span>';
     }
 };
 
 // ============================================================================
 // BATCH SYNC OWNER PROFILES TO PROPERTIES
 // ============================================================================
-// Admin tool to sync all users' display names and phone numbers to their properties
+// Admin tool to sync all users' display names and phone numbers to their vehicles
 // This fixes visibility for non-admin users who can't read the users collection
 // ============================================================================
 
@@ -1823,16 +1823,16 @@ window.previewBatchSync = async function() {
             }
         });
         
-        // Get all properties
-        const propsDoc = await db.collection('settings').doc('properties').get();
-        const allProperties = propsDoc.exists ? propsDoc.data() : {};
+        // Get all vehicles
+        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const allVehicles = propsDoc.exists ? propsDoc.data() : {};
         
         // Build preview
         let previewHtml = '<div class="space-y-2">';
         let needsUpdate = 0;
         let alreadySynced = 0;
         
-        for (const [propId, prop] of Object.entries(allProperties)) {
+        for (const [propId, prop] of Object.entries(allVehicles)) {
             if (!prop || !prop.ownerEmail) continue;
             
             const ownerEmail = prop.ownerEmail.toLowerCase();
@@ -1857,7 +1857,7 @@ window.previewBatchSync = async function() {
         previewHtml += '</div>';
         previewHtml += `<div class="mt-3 pt-3 border-t border-gray-700">
             <span class="text-cyan-400">Summary:</span> 
-            <span class="text-yellow-300">${needsUpdate} properties need updates</span>, 
+            <span class="text-yellow-300">${needsUpdate} vehicles need updates</span>, 
             <span class="text-green-300">${alreadySynced} already synced</span>
         </div>`;
         
@@ -1874,7 +1874,7 @@ window.batchSyncOwnerProfiles = async function() {
     const statusDiv = $('batchSyncStatus');
     const previewDiv = $('batchSyncPreview');
     
-    if (!confirm('This will update all properties with owner display names and phone numbers from user profiles.\n\nContinue?')) {
+    if (!confirm('This will update all vehicles with owner display names and phone numbers from user profiles.\n\nContinue?')) {
         return;
     }
     
@@ -1910,11 +1910,11 @@ window.batchSyncOwnerProfiles = async function() {
         });
         console.log(`[BatchSync] Found ${Object.keys(users).length} users`);
         
-        // Step 2: Get all properties
-        statusDiv.textContent = 'Fetching properties...';
-        const propsDoc = await db.collection('settings').doc('properties').get();
-        const allProperties = propsDoc.exists ? propsDoc.data() : {};
-        console.log(`[BatchSync] Found ${Object.keys(allProperties).length} properties`);
+        // Step 2: Get all vehicles
+        statusDiv.textContent = 'Fetching vehicles...';
+        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const allVehicles = propsDoc.exists ? propsDoc.data() : {};
+        console.log(`[BatchSync] Found ${Object.keys(allVehicles).length} vehicles`);
         
         // Step 3: Build updates
         statusDiv.textContent = 'Building updates...';
@@ -1922,7 +1922,7 @@ window.batchSyncOwnerProfiles = async function() {
         let updateCount = 0;
         let skipCount = 0;
         
-        for (const [propId, prop] of Object.entries(allProperties)) {
+        for (const [propId, prop] of Object.entries(allVehicles)) {
             if (!prop || !prop.ownerEmail) {
                 skipCount++;
                 continue;
@@ -1950,23 +1950,23 @@ window.batchSyncOwnerProfiles = async function() {
             }
         }
         
-        console.log(`[BatchSync] ${updateCount} properties to update, ${skipCount} skipped`);
+        console.log(`[BatchSync] ${updateCount} vehicles to update, ${skipCount} skipped`);
         
         if (updateCount === 0) {
             statusDiv.className = 'mb-3 p-3 rounded-lg text-sm bg-green-900/50 text-green-300';
-            statusDiv.textContent = '✅ All properties are already synced! No updates needed.';
+            statusDiv.textContent = '✅ All vehicles are already synced! No updates needed.';
             btn.disabled = false;
             btn.innerHTML = '<span>🔄</span> Sync All Users';
             return;
         }
         
         // Step 4: Save to Firestore
-        statusDiv.textContent = `Saving ${updateCount} property updates...`;
-        await db.collection('settings').doc('properties').set(updates, { merge: true });
+        statusDiv.textContent = `Saving ${updateCount} vehicle updates...`;
+        await db.collection('settings').doc('vehicles').set(updates, { merge: true });
         
-        // Step 5: Update local properties array
+        // Step 5: Update local vehicles array
         for (const [propId, updatedProp] of Object.entries(updates)) {
-            const localProp = properties.find(p => String(p.id) === String(propId));
+            const localProp = vehicles.find(p => String(p.id) === String(propId));
             if (localProp) {
                 if (updatedProp.ownerDisplayName) localProp.ownerDisplayName = updatedProp.ownerDisplayName;
                 if (updatedProp.ownerContactPhone) localProp.ownerContactPhone = updatedProp.ownerContactPhone;
@@ -1983,19 +1983,19 @@ window.batchSyncOwnerProfiles = async function() {
         
         // Success
         statusDiv.className = 'mb-3 p-3 rounded-lg text-sm bg-green-900/50 text-green-300';
-        statusDiv.innerHTML = `✅ <strong>Sync complete!</strong> Updated ${updateCount} properties with owner profiles.`;
+        statusDiv.innerHTML = `✅ <strong>Sync complete!</strong> Updated ${updateCount} vehicles with owner profiles.`;
         
         // Update preview if visible
         if (!previewDiv.classList.contains('hidden')) {
             previewBatchSync();
         }
         
-        // Refresh property display
-        if (typeof renderProperties === 'function') {
-            renderProperties(state.filteredProperties || properties);
+        // Refresh vehicle display
+        if (typeof renderVehicles === 'function') {
+            renderVehicles(state.filteredVehicles || vehicles);
         }
         
-        console.log(`[BatchSync] Complete! Updated ${updateCount} properties`);
+        console.log(`[BatchSync] Complete! Updated ${updateCount} vehicles`);
         
     } catch (error) {
         console.error('[BatchSync] Error:', error);

@@ -102,7 +102,7 @@ window.closeModal = function(id) {
 };
 
 window.openContactModal = async function(type, vehicleTitle, vehicleId) {
-    // For vehicles, type is always 'purchase' (no rentals)
+    // For vehicles, type is always 'purchase' (no financing)
     const colors = ['amber', 'orange'];
     const defaultPhone = '2057028233'; // Pauly's number as fallback
     let usedFallback = false; // Track if we had to use fallback
@@ -172,7 +172,7 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
             accent.innerHTML = `
                 <div class="text-gray-300 text-sm mb-3">
                     <strong>🏢 Multiple Sales Agents</strong><br>
-                    This property has ${agentContacts.length} agents. Text <strong>ALL</strong> of them for the quickest response!
+                    This vehicle has ${agentContacts.length} agents. Text <strong>ALL</strong> of them for the quickest response!
                 </div>
                 <div class="grid grid-cols-${Math.min(agentContacts.length, 3)} gap-2">
                     ${phonesHtml}
@@ -187,30 +187,30 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
         // No agents - use owner contact (existing behavior)
         try {
             if (vehicleId && typeof db !== 'undefined') {
-                // Get property data to find owner contact info
-                const propsDoc = await db.collection('settings').doc('properties').get();
+                // Get vehicle data to find owner contact info
+                const propsDoc = await db.collection('settings').doc('vehicles').get();
                 if (propsDoc.exists) {
-                    const properties = propsDoc.data();
-                    const property = properties[vehicleId] || properties[String(vehicleId)];
+                    const vehicles = propsDoc.data();
+                    const vehicle = vehicles[vehicleId] || vehicles[String(vehicleId)];
                     
-                    if (property) {
+                    if (vehicle) {
                         // Check ownerContactPhone first (synced from user profile)
-                        if (property.ownerContactPhone) {
-                            modalPhone.value = property.ownerContactPhone.replace(/\D/g, '');
+                        if (vehicle.ownerContactPhone) {
+                            modalPhone.value = vehicle.ownerContactPhone.replace(/\D/g, '');
                             usedFallback = false;
-                            console.log('[Contact] Using property ownerContactPhone');
+                            console.log('[Contact] Using vehicle ownerContactPhone');
                         }
                         // Then check legacy ownerPhone field
-                        else if (property.ownerPhone) {
-                            modalPhone.value = property.ownerPhone.replace(/\D/g, '');
+                        else if (vehicle.ownerPhone) {
+                            modalPhone.value = vehicle.ownerPhone.replace(/\D/g, '');
                             usedFallback = false;
-                            console.log('[Contact] Using property ownerPhone');
+                            console.log('[Contact] Using vehicle ownerPhone');
                         }
                         // Finally try user doc (may fail for non-admins due to permissions)
-                        else if (property.ownerEmail) {
+                        else if (vehicle.ownerEmail) {
                             try {
                                 const usersSnapshot = await db.collection('users')
-                                    .where('email', '==', property.ownerEmail.toLowerCase())
+                                    .where('email', '==', vehicle.ownerEmail.toLowerCase())
                                     .limit(1)
                                     .get();
                                 
@@ -690,13 +690,13 @@ const EditableStatTile = {
      * @param {Object} config - Tile configuration
      */
     render(config) {
-        const { id, propertyId, field, label, value, icon, gradient, prefix = '', suffix = '', type = 'number' } = config;
+        const { id, vehicleId, field, label, value, icon, gradient, prefix = '', suffix = '', type = 'number' } = config;
         
         return `
             <div id="tile-${id}" 
                  class="stat-tile bg-gradient-to-br ${gradient} rounded-2xl shadow-xl p-6 text-white border cursor-pointer"
-                 onclick="EditableStatTile.startEdit('${id}', ${propertyId}, '${field}', '${type}')"
-                 data-property-id="${propertyId}"
+                 onclick="EditableStatTile.startEdit('${id}', ${vehicleId}, '${field}', '${type}')"
+                 data-vehicle-id="${vehicleId}"
                  data-field="${field}"
                  data-original-value="${value}">
                 <div class="flex items-center justify-between mb-3">
@@ -718,14 +718,14 @@ const EditableStatTile = {
     /**
      * Start editing a tile
      */
-    async startEdit(tileId, propertyId, field, type) {
+    async startEdit(tileId, vehicleId, field, type) {
         const tile = $(`tile-${tileId}`);
         const valueEl = $(`value-${tileId}`);
         
         if (tile.classList.contains('editing')) return;
         
         // Get current value from Firestore (fresh read)
-        const currentValue = PropertyDataService.getValue(propertyId, field, tile.dataset.originalValue);
+        const currentValue = VehicleDataService.getValue(vehicleId, field, tile.dataset.originalValue);
         
         tile.classList.add('editing');
         
@@ -737,14 +737,14 @@ const EditableStatTile = {
                    id="input-${tileId}"
                    class="stat-input text-2xl"
                    value="${rawValue}"
-                   onkeydown="EditableStatTile.handleKeydown(event, '${tileId}', ${propertyId}, '${field}', '${type}')"
-                   onblur="EditableStatTile.cancelEdit('${tileId}', ${propertyId}, '${field}')">
+                   onkeydown="EditableStatTile.handleKeydown(event, '${tileId}', ${vehicleId}, '${field}', '${type}')"
+                   onblur="EditableStatTile.cancelEdit('${tileId}', ${vehicleId}, '${field}')">
             <div class="flex gap-2 mt-3">
-                <button onclick="event.stopPropagation(); EditableStatTile.saveEdit('${tileId}', ${propertyId}, '${field}', '${type}')" 
+                <button onclick="event.stopPropagation(); EditableStatTile.saveEdit('${tileId}', ${vehicleId}, '${field}', '${type}')" 
                         class="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-sm transition">
                     Save
                 </button>
-                <button onclick="event.stopPropagation(); EditableStatTile.cancelEdit('${tileId}', ${propertyId}, '${field}')" 
+                <button onclick="event.stopPropagation(); EditableStatTile.cancelEdit('${tileId}', ${vehicleId}, '${field}')" 
                         class="flex-1 bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-lg font-bold text-sm transition">
                     Cancel
                 </button>
@@ -762,12 +762,12 @@ const EditableStatTile = {
     /**
      * Handle keyboard events in edit mode
      */
-    handleKeydown(event, tileId, propertyId, field, type) {
+    handleKeydown(event, tileId, vehicleId, field, type) {
         event.stopPropagation();
         if (event.key === 'Enter') {
-            this.saveEdit(tileId, propertyId, field, type);
+            this.saveEdit(tileId, vehicleId, field, type);
         } else if (event.key === 'Escape') {
-            this.cancelEdit(tileId, propertyId, field);
+            this.cancelEdit(tileId, vehicleId, field);
         }
     },
     
@@ -775,7 +775,7 @@ const EditableStatTile = {
      * Save the edited value
      * Implements optimistic UI with automatic rollback on failure
      */
-    async saveEdit(tileId, propertyId, field, type) {
+    async saveEdit(tileId, vehicleId, field, type) {
         const tile = $(`tile-${tileId}`);
         const valueEl = $(`value-${tileId}`);
         const input = $(`input-${tileId}`);
@@ -806,7 +806,7 @@ const EditableStatTile = {
         
         try {
             // Write to Firestore (includes fresh read before write)
-            await PropertyDataService.write(propertyId, field, newValue);
+            await VehicleDataService.write(vehicleId, field, newValue);
             
             // Success feedback
             tile.classList.remove('saving');
@@ -845,7 +845,7 @@ const EditableStatTile = {
     /**
      * Cancel editing and restore original value
      */
-    cancelEdit(tileId, propertyId, field) {
+    cancelEdit(tileId, vehicleId, field) {
         const tile = $(`tile-${tileId}`);
         const valueEl = $(`value-${tileId}`);
         
@@ -853,7 +853,7 @@ const EditableStatTile = {
         
         tile.classList.remove('editing');
         
-        const originalValue = PropertyDataService.getValue(propertyId, field, tile.dataset.originalValue);
+        const originalValue = VehicleDataService.getValue(vehicleId, field, tile.dataset.originalValue);
         const displayValue = typeof originalValue === 'number'
             ? `${originalValue.toLocaleString()}`
             : originalValue;

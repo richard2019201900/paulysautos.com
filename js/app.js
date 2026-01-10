@@ -65,22 +65,22 @@ window.formatDate = function(dateStr, options = { month: 'short', day: 'numeric'
 }
 
 // ==================== VIEW PROPERTY ====================
-window.viewProperty = function(id) {
-    const p = properties.find(prop => prop.id === id);
+window.viewVehicle = function(id) {
+    const p = vehicles.find(prop => prop.id === id);
     if (!p) return;
     
     // Save scroll position before navigating away
     window.savedScrollPosition = window.scrollY || window.pageYOffset;
     
-    state.currentPropertyId = id;
+    state.currentVehicleId = id;
     state.currentImages = p.images || [];
     
-    // Check if property has valid images
+    // Check if vehicle has valid images
     const hasImages = p.images && Array.isArray(p.images) && p.images.length > 0;
     const firstImage = hasImages ? p.images[0] : '';
     
     // Get premium status early for all styling
-    const isPremium = PropertyDataService.getValue(id, 'isPremium', p.isPremium || false);
+    const isPremium = VehicleDataService.getValue(id, 'isPremium', p.isPremium || false);
     
     // Image placeholder HTML
     const imagePlaceholder = `
@@ -94,7 +94,7 @@ window.viewProperty = function(id) {
     // Image error handler
     const imgErrorHandler = "this.onerror=null; this.style.display='none'; this.insertAdjacentHTML('afterend', `<div class='w-full h-60 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600'><span class='text-7xl mb-4'>🚗</span><span class='text-gray-400 font-semibold text-lg'>Photo Unavailable</span></div>`);";
     
-    hideElement($('renterSection'));
+    hideElement($('browseSection'));
     hideElement($('ownerDashboard'));
     hideElement($('vehicleStatsPage'));
     hideElement($('leaderboardPage'));
@@ -131,14 +131,14 @@ window.viewProperty = function(id) {
             </div>
         </div>` : '';
 
-    // Generate owner tabs if user is owner of this property
+    // Generate owner tabs if user is owner of this vehicle
     const ownerTabs = (state.currentUser === 'owner' && ownsProperty(id)) ? `
         <div class="flex border-b border-gray-700">
-            <button onclick="viewProperty(${id})" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 border-b-2 border-purple-400">
+            <button onclick="viewVehicle(${id})" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 border-b-2 border-purple-400">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                 Vehicle View
             </button>
-            <button onclick="viewPropertyStats(${id})" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
+            <button onclick="viewVehicleStats(${id})" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
                 Owner Stats
             </button>
@@ -217,18 +217,18 @@ window.viewProperty = function(id) {
                 <div>
                     <h2 class="text-2xl md:text-4xl font-black text-white mb-2">✨ ${sanitize(p.title)}</h2>
                     <p class="text-lg md:text-xl text-gray-300 font-semibold">📝 Description: ${sanitize(p.location) || 'No description'}</p>
-                    <p id="propertyOwnerDisplay" class="text-blue-400 font-semibold mt-1">👤 Owner: Loading...</p>
+                    <p id="vehicleOwnerDisplay" class="text-blue-400 font-semibold mt-1">👤 Owner: Loading...</p>
                 </div>
-                <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg border border-amber-400/50">${PropertyDataService.getValue(id, 'type', p.type) || 'OTHER'}</span>
+                <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg border border-amber-400/50">${VehicleDataService.getValue(id, 'type', p.type) || 'OTHER'}</span>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
                 ${[
-                    {icon:'🔖', val:PropertyDataService.getValue(id, 'plate', p.plate) || 'N/A', label:'Plate'},
-                    {icon:'🔧', val:PropertyDataService.getValue(id, 'upgrades', p.upgrades) || 'N/A', label:'Upgrades'},
-                    {icon:'⚡', val:PropertyDataService.getValue(id, 'speed', p.speed) || 'N/A', label:'Speed'},
-                    {icon:'📦', val:PropertyDataService.getValue(id, 'storage', p.storage) || 'N/A', label:'Storage'},
-                    {icon:'💺', val:PropertyDataService.getValue(id, 'seats', p.seats) || 'N/A', label:'Seats'},
-                    {icon:'💰', val:'$' + (PropertyDataService.getValue(id, 'buyPrice', p.buyPrice) || 0).toLocaleString(), label:'Price'}
+                    {icon:'🔖', val:VehicleDataService.getValue(id, 'plate', p.plate) || 'N/A', label:'Plate'},
+                    {icon:'🔧', val:VehicleDataService.getValue(id, 'upgrades', p.upgrades) || 'N/A', label:'Upgrades'},
+                    {icon:'⚡', val:VehicleDataService.getValue(id, 'speed', p.speed) || 'N/A', label:'Speed'},
+                    {icon:'📦', val:VehicleDataService.getValue(id, 'storage', p.storage) || 'N/A', label:'Storage'},
+                    {icon:'💺', val:VehicleDataService.getValue(id, 'seats', p.seats) || 'N/A', label:'Seats'},
+                    {icon:'💰', val:'$' + (VehicleDataService.getValue(id, 'buyPrice', p.buyPrice) || 0).toLocaleString(), label:'Price'}
                 ].map(s => `
                     <div class="text-center p-3 md:p-4 bg-gray-700 rounded-xl border border-gray-600">
                         <div class="text-2xl md:text-3xl mb-2">${s.icon}</div>
@@ -241,7 +241,7 @@ window.viewProperty = function(id) {
             <div class="bg-gray-800 p-5 md:p-8 rounded-2xl mb-8 border border-gray-700">
                 <h3 class="text-xl font-bold text-white mb-4">💰 Price</h3>
                 ${(() => {
-                    const buyPrice = PropertyDataService.getValue(id, 'buyPrice', p.buyPrice || 0);
+                    const buyPrice = VehicleDataService.getValue(id, 'buyPrice', p.buyPrice || 0);
                     
                     let html = '<div class="flex justify-center">';
                     
@@ -263,12 +263,12 @@ window.viewProperty = function(id) {
         </div>`;
     
     // Load and display owner username with tier badge
-    getPropertyOwnerWithTier(id).then(ownerInfo => {
-        const ownerEl = $('propertyOwnerDisplay');
+    getVehicleOwnerWithTier(id).then(ownerInfo => {
+        const ownerEl = $('vehicleOwnerDisplay');
         if (ownerEl) {
             const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
             
-            // Use different label based on whether property is managed by agent
+            // Use different label based on whether vehicle is managed by agent
             if (ownerInfo.isManaged) {
                 // Managed by agent - show agent info, hide actual owner from public
                 if (isAdmin) {
@@ -290,9 +290,9 @@ window.viewProperty = function(id) {
     window.scrollTo(0, 0);
 };
 
-// Navigate to property page and highlight the offer button
+// Navigate to vehicle page and highlight the offer button
 window.viewPropertyAndHighlightOffers = function(id) {
-    viewProperty(id);
+    viewVehicle(id);
     
     // Wait for DOM to update, then highlight the offer button
     setTimeout(() => {
@@ -327,61 +327,61 @@ window.viewPropertyAndHighlightOffers = function(id) {
 
 // ==================== PROPERTY STATS PAGE ====================
 /**
- * Renders the property stats page with EDITABLE tiles
+ * Renders the vehicle stats page with EDITABLE tiles
  * All editable fields sync in real-time with Firestore
  */
-window.viewPropertyStats = async function(id) {
-    const p = properties.find(prop => prop.id === id);
+window.viewVehicleStats = async function(id) {
+    const p = vehicles.find(prop => prop.id === id);
     if (!p) {
-        console.error('[viewPropertyStats] Property not found:', id);
+        console.error('[viewVehicleStats] Vehicle not found:', id);
         return;
     }
     
-    // Check if owner owns this property
+    // Check if owner owns this vehicle
     if (!ownsProperty(id)) {
-        console.warn('[viewPropertyStats] Access denied for property:', id);
-        alert('You do not have access to this property.');
+        console.warn('[viewVehicleStats] Access denied for vehicle:', id);
+        alert('You do not have access to this vehicle.');
         return;
     }
-    state.currentPropertyId = id;
+    state.currentVehicleId = id;
     state.currentImages = p.images;
     
-    // Fetch fresh data from Firestore and sync to local properties array
+    // Fetch fresh data from Firestore and sync to local vehicles array
     try {
-        const freshData = await PropertyDataService.read(id);
+        const freshData = await VehicleDataService.read(id);
         if (freshData.exists) {
-            // Data is automatically synced to properties array by PropertyDataService.read()
+            // Data is automatically synced to vehicles array by VehicleDataService.read()
             // Debug log removed
         }
     } catch (error) {
-        console.error('Error fetching property data:', error);
+        console.error('Error fetching vehicle data:', error);
     }
     
-    // Set up real-time listener for all properties
-    PropertyDataService.subscribeAll((data) => {
+    // Set up real-time listener for all vehicles
+    VehicleDataService.subscribeAll((data) => {
         // Re-render when data changes from another source
-        if (state.currentPropertyId === id) {
-            renderPropertyStatsContent(id);
+        if (state.currentVehicleId === id) {
+            renderVehicleStatsContent(id);
             loadStatsOwnerName(id);
         }
     });
     
-    // Note: Property deletion notifications are handled by the global listener
-    // in setupGlobalPropertiesListener() which watches the propertyDeletions collection
+    // Note: Vehicle deletion notifications are handled by the global listener
+    // in setupGlobalPropertiesListener() which watches the vehicleDeletions collection
     // filtered by the logged-in user's email - so only the OWNER sees the notification
     
-    renderPropertyStatsContent(id);
+    renderVehicleStatsContent(id);
     loadStatsOwnerName(id);
     
-    // Load property analytics (async - will populate the analytics section)
+    // Load vehicle analytics (async - will populate the analytics section)
     setTimeout(() => {
-        if (typeof renderPropertyAnalytics === 'function') {
-            renderPropertyAnalytics(id);
+        if (typeof renderVehicleAnalytics === 'function') {
+            renderVehicleAnalytics(id);
         }
     }, 100);
     
     hideElement($('ownerDashboard'));
-    hideElement($('renterSection'));
+    hideElement($('browseSection'));
     hideElement($('vehicleDetailPage'));
     hideElement($('leaderboardPage'));
     hideElement($('blogPage'));
@@ -395,20 +395,20 @@ window.viewPropertyStats = async function(id) {
 };
 
 // Load owner name for stats page (always shows real owner, not anonymized)
-async function loadStatsOwnerName(propertyId) {
-    const ownerEl = $(`stats-owner-${propertyId}`);
+async function loadStatsOwnerName(vehicleId) {
+    const ownerEl = $(`stats-owner-${vehicleId}`);
     if (!ownerEl) return;
     
     try {
         // Use tier-aware username lookup with forceShowOwner to bypass agent anonymization
-        const ownerInfo = await getPropertyOwnerWithTier(propertyId, { forceShowOwner: true });
+        const ownerInfo = await getVehicleOwnerWithTier(vehicleId, { forceShowOwner: true });
         const spanEl = ownerEl.querySelector('span');
         if (spanEl) {
             spanEl.textContent = ownerInfo.display;
         }
     } catch (error) {
         console.error('Error loading owner name:', error);
-        const ownerEmail = propertyOwnerEmail[propertyId];
+        const ownerEmail = vehicleOwnerEmail[vehicleId];
         const spanEl = ownerEl.querySelector('span');
         if (spanEl) {
             spanEl.textContent = ownerEmail ? ownerEmail.split('@')[0] : 'Unknown';
@@ -417,10 +417,10 @@ async function loadStatsOwnerName(propertyId) {
 }
 
 /**
- * Renders the property stats content with editable tiles
+ * Renders the vehicle stats content with editable tiles
  */
-function renderPropertyStatsContent(id) {
-    const p = properties.find(prop => prop.id === id);
+function renderVehicleStatsContent(id) {
+    const p = vehicles.find(prop => prop.id === id);
     if (!p) return;
     
     const isAvailable = state.availability[id] !== false;
@@ -428,10 +428,10 @@ function renderPropertyStatsContent(id) {
     const statusText = isAvailable ? 'Available' : 'Sold';
     
     // Get premium status
-    const isPremium = PropertyDataService.getValue(id, 'isPremium', p.isPremium || false);
-    const isPremiumTrial = PropertyDataService.getValue(id, 'isPremiumTrial', p.isPremiumTrial || false);
-    const premiumStartDate = PropertyDataService.getValue(id, 'premiumStartDate', p.premiumStartDate || '');
-    const premiumLastPayment = PropertyDataService.getValue(id, 'premiumLastPayment', p.premiumLastPayment || '');
+    const isPremium = VehicleDataService.getValue(id, 'isPremium', p.isPremium || false);
+    const isPremiumTrial = VehicleDataService.getValue(id, 'isPremiumTrial', p.isPremiumTrial || false);
+    const premiumStartDate = VehicleDataService.getValue(id, 'premiumStartDate', p.premiumStartDate || '');
+    const premiumLastPayment = VehicleDataService.getValue(id, 'premiumLastPayment', p.premiumLastPayment || '');
     
     // Calculate premium next due date (weekly)
     let premiumNextDue = '';
@@ -449,34 +449,34 @@ function renderPropertyStatsContent(id) {
     }
     
     // Get effective values (overrides or defaults) - Benny's app style
-    const plate = PropertyDataService.getValue(id, 'plate', p.plate || '');
-    const upgrades = PropertyDataService.getValue(id, 'upgrades', p.upgrades || '');
-    const speed = PropertyDataService.getValue(id, 'speed', p.speed || '');
-    const storage = PropertyDataService.getValue(id, 'storage', p.storage || '');
-    const seats = PropertyDataService.getValue(id, 'seats', p.seats || '');
-    const propertyType = PropertyDataService.getValue(id, 'type', p.type);
-    const buyPrice = PropertyDataService.getValue(id, 'buyPrice', p.buyPrice || 0);
+    const plate = VehicleDataService.getValue(id, 'plate', p.plate || '');
+    const upgrades = VehicleDataService.getValue(id, 'upgrades', p.upgrades || '');
+    const speed = VehicleDataService.getValue(id, 'speed', p.speed || '');
+    const storage = VehicleDataService.getValue(id, 'storage', p.storage || '');
+    const seats = VehicleDataService.getValue(id, 'seats', p.seats || '');
+    const vehicleType = VehicleDataService.getValue(id, 'type', p.type);
+    const buyPrice = VehicleDataService.getValue(id, 'buyPrice', p.buyPrice || 0);
     
     // Legacy price variables (for backwards compatibility with existing code)
-    const dailyPrice = PropertyDataService.getValue(id, 'dailyPrice', p.dailyPrice || 0);
-    const weeklyPrice = PropertyDataService.getValue(id, 'weeklyPrice', p.weeklyPrice || 0);
-    const biweeklyPrice = PropertyDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
-    const monthlyPrice = PropertyDataService.getValue(id, 'monthlyPrice', p.monthlyPrice || 0);
+    const dailyPrice = VehicleDataService.getValue(id, 'dailyPrice', p.dailyPrice || 0);
+    const weeklyPrice = VehicleDataService.getValue(id, 'weeklyPrice', p.weeklyPrice || 0);
+    const biweeklyPrice = VehicleDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
+    const monthlyPrice = VehicleDataService.getValue(id, 'monthlyPrice', p.monthlyPrice || 0);
     
-    // Buyer Renter & Payment info Payment info
-    const buyerName = PropertyDataService.getValue(id, 'buyerName', p.buyerName || '');
-    const buyerPhoneRaw = PropertyDataService.getValue(id, 'buyerPhone', p.buyerPhone || '');
+    // Buyer & Payment info Payment info
+    const buyerName = VehicleDataService.getValue(id, 'buyerName', p.buyerName || '');
+    const buyerPhoneRaw = VehicleDataService.getValue(id, 'buyerPhone', p.buyerPhone || '');
     const buyerPhone = buyerPhoneRaw ? buyerPhoneRaw.replace(/\D/g, '') : '';
-    const buyerNotes = PropertyDataService.getValue(id, 'buyerNotes', p.buyerNotes || '');
-    const paymentFrequency = PropertyDataService.getValue(id, 'paymentFrequency', p.paymentFrequency || '');
-    const lastPaymentDate = PropertyDataService.getValue(id, 'lastPaymentDate', p.lastPaymentDate || '');
+    const buyerNotes = VehicleDataService.getValue(id, 'buyerNotes', p.buyerNotes || '');
+    const paymentFrequency = VehicleDataService.getValue(id, 'paymentFrequency', p.paymentFrequency || '');
+    const lastPaymentDate = VehicleDataService.getValue(id, 'lastPaymentDate', p.lastPaymentDate || '');
     
-    // DEBUG: Log property render (without sensitive buyer data)
+    // DEBUG: Log vehicle render (without sensitive buyer data)
     // Debug log removed
     
-    // NOTE: Removed AUTO-FIX logic that was causing race conditions with lease completion
+    // NOTE: Removed AUTO-FIX logic that was causing race conditions with sale completion
     // The availability status should be explicitly managed via toggleAvailability/saveAvailability
-    // and the completeLease flow, not auto-corrected based on potentially stale data
+    // and the completeSale flow, not auto-corrected based on potentially stale data
     
     // Calculate next due date and days until due
     let nextDueDate = '';
@@ -484,16 +484,16 @@ function renderPropertyStatsContent(id) {
     let reminderScript = '';
     
     // Check for active RTO
-    const hasActiveFinancing = PropertyDataService.getValue(id, 'hasActiveFinancing', p.hasActiveFinancing || false);
-    const financingCurrentPayment = PropertyDataService.getValue(id, 'financingCurrentPayment', p.financingCurrentPayment || 0);
-    const financingTotalPayments = PropertyDataService.getValue(id, 'financingTotalPayments', p.financingTotalPayments || 0);
+    const hasActiveFinancing = VehicleDataService.getValue(id, 'hasActiveFinancing', p.hasActiveFinancing || false);
+    const financingCurrentPayment = VehicleDataService.getValue(id, 'financingCurrentPayment', p.financingCurrentPayment || 0);
+    const financingTotalPayments = VehicleDataService.getValue(id, 'financingTotalPayments', p.financingTotalPayments || 0);
     const financingPaymentInfo = hasActiveFinancing ? ` (Payment ${financingCurrentPayment + 1} of ${financingTotalPayments} - Financing Plan)` : '';
     
-    // Check if property is sold
-    const isSold = PropertyDataService.getValue(id, 'isSold', p.isSold || false);
-    const soldTo = PropertyDataService.getValue(id, 'soldTo', p.soldTo || '');
-    const soldDate = PropertyDataService.getValue(id, 'soldDate', p.soldDate || '');
-    const soldPrice = PropertyDataService.getValue(id, 'soldPrice', p.soldPrice || 0);
+    // Check if vehicle is sold
+    const isSold = VehicleDataService.getValue(id, 'isSold', p.isSold || false);
+    const soldTo = VehicleDataService.getValue(id, 'soldTo', p.soldTo || '');
+    const soldDate = VehicleDataService.getValue(id, 'soldDate', p.soldDate || '');
+    const soldPrice = VehicleDataService.getValue(id, 'soldPrice', p.soldPrice || 0);
     
     // Check if user can access Financing (Elite or Admin only)
     const isRTOAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
@@ -521,7 +521,7 @@ function renderPropertyStatsContent(id) {
         
         // Generate reminder script if 1 day away or overdue
         // Determine amount based on frequency
-        const biweeklyPrice = PropertyDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
+        const biweeklyPrice = VehicleDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
         let amountDue = weeklyPrice;
         if (paymentFrequency === 'daily' && dailyPrice > 0) {
             amountDue = dailyPrice;
@@ -593,17 +593,17 @@ function renderPropertyStatsContent(id) {
         ${premiumBanner}
         <!-- View Toggle Tabs - full width, no padding needed -->
         <div class="flex border-b border-gray-700">
-            <button onclick="viewProperty(${id})" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
+            <button onclick="viewVehicle(${id})" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                 Vehicle View
             </button>
-            <button onclick="viewPropertyStats(${id})" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 border-b-2 border-amber-400">
+            <button onclick="viewVehicleStats(${id})" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 border-b-2 border-amber-400">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
                 Owner Stats
             </button>
         </div>
         
-        <!-- Property Header -->
+        <!-- Vehicle Header -->
         <div class="relative">
             ${p.images && p.images.length > 0 && p.images[0] 
                 ? `<img src="${p.images[0]}" alt="${sanitize(p.title)}" class="w-full h-64 md:h-80 object-cover cursor-pointer hover:opacity-90 transition" onclick="scrollToImagesSection(${id})" title="Click to view all images" onerror="this.onerror=null; this.parentElement.querySelector('.stats-img-container').innerHTML=this.parentElement.querySelector('.stats-img-container').dataset.placeholder;" >
@@ -649,9 +649,9 @@ function renderPropertyStatsContent(id) {
                               class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase cursor-pointer hover:ring-2 hover:ring-amber-400 transition flex items-center gap-2 shadow-lg tracking-wider border border-amber-400/50"
                               onclick="startEditPropertyType(${id})"
                               data-field="type"
-                              data-original-value="${propertyType}"
+                              data-original-value="${vehicleType}"
                               title="Click to change vehicle type">
-                            ${propertyType || 'OTHER'}
+                            ${vehicleType || 'OTHER'}
                             <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </span>
                         <span id="stats-owner-${id}" class="bg-blue-600/80 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
@@ -742,7 +742,7 @@ function renderPropertyStatsContent(id) {
                 </div>
                 
                 <!-- Vehicle Images Gallery with Drag & Drop -->
-                <div id="property-images-section-${id}" class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8 transition-all duration-500">
+                <div id="vehicle-images-section-${id}" class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8 transition-all duration-500">
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="text-2xl font-bold text-gray-200">📸 Vehicle Images</h3>
@@ -753,9 +753,9 @@ function renderPropertyStatsContent(id) {
                             Add Images
                         </button>
                     </div>
-                    <div class="flex gap-4 overflow-x-auto pb-4" id="images-grid-${id}" data-property-id="${id}">
+                    <div class="flex gap-4 overflow-x-auto pb-4" id="images-grid-${id}" data-vehicle-id="${id}">
                         ${p.images.map((img, i) => `
-                            <div class="relative group flex-shrink-0 draggable-image" draggable="true" data-index="${i}" data-property-id="${id}">
+                            <div class="relative group flex-shrink-0 draggable-image" draggable="true" data-index="${i}" data-vehicle-id="${id}">
                                 <div class="absolute top-2 left-2 z-10 bg-black/60 text-white text-xs px-2 py-1 rounded-lg font-bold cursor-grab active:cursor-grabbing">
                                     ${i === 0 ? '⭐ Main' : `#${i + 1}`}
                                 </div>
@@ -876,7 +876,7 @@ function renderPropertyStatsContent(id) {
                 
                 <!-- Pending Sale Tracking -->
                 ${(() => {
-                    const pendingSale = PropertyDataService.getValue(id, 'pendingSale', p.pendingSale || null);
+                    const pendingSale = VehicleDataService.getValue(id, 'pendingSale', p.pendingSale || null);
                     if (pendingSale) {
                         return `
                         <div class="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 border-2 border-amber-500/50 rounded-xl p-5 mb-4">
@@ -1074,7 +1074,7 @@ function renderPropertyStatsContent(id) {
         ` : ''}
         
         <!-- Agent Management Section -->
-        <div id="propertyAgentSection" class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
+        <div id="vehicleAgentSection" class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
             <!-- Content loaded dynamically by renderPropertyAgentSection() -->
             <p class="text-gray-500 italic">Loading agent section...</p>
         </div>
@@ -1093,7 +1093,7 @@ function renderPropertyStatsContent(id) {
         <div class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
             <h3 class="text-2xl font-bold text-gray-200 mb-6">⚡ Quick Actions</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <button onclick="toggleAvailability(${id}); setTimeout(() => renderPropertyStatsContent(${id}), 100);" class="flex items-center justify-center space-x-3 ${isAvailable ? 'bg-gradient-to-r from-red-500 to-pink-600' : 'bg-gradient-to-r from-green-500 to-emerald-600'} text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
+                <button onclick="toggleAvailability(${id}); setTimeout(() => renderVehicleStatsContent(${id}), 100);" class="flex items-center justify-center space-x-3 ${isAvailable ? 'bg-gradient-to-r from-red-500 to-pink-600' : 'bg-gradient-to-r from-green-500 to-emerald-600'} text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                     <span>${isAvailable ? 'Mark as Sold' : 'Mark as Available'}</span>
                 </button>
@@ -1101,7 +1101,7 @@ function renderPropertyStatsContent(id) {
                     <span class="text-xl">👑</span>
                     <span>${isPremium ? 'Premium Active ($10k)' : 'Enable Premium'}</span>
                 </button>
-                <button onclick="viewProperty(${id})" class="flex items-center justify-center space-x-3 gradient-bg text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
+                <button onclick="viewVehicle(${id})" class="flex items-center justify-center space-x-3 gradient-bg text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     <span>View Public Listing</span>
                 </button>
@@ -1120,7 +1120,7 @@ function renderPropertyStatsContent(id) {
     // Render agent section dynamically
     if (typeof renderPropertyAgentSection === 'function') {
         renderPropertyAgentSection(id).then(function(html) {
-            var agentSection = $('propertyAgentSection');
+            var agentSection = $('vehicleAgentSection');
             if (agentSection && html) {
                 agentSection.innerHTML = html;
             }
@@ -1143,16 +1143,16 @@ async function loadVehicleSalesHistory(vehicleId) {
     try {
         // Query vehicleSales collection for this vehicle
         // Use simple query without orderBy to avoid index requirement
-        // Check both vehicleId (new) and propertyId (legacy) fields
+        // Check both vehicleId (new) and vehicleId (legacy) fields
         let salesSnapshot = await db.collection('vehicleSales')
             .where('vehicleId', '==', numericId)
             .limit(10)
             .get();
         
-        // If no results, try legacy propertyId field
+        // If no results, try legacy vehicleId field
         if (salesSnapshot.empty) {
             salesSnapshot = await db.collection('vehicleSales')
-                .where('propertyId', '==', numericId)
+                .where('vehicleId', '==', numericId)
                 .limit(10)
                 .get();
         }
@@ -1225,9 +1225,9 @@ window.loadVehicleSalesHistory = loadVehicleSalesHistory;
 /**
  * Start editing a tile - shows inline input
  */
-window.startEditTile = function(field, propertyId, type) {
-    const tileId = `tile-${field}-${propertyId}`;
-    const valueId = `value-${field}-${propertyId}`;
+window.startEditTile = function(field, vehicleId, type) {
+    const tileId = `tile-${field}-${vehicleId}`;
+    const valueId = `value-${field}-${vehicleId}`;
     const tile = $(tileId);
     const valueEl = $(valueId);
     
@@ -1235,9 +1235,9 @@ window.startEditTile = function(field, propertyId, type) {
     
     // VALIDATION: Block lastPaymentDate if frequency is not set (unless clearing)
     if (field === 'lastPaymentDate') {
-        const p = properties.find(prop => prop.id === propertyId);
-        const frequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || '');
-        const currentValue = PropertyDataService.getValue(propertyId, 'lastPaymentDate', p?.lastPaymentDate || '');
+        const p = vehicles.find(prop => prop.id === vehicleId);
+        const frequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', p?.paymentFrequency || '');
+        const currentValue = VehicleDataService.getValue(vehicleId, 'lastPaymentDate', p?.lastPaymentDate || '');
         
         // If frequency not set, only allow if we're clearing an existing value
         if (!frequency && !currentValue) {
@@ -1250,38 +1250,38 @@ window.startEditTile = function(field, propertyId, type) {
             // Show a modified editor that allows clearing
             tile.classList.add('editing');
             const inputHtml = `
-                <input type="date" id="input-${field}-${propertyId}" class="stat-input text-lg" value="${currentValue}">
+                <input type="date" id="input-${field}-${vehicleId}" class="stat-input text-lg" value="${currentValue}">
                 <div class="text-xs text-yellow-300 mt-1">⚠️ Set frequency first, or clear this field</div>
             `;
             valueEl.innerHTML = inputHtml;
-            const input = $(`input-${field}-${propertyId}`);
+            const input = $(`input-${field}-${vehicleId}`);
             if (input) {
                 input.focus();
-                input.addEventListener('blur', () => saveTileEdit(field, propertyId, type));
+                input.addEventListener('blur', () => saveTileEdit(field, vehicleId, type));
                 input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') saveTileEdit(field, propertyId, type);
-                    if (e.key === 'Escape') cancelTileEdit(field, propertyId);
+                    if (e.key === 'Enter') saveTileEdit(field, vehicleId, type);
+                    if (e.key === 'Escape') cancelTileEdit(field, vehicleId);
                 });
             }
             return;
         }
         
-        // Check if this is an Financing property - show custom Financing payment modal instead
-        const hasActiveFinancing = PropertyDataService.getValue(propertyId, 'hasActiveFinancing', p?.hasActiveFinancing || false);
+        // Check if this is a Financing vehicle - show custom Financing payment modal instead
+        const hasActiveFinancing = VehicleDataService.getValue(vehicleId, 'hasActiveFinancing', p?.hasActiveFinancing || false);
         if (hasActiveFinancing) {
-            showFinancingPaymentModal(propertyId);
+            showFinancingPaymentModal(vehicleId);
             return; // Don't continue with normal tile editing
         }
     }
     
     tile.classList.add('editing');
     
-    const currentValue = PropertyDataService.getValue(propertyId, field, tile.dataset.originalValue);
+    const currentValue = VehicleDataService.getValue(vehicleId, field, tile.dataset.originalValue);
     
     let inputHtml;
     if (type === 'select' && field === 'upgrades') {
         inputHtml = `
-            <select id="input-${field}-${propertyId}" class="stat-input text-lg w-full">
+            <select id="input-${field}-${vehicleId}" class="stat-input text-lg w-full">
                 <option value="None" ${currentValue === 'None' ? 'selected' : ''}>None</option>
                 <option value="Some" ${currentValue === 'Some' ? 'selected' : ''}>Some</option>
                 <option value="Max" ${currentValue === 'Max' ? 'selected' : ''}>Max</option>
@@ -1289,7 +1289,7 @@ window.startEditTile = function(field, propertyId, type) {
         `;
     } else if (type === 'select' && field === 'speed') {
         inputHtml = `
-            <select id="input-${field}-${propertyId}" class="stat-input text-lg w-full">
+            <select id="input-${field}-${vehicleId}" class="stat-input text-lg w-full">
                 <option value="Normal" ${currentValue === 'Normal' ? 'selected' : ''}>Normal</option>
                 <option value="Fast" ${currentValue === 'Fast' ? 'selected' : ''}>Fast</option>
                 <option value="Ludicrous" ${currentValue === 'Ludicrous' ? 'selected' : ''}>Ludicrous</option>
@@ -1297,7 +1297,7 @@ window.startEditTile = function(field, propertyId, type) {
         `;
     } else if (type === 'select' && field === 'storage') {
         inputHtml = `
-            <select id="input-${field}-${propertyId}" class="stat-input text-lg w-full">
+            <select id="input-${field}-${vehicleId}" class="stat-input text-lg w-full">
                 <option value="Low" ${currentValue === 'Low' ? 'selected' : ''}>Low</option>
                 <option value="Medium" ${currentValue === 'Medium' ? 'selected' : ''}>Medium</option>
                 <option value="High" ${currentValue === 'High' ? 'selected' : ''}>High</option>
@@ -1305,7 +1305,7 @@ window.startEditTile = function(field, propertyId, type) {
         `;
     } else if (type === 'select' && field === 'seats') {
         inputHtml = `
-            <select id="input-${field}-${propertyId}" class="stat-input text-lg w-full">
+            <select id="input-${field}-${vehicleId}" class="stat-input text-lg w-full">
                 <option value="Two" ${currentValue === 'Two' ? 'selected' : ''}>Two</option>
                 <option value="Four" ${currentValue === 'Four' ? 'selected' : ''}>Four</option>
                 <option value="Five" ${currentValue === 'Five' ? 'selected' : ''}>Five</option>
@@ -1314,7 +1314,7 @@ window.startEditTile = function(field, propertyId, type) {
         `;
     } else if (type === 'frequency') {
         inputHtml = `
-            <select id="input-${field}-${propertyId}" class="stat-input text-lg w-full">
+            <select id="input-${field}-${vehicleId}" class="stat-input text-lg w-full">
                 <option value="" ${!currentValue ? 'selected' : ''}>-- Select Frequency --</option>
                 <option value="daily" ${currentValue === 'daily' ? 'selected' : ''}>Daily</option>
                 <option value="weekly" ${currentValue === 'weekly' ? 'selected' : ''}>Weekly</option>
@@ -1325,13 +1325,13 @@ window.startEditTile = function(field, propertyId, type) {
     } else if (type === 'date') {
         inputHtml = `
             <input type="date" 
-                   id="input-${field}-${propertyId}"
+                   id="input-${field}-${vehicleId}"
                    class="stat-input text-lg"
                    value="${currentValue || ''}">
         `;
     } else if (type === 'textarea') {
         inputHtml = `
-            <textarea id="input-${field}-${propertyId}"
+            <textarea id="input-${field}-${vehicleId}"
                    class="stat-input text-sm w-full"
                    rows="3"
                    placeholder="Add notes about this buyer...">${currentValue || ''}</textarea>
@@ -1348,7 +1348,7 @@ window.startEditTile = function(field, propertyId, type) {
         // Add minimum price info for buyPrice field
         let minPriceNote = '';
         if (field === 'buyPrice') {
-            const p = properties.find(prop => prop.id === propertyId);
+            const p = vehicles.find(prop => prop.id === vehicleId);
             if (p) {
                 const minInfo = getMinimumBuyPrice(p);
                 minPriceNote = `
@@ -1363,7 +1363,7 @@ window.startEditTile = function(field, propertyId, type) {
         
         inputHtml = `
             <input type="${inputType}" 
-                   id="input-${field}-${propertyId}"
+                   id="input-${field}-${vehicleId}"
                    class="stat-input text-lg"
                    value="${rawValue}"
                    ${type === 'number' ? 'min="0"' : ''}
@@ -1376,18 +1376,18 @@ window.startEditTile = function(field, propertyId, type) {
     valueEl.innerHTML = `
         ${inputHtml}
         <div class="flex gap-2 mt-3">
-            <button onclick="event.stopPropagation(); saveTileEdit('${field}', ${propertyId}, '${type}')" 
+            <button onclick="event.stopPropagation(); saveTileEdit('${field}', ${vehicleId}, '${type}')" 
                     class="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-xs transition">
                 Save
             </button>
-            <button onclick="event.stopPropagation(); cancelTileEdit('${field}', ${propertyId})" 
+            <button onclick="event.stopPropagation(); cancelTileEdit('${field}', ${vehicleId})" 
                     class="flex-1 bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-lg font-bold text-xs transition">
                 Cancel
             </button>
         </div>
     `;
     
-    const input = $(`input-${field}-${propertyId}`);
+    const input = $(`input-${field}-${vehicleId}`);
     if (input) {
         input.focus();
         if (input.select) input.select();
@@ -1395,8 +1395,8 @@ window.startEditTile = function(field, propertyId, type) {
         input.onkeydown = (e) => {
             e.stopPropagation();
             // For textarea, don't save on Enter (allow multi-line)
-            if (e.key === 'Enter' && type !== 'textarea') saveTileEdit(field, propertyId, type);
-            if (e.key === 'Escape') cancelTileEdit(field, propertyId);
+            if (e.key === 'Enter' && type !== 'textarea') saveTileEdit(field, vehicleId, type);
+            if (e.key === 'Escape') cancelTileEdit(field, vehicleId);
         };
     }
 };
@@ -1404,10 +1404,10 @@ window.startEditTile = function(field, propertyId, type) {
 /**
  * Save tile edit - writes to Firestore with optimistic UI
  */
-window.saveTileEdit = async function(field, propertyId, type) {
-    const tileId = `tile-${field}-${propertyId}`;
-    const valueId = `value-${field}-${propertyId}`;
-    const inputId = `input-${field}-${propertyId}`;
+window.saveTileEdit = async function(field, vehicleId, type) {
+    const tileId = `tile-${field}-${vehicleId}`;
+    const valueId = `value-${field}-${vehicleId}`;
+    const inputId = `input-${field}-${vehicleId}`;
     
     const tile = $(tileId);
     const valueEl = $(valueId);
@@ -1454,26 +1454,26 @@ window.saveTileEdit = async function(field, propertyId, type) {
     
     // PRICE VALIDATION - check if price values are logical
     if (field === 'weeklyPrice' || field === 'biweeklyPrice' || field === 'monthlyPrice') {
-        const p = properties.find(prop => prop.id === propertyId);
+        const p = vehicles.find(prop => prop.id === vehicleId);
         if (p) {
-            const weekly = field === 'weeklyPrice' ? newValue : PropertyDataService.getValue(propertyId, 'weeklyPrice', p.weeklyPrice);
-            const biweekly = field === 'biweeklyPrice' ? newValue : PropertyDataService.getValue(propertyId, 'biweeklyPrice', p.biweeklyPrice || 0);
-            const monthly = field === 'monthlyPrice' ? newValue : PropertyDataService.getValue(propertyId, 'monthlyPrice', p.monthlyPrice);
+            const weekly = field === 'weeklyPrice' ? newValue : VehicleDataService.getValue(vehicleId, 'weeklyPrice', p.weeklyPrice);
+            const biweekly = field === 'biweeklyPrice' ? newValue : VehicleDataService.getValue(vehicleId, 'biweeklyPrice', p.biweeklyPrice || 0);
+            const monthly = field === 'monthlyPrice' ? newValue : VehicleDataService.getValue(vehicleId, 'monthlyPrice', p.monthlyPrice);
             
             const warnings = validatePriceLogic(weekly, biweekly, monthly);
             
             if (warnings.length > 0) {
                 // Store the save parameters for after confirmation
-                const saveParams = { field, propertyId, type, newValue, tile, valueEl };
+                const saveParams = { field, vehicleId, type, newValue, tile, valueEl };
                 
                 showPriceWarningModal(warnings, 
                     () => {
                         // User confirmed - proceed with save
-                        executeTileSave(saveParams.field, saveParams.propertyId, saveParams.type, saveParams.newValue, saveParams.tile, saveParams.valueEl);
+                        executeTileSave(saveParams.field, saveParams.vehicleId, saveParams.type, saveParams.newValue, saveParams.tile, saveParams.valueEl);
                     },
                     () => {
                         // User cancelled - just cancel the edit
-                        cancelTileEdit(field, propertyId);
+                        cancelTileEdit(field, vehicleId);
                     }
                 );
                 return; // Don't save yet, wait for confirmation
@@ -1482,17 +1482,17 @@ window.saveTileEdit = async function(field, propertyId, type) {
     }
     
     // Proceed with normal save
-    executeTileSave(field, propertyId, type, newValue, tile, valueEl);
+    executeTileSave(field, vehicleId, type, newValue, tile, valueEl);
 };
 
 /**
  * Execute tile save - writes to Firestore with optimistic UI
  * (Separated from saveTileEdit to allow price warning confirmation)
  */
-window.executeTileSave = async function(field, propertyId, type, newValue, tile, valueEl) {
+window.executeTileSave = async function(field, vehicleId, type, newValue, tile, valueEl) {
     if (!tile || !valueEl) {
-        tile = $(`tile-${field}-${propertyId}`);
-        valueEl = $(`value-${field}-${propertyId}`);
+        tile = $(`tile-${field}-${vehicleId}`);
+        valueEl = $(`value-${field}-${vehicleId}`);
     }
     
     const originalValue = tile.dataset.originalValue;
@@ -1526,17 +1526,17 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
     
     try {
         // CRITICAL: Write to Firestore (includes fresh read before write)
-        await PropertyDataService.write(propertyId, field, newValue);
+        await VehicleDataService.write(vehicleId, field, newValue);
         
         // LOG PAYMENT when lastPaymentDate is updated
         if (field === 'lastPaymentDate' && newValue) {
-            const p = properties.find(prop => prop.id === propertyId);
-            const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
-            const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
-            const dailyPrice = PropertyDataService.getValue(propertyId, 'dailyPrice', p?.dailyPrice || 0);
-            const weeklyPrice = PropertyDataService.getValue(propertyId, 'weeklyPrice', p?.weeklyPrice || 0);
-            const biweeklyPrice = PropertyDataService.getValue(propertyId, 'biweeklyPrice', p?.biweeklyPrice || 0);
-            const monthlyPrice = PropertyDataService.getValue(propertyId, 'monthlyPrice', p?.monthlyPrice || 0);
+            const p = vehicles.find(prop => prop.id === vehicleId);
+            const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p?.buyerName || 'Unknown');
+            const paymentFrequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
+            const dailyPrice = VehicleDataService.getValue(vehicleId, 'dailyPrice', p?.dailyPrice || 0);
+            const weeklyPrice = VehicleDataService.getValue(vehicleId, 'weeklyPrice', p?.weeklyPrice || 0);
+            const biweeklyPrice = VehicleDataService.getValue(vehicleId, 'biweeklyPrice', p?.biweeklyPrice || 0);
+            const monthlyPrice = VehicleDataService.getValue(vehicleId, 'monthlyPrice', p?.monthlyPrice || 0);
             
             // Calculate payment amount based on frequency
             let paymentAmount = weeklyPrice;
@@ -1549,22 +1549,22 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
             }
             
             // Check for Financing - handle deposit vs monthly payments
-            const hasActiveFinancing = PropertyDataService.getValue(propertyId, 'hasActiveFinancing', p?.hasActiveFinancing || false);
+            const hasActiveFinancing = VehicleDataService.getValue(vehicleId, 'hasActiveFinancing', p?.hasActiveFinancing || false);
             let isDepositPayment = false;
             let financingPaymentInfo = null;
             
             if (hasActiveFinancing) {
-                const financingDownPaymentPaid = PropertyDataService.getValue(propertyId, 'financingDownPaymentPaid', p?.financingDownPaymentPaid || false);
-                const financingContractId = PropertyDataService.getValue(propertyId, 'financingContractId', p?.financingContractId || '');
+                const financingDownPaymentPaid = VehicleDataService.getValue(vehicleId, 'financingDownPaymentPaid', p?.financingDownPaymentPaid || false);
+                const financingContractId = VehicleDataService.getValue(vehicleId, 'financingContractId', p?.financingContractId || '');
                 
                 if (!financingDownPaymentPaid) {
                     // DEPOSIT NOT YET PAID - record deposit payment
                     isDepositPayment = true;
-                    const financingDownPayment = PropertyDataService.getValue(propertyId, 'financingDownPayment', p?.financingDownPayment || 0);
+                    const financingDownPayment = VehicleDataService.getValue(vehicleId, 'financingDownPayment', p?.financingDownPayment || 0);
                     paymentAmount = financingDownPayment; // Override payment amount to deposit
                     
-                    // Mark deposit as paid on property
-                    await PropertyDataService.writeMultiple(propertyId, {
+                    // Mark deposit as paid on vehicle
+                    await VehicleDataService.writeMultiple(vehicleId, {
                         financingDownPaymentPaid: true,
                         financingDownPaymentPaidDate: newValue
                     });
@@ -1584,7 +1584,7 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
                     console.log(`[RTO] Deposit of $${financingDownPayment.toLocaleString()} recorded for contract ${financingContractId}`);
                     
                     // Store info for confirmation modal
-                    const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 0);
+                    const financingTotalPayments = VehicleDataService.getValue(vehicleId, 'financingTotalPayments', p?.financingTotalPayments || 0);
                     financingPaymentInfo = { 
                         isDeposit: true, 
                         depositAmount: financingDownPayment,
@@ -1593,9 +1593,9 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
                     };
                 } else {
                     // DEPOSIT ALREADY PAID - record monthly payment
-                    const financingCurrentPayment = PropertyDataService.getValue(propertyId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
+                    const financingCurrentPayment = VehicleDataService.getValue(vehicleId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
                     const newPaymentNumber = financingCurrentPayment + 1;
-                    await PropertyDataService.write(propertyId, 'financingCurrentPayment', newPaymentNumber);
+                    await VehicleDataService.write(vehicleId, 'financingCurrentPayment', newPaymentNumber);
                     
                     // Update the Financing contract in Firestore
                     if (financingContractId) {
@@ -1612,7 +1612,7 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
                     console.log(`[RTO] Monthly payment ${newPaymentNumber} recorded for contract ${financingContractId}`);
                     
                     // Store info for confirmation modal
-                    const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 0);
+                    const financingTotalPayments = VehicleDataService.getValue(vehicleId, 'financingTotalPayments', p?.financingTotalPayments || 0);
                     financingPaymentInfo = { 
                         isDeposit: false, 
                         current: newPaymentNumber, 
@@ -1622,7 +1622,7 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
             }
             
             // Log payment to Firestore
-            const logSuccess = await logPayment(propertyId, {
+            const logSuccess = await logPayment(vehicleId, {
                 paymentDate: newValue,
                 recordedAt: new Date().toISOString(),
                 buyerName: buyerName,
@@ -1655,8 +1655,8 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
                 if (typeof GamificationService !== 'undefined' && GamificationService.awardXP) {
                     const userId = auth.currentUser?.uid;
                     if (userId) {
-                        const propertyTitle = p?.title || `Property #${propertyId}`;
-                        await GamificationService.awardXP(userId, 100, `Collected $${paymentAmount.toLocaleString()} payment on ${propertyTitle}`);
+                        const vehicleTitle = p?.title || `Vehicle #${vehicleId}`;
+                        await GamificationService.awardXP(userId, 100, `Collected $${paymentAmount.toLocaleString()} payment on ${vehicleTitle}`);
                     }
                 }
             }
@@ -1664,22 +1664,22 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
         
         // Auto-flip to "sold" when setting buyer name or phone
         if ((field === 'buyerName' || field === 'buyerPhone') && newValue) {
-            if (state.availability[propertyId] !== false) {
-                // Property is currently available, flip to sold
-                state.availability[propertyId] = false;
-                await saveAvailability(propertyId, false);
+            if (state.availability[vehicleId] !== false) {
+                // Vehicle is currently available, flip to sold
+                state.availability[vehicleId] = false;
+                await saveAvailability(vehicleId, false);
                 
                 // End any ongoing vacancy period
-                await endVacancyPeriod(propertyId);
+                await endVacancyPeriod(vehicleId);
             }
         }
         
         // If payment frequency changed to weekly, auto-adjust monthly price
         if (field === 'paymentFrequency' && newValue === 'weekly') {
-            const p = properties.find(prop => prop.id === propertyId);
-            const weeklyPrice = PropertyDataService.getValue(propertyId, 'weeklyPrice', p?.weeklyPrice || 0);
+            const p = vehicles.find(prop => prop.id === vehicleId);
+            const weeklyPrice = VehicleDataService.getValue(vehicleId, 'weeklyPrice', p?.weeklyPrice || 0);
             const newMonthlyPrice = weeklyPrice * 4;
-            await PropertyDataService.write(propertyId, 'monthlyPrice', newMonthlyPrice);
+            await VehicleDataService.write(vehicleId, 'monthlyPrice', newMonthlyPrice);
         }
         
         // Success feedback
@@ -1694,19 +1694,19 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
         setTimeout(() => {
             tile.classList.remove('success');
             // Refresh the entire stats page to show synced data
-            renderPropertyStatsContent(propertyId);
+            renderVehicleStatsContent(vehicleId);
             
             // Refresh analytics if payment was logged
-            if (field === 'lastPaymentDate' && typeof renderPropertyAnalytics === 'function') {
-                setTimeout(() => renderPropertyAnalytics(propertyId), 200);
+            if (field === 'lastPaymentDate' && typeof renderVehicleAnalytics === 'function') {
+                setTimeout(() => renderVehicleAnalytics(vehicleId), 200);
             }
         }, 1000);
         
-        // Update filtered properties to reflect changes
-        state.filteredProperties = [...properties];
+        // Update filtered vehicles to reflect changes
+        state.filteredVehicles = [...vehicles];
         
-        // Also refresh properties grid and dashboard if they're using this data
-        renderProperties(state.filteredProperties);
+        // Also refresh vehicles grid and dashboard if they're using this data
+        renderVehicles(state.filteredVehicles);
         if (state.currentUser === 'owner') renderOwnerDashboard();
         
     } catch (error) {
@@ -1723,7 +1723,7 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
         
         setTimeout(() => {
             tile.classList.remove('error');
-            renderPropertyStatsContent(propertyId);
+            renderVehicleStatsContent(vehicleId);
         }, 2000);
     }
 };
@@ -1731,8 +1731,8 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
 /**
  * Cancel tile edit - restores original value
  */
-window.cancelTileEdit = function(field, propertyId) {
-    const tileId = `tile-${field}-${propertyId}`;
+window.cancelTileEdit = function(field, vehicleId) {
+    const tileId = `tile-${field}-${vehicleId}`;
     const tile = $(tileId);
     
     if (!tile || !tile.classList.contains('editing')) return;
@@ -1740,24 +1740,24 @@ window.cancelTileEdit = function(field, propertyId) {
     tile.classList.remove('editing');
     
     // Re-render to restore original display
-    renderPropertyStatsContent(propertyId);
+    renderVehicleStatsContent(vehicleId);
 };
 
 /**
- * Edit property type on stats page
+ * Edit vehicle type on stats page
  */
-window.startEditPropertyType = function(propertyId) {
-    const tile = $(`tile-type-${propertyId}`);
+window.startEditPropertyType = function(vehicleId) {
+    const tile = $(`tile-type-${vehicleId}`);
     if (!tile) return;
     
     const currentValue = tile.dataset.originalValue || tile.textContent.trim().toLowerCase();
     
     // Create dropdown in place
     tile.outerHTML = `
-        <div id="type-edit-container-${propertyId}" class="flex flex-col items-end gap-2">
-            <select id="type-select-${propertyId}" 
+        <div id="type-edit-container-${vehicleId}" class="flex flex-col items-end gap-2">
+            <select id="type-select-${vehicleId}" 
                     class="bg-gray-800 border-2 border-purple-500 rounded-full px-4 py-2 text-white text-sm font-bold uppercase cursor-pointer focus:ring-2 focus:ring-purple-400"
-                    onchange="savePropertyType(${propertyId}, this.value)">
+                    onchange="savePropertyType(${vehicleId}, this.value)">
                 <option value="car" ${currentValue === 'car' ? 'selected' : ''}>Car</option>
                 <option value="truck" ${currentValue === 'truck' ? 'selected' : ''}>Truck</option>
                 <option value="suv" ${currentValue === 'suv' ? 'selected' : ''}>SUV</option>
@@ -1765,59 +1765,59 @@ window.startEditPropertyType = function(propertyId) {
                 <option value="motorcycle" ${currentValue === 'motorcycle' ? 'selected' : ''}>Motorcycle</option>
                 <option value="other" ${currentValue === 'other' ? 'selected' : ''}>Other</option>
             </select>
-            <button onclick="renderPropertyStatsContent(${propertyId})" class="text-xs text-gray-400 hover:text-white">Cancel</button>
+            <button onclick="renderVehicleStatsContent(${vehicleId})" class="text-xs text-gray-400 hover:text-white">Cancel</button>
         </div>
     `;
     
     // Focus the select
     setTimeout(() => {
-        const select = $(`type-select-${propertyId}`);
+        const select = $(`type-select-${vehicleId}`);
         if (select) select.focus();
     }, 50);
 };
 
 /**
- * Save property type change
+ * Save vehicle type change
  */
-window.savePropertyType = async function(propertyId, newValue) {
+window.savePropertyType = async function(vehicleId, newValue) {
     try {
-        await PropertyDataService.write(propertyId, 'type', newValue);
+        await VehicleDataService.write(vehicleId, 'type', newValue);
         
-        // Update filtered properties
-        state.filteredProperties = [...properties];
+        // Update filtered vehicles
+        state.filteredVehicles = [...vehicles];
         
         // Refresh all views
-        renderPropertyStatsContent(propertyId);
-        renderProperties(state.filteredProperties);
+        renderVehicleStatsContent(vehicleId);
+        renderVehicles(state.filteredVehicles);
         if (state.currentUser === 'owner') renderOwnerDashboard();
         
-        showToast('Property type updated!', 'success');
+        showToast('Vehicle type updated!', 'success');
     } catch (error) {
-        console.error('Failed to save property type:', error);
-        showToast('Failed to update property type', 'error');
-        renderPropertyStatsContent(propertyId);
+        console.error('Failed to save vehicle type:', error);
+        showToast('Failed to update vehicle type', 'error');
+        renderVehicleStatsContent(vehicleId);
     }
 };
 
 /**
- * Toggle property status (available/sold)
+ * Toggle vehicle status (available/sold)
  */
-window.togglePropertyStatus = async function(propertyId) {
-    await toggleAvailability(propertyId);
-    setTimeout(() => renderPropertyStatsContent(propertyId), 100);
+window.togglePropertyStatus = async function(vehicleId) {
+    await toggleAvailability(vehicleId);
+    setTimeout(() => renderVehicleStatsContent(vehicleId), 100);
 };
 
 // Toggle Premium listing status
-window.togglePremiumStatus = async function(propertyId) {
-    const p = properties.find(prop => prop.id === propertyId);
+window.togglePremiumStatus = async function(vehicleId) {
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) return;
     
-    const currentPremium = PropertyDataService.getValue(propertyId, 'isPremium', p.isPremium || false);
+    const currentPremium = VehicleDataService.getValue(vehicleId, 'isPremium', p.isPremium || false);
     const newPremium = !currentPremium;
     
     if (newPremium) {
         // Show premium enable modal instead of simple confirm
-        showPremiumEnableModal(propertyId, p.title);
+        showPremiumEnableModal(vehicleId, p.title);
         return;
     }
     
@@ -1827,15 +1827,15 @@ window.togglePremiumStatus = async function(propertyId) {
     }
     
     try {
-        await PropertyDataService.write(propertyId, 'isPremium', false);
-        await PropertyDataService.write(propertyId, 'premiumUpdatedAt', new Date().toISOString());
+        await VehicleDataService.write(vehicleId, 'isPremium', false);
+        await VehicleDataService.write(vehicleId, 'premiumUpdatedAt', new Date().toISOString());
         
         p.isPremium = false;
-        renderPropertyStatsContent(propertyId);
+        renderVehicleStatsContent(vehicleId);
         
-        if (typeof renderProperties === 'function') {
-            state.filteredProperties = [...properties];
-            renderProperties(state.filteredProperties);
+        if (typeof renderVehicles === 'function') {
+            state.filteredVehicles = [...vehicles];
+            renderVehicles(state.filteredVehicles);
         }
         
         showToast('Premium Listing Deactivated', 'info');
@@ -1847,7 +1847,7 @@ window.togglePremiumStatus = async function(propertyId) {
 };
 
 // Show modal to enable premium with trial option
-window.showPremiumEnableModal = function(propertyId, propertyTitle) {
+window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
     const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     
     // Free Trial section - only visible to admin
@@ -1880,7 +1880,7 @@ window.showPremiumEnableModal = function(propertyId, propertyTitle) {
                 <h3 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">👑 Enable Premium Listing</h3>
                 
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
-                    <p class="text-gray-300 mb-2"><strong>Property:</strong> ${propertyTitle}</p>
+                    <p class="text-gray-300 mb-2"><strong>Vehicle:</strong> ${vehicleTitle}</p>
                     <p class="text-gray-300"><strong>Fee:</strong> <span class="text-amber-400 font-bold">$10,000/week</span></p>
                 </div>
                 
@@ -1898,7 +1898,7 @@ window.showPremiumEnableModal = function(propertyId, propertyTitle) {
                 
                 <!-- Buttons -->
                 <div class="flex gap-3">
-                    <button onclick="confirmPremiumEnable(${propertyId})" 
+                    <button onclick="confirmPremiumEnable(${vehicleId})" 
                             class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 rounded-xl font-bold hover:opacity-90 transition">
                         ✓ Enable Premium
                     </button>
@@ -1919,8 +1919,8 @@ window.closePremiumEnableModal = function() {
     if (modal) modal.remove();
 };
 
-window.confirmPremiumEnable = async function(propertyId) {
-    const p = properties.find(prop => prop.id === propertyId);
+window.confirmPremiumEnable = async function(vehicleId) {
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) return;
     
     const isTrial = $('premiumTrialCheckbox')?.checked || false;
@@ -1928,23 +1928,23 @@ window.confirmPremiumEnable = async function(propertyId) {
     
     try {
         // Save premium status
-        await PropertyDataService.write(propertyId, 'isPremium', true);
-        await PropertyDataService.write(propertyId, 'isPremiumTrial', isTrial);
-        await PropertyDataService.write(propertyId, 'premiumUpdatedAt', new Date().toISOString());
-        await PropertyDataService.write(propertyId, 'premiumStartDate', today);
+        await VehicleDataService.write(vehicleId, 'isPremium', true);
+        await VehicleDataService.write(vehicleId, 'isPremiumTrial', isTrial);
+        await VehicleDataService.write(vehicleId, 'premiumUpdatedAt', new Date().toISOString());
+        await VehicleDataService.write(vehicleId, 'premiumStartDate', today);
         
         // If not trial, set last payment date to today
         if (!isTrial) {
-            await PropertyDataService.write(propertyId, 'premiumLastPayment', today);
+            await VehicleDataService.write(vehicleId, 'premiumLastPayment', today);
         }
         
-        // Update local property
+        // Update local vehicle
         p.isPremium = true;
         p.isPremiumTrial = isTrial;
         
         // Create admin notification if NOT admin enabling it
         const currentUserEmail = auth.currentUser?.email?.toLowerCase();
-        const ownerEmail = (p.ownerEmail || propertyOwnerEmail[propertyId] || '').toLowerCase();
+        const ownerEmail = (p.ownerEmail || vehicleOwnerEmail[vehicleId] || '').toLowerCase();
         
         // Get owner display name if available
         let ownerDisplayName = '';
@@ -1960,12 +1960,12 @@ window.confirmPremiumEnable = async function(propertyId) {
         }
         
         if (!TierService.isMasterAdmin(currentUserEmail)) {
-            // Property owner enabled premium - notify admin
+            // Vehicle owner enabled premium - notify admin
             try {
                 await db.collection('adminNotifications').add({
                     type: 'premium_request',
-                    propertyId: propertyId,
-                    propertyTitle: p.title,
+                    vehicleId: vehicleId,
+                    vehicleTitle: p.title,
                     ownerEmail: ownerEmail,
                     ownerDisplayName: ownerDisplayName,
                     isTrial: isTrial,
@@ -1980,11 +1980,11 @@ window.confirmPremiumEnable = async function(propertyId) {
         }
         
         closePremiumEnableModal();
-        renderPropertyStatsContent(propertyId);
+        renderVehicleStatsContent(vehicleId);
         
-        if (typeof renderProperties === 'function') {
-            state.filteredProperties = [...properties];
-            renderProperties(state.filteredProperties);
+        if (typeof renderVehicles === 'function') {
+            state.filteredVehicles = [...vehicles];
+            renderVehicles(state.filteredVehicles);
         }
         
         if (isTrial) {
@@ -2000,11 +2000,11 @@ window.confirmPremiumEnable = async function(propertyId) {
 };
 
 // Toggle premium between trial and paid
-window.togglePremiumTrialStatus = async function(propertyId) {
-    const p = properties.find(prop => prop.id === propertyId);
+window.togglePremiumTrialStatus = async function(vehicleId) {
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) return;
     
-    const currentTrial = PropertyDataService.getValue(propertyId, 'isPremiumTrial', p.isPremiumTrial || false);
+    const currentTrial = VehicleDataService.getValue(vehicleId, 'isPremiumTrial', p.isPremiumTrial || false);
     const newTrial = !currentTrial;
     
     const action = newTrial ? 'Convert to Free Trial?' : 'Convert to Paid ($10k/week)?';
@@ -2013,16 +2013,16 @@ window.togglePremiumTrialStatus = async function(propertyId) {
     }
     
     try {
-        await PropertyDataService.write(propertyId, 'isPremiumTrial', newTrial);
+        await VehicleDataService.write(vehicleId, 'isPremiumTrial', newTrial);
         
         // If converting to paid, set last payment to today
         if (!newTrial) {
             const today = new Date().toISOString().split('T')[0];
-            await PropertyDataService.write(propertyId, 'premiumLastPayment', today);
+            await VehicleDataService.write(vehicleId, 'premiumLastPayment', today);
         }
         
         p.isPremiumTrial = newTrial;
-        renderPropertyStatsContent(propertyId);
+        renderVehicleStatsContent(vehicleId);
         
         if (newTrial) {
             showToast('🎁 Converted to Free Trial', 'info');
@@ -2038,11 +2038,11 @@ window.togglePremiumTrialStatus = async function(propertyId) {
 
 // ==================== PAYMENT LEDGER SYSTEM ====================
 
-// Log a payment to the property's payment history
-window.logPayment = async function(propertyId, paymentData) {
+// Log a payment to the vehicle's payment history
+window.logPayment = async function(vehicleId, paymentData) {
     try {
         // Get existing payment history
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         let payments = [];
         
         if (historyDoc.exists) {
@@ -2057,8 +2057,8 @@ window.logPayment = async function(propertyId, paymentData) {
         };
         payments.push(newPayment);
         // Save back to Firestore
-        await db.collection('paymentHistory').doc(String(propertyId)).set({
-            propertyId: propertyId,
+        await db.collection('paymentHistory').doc(String(vehicleId)).set({
+            vehicleId: vehicleId,
             payments: payments,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -2195,10 +2195,10 @@ window.closePaymentConfirmModal = function() {
     }
 };
 
-// Get payment history for a property
-window.getPaymentHistory = async function(propertyId) {
+// Get payment history for a vehicle
+window.getPaymentHistory = async function(vehicleId) {
     try {
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         if (historyDoc.exists) {
             const payments = historyDoc.data().payments || [];
             return payments;
@@ -2217,14 +2217,14 @@ window.getPaymentHistory = async function(propertyId) {
 };
 
 // Delete a payment from the ledger
-window.deletePayment = async function(propertyId, paymentId) {
+window.deletePayment = async function(vehicleId, paymentId) {
     // Confirm deletion
     if (!confirm('Are you sure you want to delete this payment? This will update all financial stats and reverse any XP earned.')) {
         return;
     }
     try {
         // Get existing payment history
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         
         if (!historyDoc.exists) {
             showToast('❌ Payment history not found', 'error');
@@ -2243,8 +2243,8 @@ window.deletePayment = async function(propertyId, paymentId) {
         }
         
         // Save back to Firestore
-        await db.collection('paymentHistory').doc(String(propertyId)).set({
-            propertyId: propertyId,
+        await db.collection('paymentHistory').doc(String(vehicleId)).set({
+            vehicleId: vehicleId,
             payments: payments,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -2253,9 +2253,9 @@ window.deletePayment = async function(propertyId, paymentId) {
         const user = auth.currentUser;
         if (user && typeof GamificationService !== 'undefined') {
             try {
-                const property = properties.find(p => p.id === propertyId);
-                const propertyTitle = property?.title || `Property ${propertyId}`;
-                await GamificationService.deductXP(user.uid, 100, `Payment deleted for ${propertyTitle}`);
+                const vehicle = vehicles.find(p => p.id === vehicleId);
+                const vehicleTitle = vehicle?.title || `Vehicle ${vehicleId}`;
+                await GamificationService.deductXP(user.uid, 100, `Payment deleted for ${vehicleTitle}`);
                 showToast('🗑️ Payment deleted, 100 XP reversed', 'success');
             } catch (xpError) {
                 console.error('[PaymentLog] Error reversing XP:', xpError);
@@ -2266,7 +2266,7 @@ window.deletePayment = async function(propertyId, paymentId) {
         }
         
         // Refresh the analytics view
-        await refreshPropertyAnalytics(propertyId);
+        await refreshPropertyAnalytics(vehicleId);
         
     } catch (error) {
         console.error('[PaymentLog] Error deleting payment:', error);
@@ -2274,36 +2274,36 @@ window.deletePayment = async function(propertyId, paymentId) {
     }
 };
 
-// Refresh property analytics after payment changes
-window.refreshPropertyAnalytics = async function(propertyId) {
-    // Find the property
-    const property = properties.find(p => p.id === propertyId);
-    if (!property) {
-        console.error('[Analytics] Property not found:', propertyId);
+// Refresh vehicle analytics after payment changes
+window.refreshPropertyAnalytics = async function(vehicleId) {
+    // Find the vehicle
+    const vehicle = vehicles.find(p => p.id === vehicleId);
+    if (!vehicle) {
+        console.error('[Analytics] Vehicle not found:', vehicleId);
         return;
     }
     
     // Re-fetch payment history
-    const payments = await getPaymentHistory(propertyId);
+    const payments = await getPaymentHistory(vehicleId);
     
     // Recalculate analytics
-    const analytics = calculatePropertyAnalytics(payments, property);
+    const analytics = calculatePropertyAnalytics(payments, vehicle);
     
     // Update the analytics container if it exists
-    const analyticsContainer = document.getElementById(`propertyAnalytics-${propertyId}`);
+    const analyticsContainer = document.getElementById(`vehicleAnalytics-${vehicleId}`);
     if (analyticsContainer) {
-        analyticsContainer.innerHTML = renderPropertyAnalytics(property, payments, analytics);
+        analyticsContainer.innerHTML = renderVehicleAnalytics(vehicle, payments, analytics);
     }
     
-    // Also refresh the stats page if we're viewing this property
-    if (state && state.currentPropertyId === propertyId) {
+    // Also refresh the stats page if we're viewing this vehicle
+    if (state && state.currentVehicleId === vehicleId) {
         // Re-render the stats page content
-        renderPropertyStatsContent(propertyId);
+        renderVehicleStatsContent(vehicleId);
     }
 };
 
-// Calculate property analytics from payment history
-window.calculatePropertyAnalytics = function(payments, property) {
+// Calculate vehicle analytics from payment history
+window.calculatePropertyAnalytics = function(payments, vehicle) {
     const now = new Date();
     const yearStart = new Date(now.getFullYear(), 0, 1);
     
@@ -2367,7 +2367,7 @@ window.calculatePropertyAnalytics = function(payments, property) {
     let occupancyRate = 0;
     
     if (firstPaymentDate && totalPayments > 0) {
-        const frequency = PropertyDataService.getValue(property?.id, 'paymentFrequency', 'weekly');
+        const frequency = VehicleDataService.getValue(vehicle?.id, 'paymentFrequency', 'weekly');
         let daysBetweenPayments = 7; // default weekly
         if (frequency === 'biweekly') daysBetweenPayments = 14;
         else if (frequency === 'monthly') daysBetweenPayments = 30;
@@ -2400,12 +2400,12 @@ window.calculatePropertyAnalytics = function(payments, property) {
     };
 };
 
-// Render analytics section on property stats page
-window.renderPropertyAnalytics = async function(propertyId) {
-    const container = $('propertyAnalyticsSection');
+// Render analytics section on vehicle stats page
+window.renderVehicleAnalytics = async function(vehicleId) {
+    const container = $('vehicleAnalyticsSection');
     if (!container) return;
     
-    const p = properties.find(prop => prop.id === propertyId);
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) return;
     
     // Show loading
@@ -2417,7 +2417,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
     `;
     
     // Fetch payment history (includes tenure history)
-    const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+    const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
     const historyData = historyDoc.exists ? historyDoc.data() : { payments: [], tenureHistory: [], vacancyPeriods: [] };
     const payments = historyData.payments || [];
     const tenureHistory = historyData.tenureHistory || [];
@@ -2432,7 +2432,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
     // Calculate current vacancy duration if applicable
     let currentVacancy = null;
     const ongoingVacancy = vacancyPeriods.find(v => v.status === 'ongoing');
-    if (ongoingVacancy && state.availability[propertyId] === true) {
+    if (ongoingVacancy && state.availability[vehicleId] === true) {
         const startDate = new Date(ongoingVacancy.startDate);
         const today = new Date();
         const vacancyDays = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
@@ -2445,7 +2445,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
     container.innerHTML = `
         <!-- Summary Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-gradient-to-br from-green-900/50 to-emerald-900/50 rounded-xl p-4 border border-green-600/30 cursor-help" title="Total revenue collected from this property since tracking began">
+            <div class="bg-gradient-to-br from-green-900/50 to-emerald-900/50 rounded-xl p-4 border border-green-600/30 cursor-help" title="Total revenue collected from this vehicle since tracking began">
                 <div class="text-green-400 text-sm font-semibold">💰 Total Earnings</div>
                 <div class="text-2xl font-black text-white">$${analytics.totalEarnings.toLocaleString()}</div>
                 <div class="text-green-300/70 text-xs">${analytics.totalPayments} payment${analytics.totalPayments !== 1 ? 's' : ''}</div>
@@ -2491,7 +2491,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
             <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <span>📊</span> Monthly Earnings Trend
             </h4>
-            <div id="earningsChart-${propertyId}" class="h-48">
+            <div id="earningsChart-${vehicleId}" class="h-48">
                 ${renderEarningsChart(lastSixMonths, analytics.monthlyData)}
             </div>
         </div>
@@ -2501,7 +2501,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
         <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl p-4 mb-6 border border-green-600/30">
             <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <span>📜</span> Completed Tenures
-                <span class="text-xs font-normal text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full">${tenureHistory.length} former renter${tenureHistory.length !== 1 ? 's' : ''}</span>
+                <span class="text-xs font-normal text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full">${tenureHistory.length} previous buyer${tenureHistory.length !== 1 ? 's' : ''}</span>
             </h4>
             <div class="space-y-3">
                 ${tenureHistory.slice().reverse().map(tenure => `
@@ -2522,9 +2522,9 @@ window.renderPropertyAnalytics = async function(propertyId) {
                             <div class="flex items-center gap-2">
                                 <div class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    Lease Completed
+                                    Sale Completed
                                 </div>
-                                <button onclick="deleteTenureRecord(${propertyId}, '${tenure.id}')" 
+                                <button onclick="deleteTenureRecord(${vehicleId}, '${tenure.id}')" 
                                     class="sm:opacity-0 sm:group-hover:opacity-100 p-2 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition-all"
                                     title="Delete this tenure record">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -2562,10 +2562,10 @@ window.renderPropertyAnalytics = async function(propertyId) {
         </div>
         ` : ''}
         
-        <!-- Renter Breakdown -->
+        <!-- Buyer Breakdown -->
         <div class="bg-gray-800/50 rounded-xl p-4 mb-6 border border-gray-700">
             <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <span>👥</span> Renter History
+                <span>👥</span> Buyer History
             </h4>
             <div class="space-y-3">
                 ${Object.entries(analytics.buyerStats).length > 0 
@@ -2586,7 +2586,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
                             </div>
                         </div>
                     `).join('')
-                    : '<p class="text-gray-500 text-center py-4">No renter history yet</p>'
+                    : '<p class="text-gray-500 text-center py-4">No buyer history yet</p>'
                 }
             </div>
         </div>
@@ -2597,11 +2597,11 @@ window.renderPropertyAnalytics = async function(propertyId) {
                 <h4 class="text-lg font-bold text-white flex items-center gap-2">
                     <span>📒</span> Payment Ledger
                 </h4>
-                <button onclick="toggleLedgerExpand(${propertyId})" class="text-purple-400 hover:text-purple-300 text-sm font-semibold">
+                <button onclick="toggleLedgerExpand(${vehicleId})" class="text-purple-400 hover:text-purple-300 text-sm font-semibold">
                     ${payments.length > 5 ? 'View All (' + payments.length + ')' : ''}
                 </button>
             </div>
-            <div id="paymentLedger-${propertyId}" class="space-y-2 max-h-80 overflow-y-auto">
+            <div id="paymentLedger-${vehicleId}" class="space-y-2 max-h-80 overflow-y-auto">
                 ${payments.length > 0 
                     ? analytics.sortedPayments
                         .slice().reverse()
@@ -2628,7 +2628,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
                                             : (p.paymentDate || 'Unknown date')}
                                     </div>
                                 </div>
-                                <button onclick="deletePayment(${propertyId}, '${p.id}')" 
+                                <button onclick="deletePayment(${vehicleId}, '${p.id}')" 
                                     class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition-all"
                                     title="Delete this payment">
                                     🗑️
@@ -2646,7 +2646,7 @@ window.renderPropertyAnalytics = async function(propertyId) {
                 }
             </div>
             ${payments.length > 10 ? `
-                <button onclick="showFullLedger(${propertyId})" class="w-full mt-4 py-2 text-center text-purple-400 hover:text-purple-300 font-semibold border border-purple-500/30 rounded-lg hover:bg-purple-500/10 transition">
+                <button onclick="showFullLedger(${vehicleId})" class="w-full mt-4 py-2 text-center text-purple-400 hover:text-purple-300 font-semibold border border-purple-500/30 rounded-lg hover:bg-purple-500/10 transition">
                     View Full Ledger (${payments.length} entries)
                 </button>
             ` : ''}
@@ -2692,9 +2692,9 @@ window.renderEarningsChart = function(months, monthlyData) {
 };
 
 // Show full ledger modal
-window.showFullLedger = async function(propertyId) {
-    const payments = await getPaymentHistory(propertyId);
-    const p = properties.find(prop => prop.id === propertyId);
+window.showFullLedger = async function(vehicleId) {
+    const payments = await getPaymentHistory(vehicleId);
+    const p = vehicles.find(prop => prop.id === vehicleId);
     
     const sortedPayments = [...payments].sort((a, b) => 
         new Date(b.paymentDate) - new Date(a.paymentDate)
@@ -2711,7 +2711,7 @@ window.showFullLedger = async function(propertyId) {
                             <h3 class="text-xl font-bold text-white flex items-center gap-2">
                                 <span>📒</span> Complete Payment Ledger
                             </h3>
-                            <p class="text-purple-200 text-sm mt-1">${p?.title || 'Property'}</p>
+                            <p class="text-purple-200 text-sm mt-1">${p?.title || 'Vehicle'}</p>
                         </div>
                         <button onclick="closeFullLedger()" class="text-white/70 hover:text-white text-2xl">&times;</button>
                     </div>
@@ -2731,7 +2731,7 @@ window.showFullLedger = async function(propertyId) {
                         <thead>
                             <tr class="text-left text-gray-400 text-sm border-b border-gray-700">
                                 <th class="pb-3">Date</th>
-                                <th class="pb-3">Renter</th>
+                                <th class="pb-3">Buyer</th>
                                 <th class="pb-3">Frequency</th>
                                 <th class="pb-3 text-right">Amount</th>
                                 <th class="pb-3 text-right">Recorded</th>
@@ -2758,7 +2758,7 @@ window.showFullLedger = async function(propertyId) {
                                         ${new Date(payment.recordedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
                                     </td>
                                     <td class="py-3 text-center">
-                                        <button onclick="deletePaymentFromModal(${propertyId}, '${payment.id}')" 
+                                        <button onclick="deletePaymentFromModal(${vehicleId}, '${payment.id}')" 
                                             class="opacity-50 group-hover:opacity-100 p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition-all"
                                             title="Delete this payment">
                                             🗑️
@@ -2781,12 +2781,12 @@ window.showFullLedger = async function(propertyId) {
 };
 
 // Delete payment from the full ledger modal (refreshes modal after)
-window.deletePaymentFromModal = async function(propertyId, paymentId) {
+window.deletePaymentFromModal = async function(vehicleId, paymentId) {
     if (!confirm('Are you sure you want to delete this payment? This will update all financial stats and reverse any XP earned.')) {
         return;
     }
     try {
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         
         if (!historyDoc.exists) {
             showToast('❌ Payment history not found', 'error');
@@ -2802,8 +2802,8 @@ window.deletePaymentFromModal = async function(propertyId, paymentId) {
             return;
         }
         
-        await db.collection('paymentHistory').doc(String(propertyId)).set({
-            propertyId: propertyId,
+        await db.collection('paymentHistory').doc(String(vehicleId)).set({
+            vehicleId: vehicleId,
             payments: payments,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -2812,9 +2812,9 @@ window.deletePaymentFromModal = async function(propertyId, paymentId) {
         const user = auth.currentUser;
         if (user && typeof GamificationService !== 'undefined') {
             try {
-                const property = properties.find(p => p.id === propertyId);
-                const propertyTitle = property?.title || `Property ${propertyId}`;
-                await GamificationService.deductXP(user.uid, 100, `Payment deleted for ${propertyTitle}`);
+                const vehicle = vehicles.find(p => p.id === vehicleId);
+                const vehicleTitle = vehicle?.title || `Vehicle ${vehicleId}`;
+                await GamificationService.deductXP(user.uid, 100, `Payment deleted for ${vehicleTitle}`);
                 showToast('🗑️ Payment deleted, 100 XP reversed', 'success');
             } catch (xpError) {
                 console.error('[PaymentLog] Error reversing XP:', xpError);
@@ -2825,10 +2825,10 @@ window.deletePaymentFromModal = async function(propertyId, paymentId) {
         }
         
         // Refresh the modal
-        await showFullLedger(propertyId);
+        await showFullLedger(vehicleId);
         
         // Also refresh analytics
-        await refreshPropertyAnalytics(propertyId);
+        await refreshPropertyAnalytics(vehicleId);
         
     } catch (error) {
         console.error('[PaymentLog] Error deleting payment:', error);
@@ -2873,7 +2873,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     state.currentUser = 'owner';
                     closeModal('loginModal');
                     hideOwnerLoginForm();
-                    hideElement($('renterSection'));
+                    hideElement($('browseSection'));
                     hideElement($('vehicleDetailPage'));
                     hideElement($('vehicleStatsPage'));
                     showElement($('ownerDashboard'));
@@ -2907,9 +2907,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==================== EDIT TITLE/LOCATION ====================
-window.startEditField = function(field, propertyId, element) {
-    const prop = properties.find(p => p.id === propertyId);
-    const currentValue = PropertyDataService.getValue(propertyId, field, prop?.[field]) || '';
+window.startEditField = function(field, vehicleId, element) {
+    const prop = vehicles.find(p => p.id === vehicleId);
+    const currentValue = VehicleDataService.getValue(vehicleId, field, prop?.[field]) || '';
     
     const input = document.createElement('input');
     input.type = 'text';
@@ -2929,10 +2929,10 @@ window.startEditField = function(field, propertyId, element) {
         if (newValue !== currentValue) {
             element.innerHTML = '<span class="text-gray-400">Saving...</span>';
             try {
-                // PropertyDataService.write already handles Firestore update
-                await PropertyDataService.write(propertyId, field, newValue);
+                // VehicleDataService.write already handles Firestore update
+                await VehicleDataService.write(vehicleId, field, newValue);
                 
-                // Update local property object
+                // Update local vehicle object
                 if (prop) prop[field] = newValue;
                 
                 // Update the display
@@ -2942,8 +2942,8 @@ window.startEditField = function(field, propertyId, element) {
                 }
                 
                 // Re-render if on stats page
-                if (typeof renderPropertyStatsContent === 'function') {
-                    renderPropertyStatsContent(propertyId);
+                if (typeof renderVehicleStatsContent === 'function') {
+                    renderVehicleStatsContent(vehicleId);
                 }
                 
                 // Show success toast
@@ -2984,8 +2984,8 @@ window.startEditField = function(field, propertyId, element) {
 };
 
 // ==================== IMAGE MANAGEMENT ====================
-window.openAddImageModal = function(propertyId) {
-    window.currentImagePropertyId = propertyId;
+window.openAddImageModal = function(vehicleId) {
+    window.currentImagePropertyId = vehicleId;
     const textarea = $('newImageUrls');
     if (textarea) textarea.value = '';
     hideElement($('addImageError'));
@@ -2999,8 +2999,8 @@ window.closeAddImageModal = function() {
 
 // Updated to handle multiple image URLs (bulk paste)
 window.saveNewImages = async function() {
-    const propertyId = window.currentImagePropertyId;
-    if (!propertyId) return;
+    const vehicleId = window.currentImagePropertyId;
+    if (!vehicleId) return;
     
     const textarea = $('newImageUrls');
     const rawText = textarea ? textarea.value.trim() : '';
@@ -3053,7 +3053,7 @@ window.saveNewImages = async function() {
             <span class="text-yellow-400">⚠️</span>
             <div>
                 <strong class="text-yellow-300">Warning: Discord links expire!</strong><br>
-                <span class="text-gray-300">Discord image links stop working after a few weeks. Your property photos will break.</span><br>
+                <span class="text-gray-300">Discord image links stop working after a few weeks. Your vehicle photos will break.</span><br>
                 <span class="text-cyan-400">We recommend using <a href="https://fivemanage.com" target="_blank" class="underline font-semibold">fivemanage.com</a> instead (it's free!).</span>
             </div>
         </div>
@@ -3071,8 +3071,8 @@ window.saveNewImages = async function() {
 
 // Actual save function (called after warnings acknowledged)
 window.saveNewImagesConfirmed = async function() {
-    const propertyId = window.currentImagePropertyId;
-    if (!propertyId) return;
+    const vehicleId = window.currentImagePropertyId;
+    if (!vehicleId) return;
     
     const textarea = $('newImageUrls');
     const rawText = textarea ? textarea.value.trim() : '';
@@ -3087,8 +3087,8 @@ window.saveNewImagesConfirmed = async function() {
     btn.textContent = `Adding ${urls.length} image${urls.length > 1 ? 's' : ''}...`;
     
     try {
-        const prop = properties.find(p => p.id === propertyId);
-        if (!prop) throw new Error('Property not found');
+        const prop = vehicles.find(p => p.id === vehicleId);
+        if (!prop) throw new Error('Vehicle not found');
         
         // Initialize images array if needed
         if (!prop.images) prop.images = [];
@@ -3103,12 +3103,12 @@ window.saveNewImagesConfirmed = async function() {
         }
         
         // Save to Firestore
-        await db.collection('settings').doc('properties').set({
-            [propertyId]: prop
+        await db.collection('settings').doc('vehicles').set({
+            [vehicleId]: prop
         }, { merge: true });
         
         // Re-render
-        renderPropertyStatsContent(propertyId);
+        renderVehicleStatsContent(vehicleId);
         closeAddImageModal();
         
         // Show success toast
@@ -3129,8 +3129,8 @@ window.saveNewImagesConfirmed = async function() {
 // Keep old function for backwards compatibility
 window.saveNewImage = window.saveNewImages;
 
-window.deletePropertyImage = async function(propertyId, imageIndex, imageUrl) {
-    const prop = properties.find(p => p.id === propertyId);
+window.deletePropertyImage = async function(vehicleId, imageIndex, imageUrl) {
+    const prop = vehicles.find(p => p.id === vehicleId);
     if (!prop || !prop.images) {
         alert('No images to delete.');
         return;
@@ -3151,18 +3151,18 @@ window.deletePropertyImage = async function(propertyId, imageIndex, imageUrl) {
         prop.images.splice(imageIndex, 1);
         state.currentImages = prop.images;
         
-        // Ensure owner info is set (especially for base properties being edited)
+        // Ensure owner info is set (especially for base vehicles being edited)
         if (!prop.ownerEmail) {
             prop.ownerEmail = (auth.currentUser?.email || 'richard2019201900@gmail.com').toLowerCase();
         }
         
         // Save to Firestore
-        await db.collection('settings').doc('properties').set({
-            [propertyId]: prop
+        await db.collection('settings').doc('vehicles').set({
+            [vehicleId]: prop
         }, { merge: true });
         
         // Re-render
-        renderPropertyStatsContent(propertyId);
+        renderVehicleStatsContent(vehicleId);
         
         // Show toast
         if (typeof showToast === 'function') {
@@ -3193,7 +3193,7 @@ window.deletePropertyImage = async function(propertyId, imageIndex, imageUrl) {
         
         draggedElement = draggable;
         draggedIndex = parseInt(draggable.dataset.index);
-        draggedPropertyId = parseInt(draggable.dataset.propertyId);
+        draggedPropertyId = parseInt(draggable.dataset.vehicleId);
         
         // Add visual feedback
         setTimeout(() => {
@@ -3261,9 +3261,9 @@ window.deletePropertyImage = async function(propertyId, imageIndex, imageUrl) {
         e.preventDefault();
         
         const targetIndex = parseInt(dropTarget.dataset.index);
-        const targetPropertyId = parseInt(dropTarget.dataset.propertyId);
+        const targetPropertyId = parseInt(dropTarget.dataset.vehicleId);
         
-        // Must be same property
+        // Must be same vehicle
         if (draggedPropertyId !== targetPropertyId) return;
         
         // Determine final position based on drop location
@@ -3285,10 +3285,10 @@ window.deletePropertyImage = async function(propertyId, imageIndex, imageUrl) {
 })();
 
 // Reorder images and save to Firestore
-window.reorderPropertyImages = async function(propertyId, fromIndex, toIndex) {
+window.reorderPropertyImages = async function(vehicleId, fromIndex, toIndex) {
     if (fromIndex === toIndex) return;
     
-    const prop = properties.find(p => p.id === propertyId);
+    const prop = vehicles.find(p => p.id === vehicleId);
     if (!prop || !prop.images) return;
     
     console.log(`[Images] Reordering: moving index ${fromIndex} to ${toIndex}`);
@@ -3305,12 +3305,12 @@ window.reorderPropertyImages = async function(propertyId, fromIndex, toIndex) {
         }
         
         // Save to Firestore
-        await db.collection('settings').doc('properties').set({
-            [propertyId]: prop
+        await db.collection('settings').doc('vehicles').set({
+            [vehicleId]: prop
         }, { merge: true });
         
         // Re-render
-        renderPropertyStatsContent(propertyId);
+        renderVehicleStatsContent(vehicleId);
         
         // Show success feedback
         if (typeof showToast === 'function') {
@@ -3324,8 +3324,8 @@ window.reorderPropertyImages = async function(propertyId, fromIndex, toIndex) {
 };
 
 // ==================== COPY REMINDER SCRIPT ====================
-window.copyReminderScript = function(propertyId, btn) {
-    const scriptElement = $(`reminderScript-${propertyId}`);
+window.copyReminderScript = function(vehicleId, btn) {
+    const scriptElement = $(`reminderScript-${vehicleId}`);
     if (!scriptElement) return;
     
     // Get value from textarea (or textContent if it's a div)
@@ -3376,74 +3376,74 @@ window.copyReminderScript = function(propertyId, btn) {
 };
 
 // ==================== EDIT REMINDER SCRIPT ====================
-window.startEditReminderScript = function(propertyId) {
-    const tile = $(`tile-reminderScript-${propertyId}`);
-    const scriptDiv = $(`reminderScript-${propertyId}`);
+window.startEditReminderScript = function(vehicleId) {
+    const tile = $(`tile-reminderScript-${vehicleId}`);
+    const scriptDiv = $(`reminderScript-${vehicleId}`);
     if (!tile || !scriptDiv) return;
     
     const currentValue = scriptDiv.textContent;
     
     tile.innerHTML = `
-        <textarea id="input-reminderScript-${propertyId}"
+        <textarea id="input-reminderScript-${vehicleId}"
                   class="w-full bg-gray-800 border-2 border-purple-500 rounded-lg p-3 text-gray-200 font-medium resize-y"
                   rows="4"
                   onclick="event.stopPropagation()">${currentValue}</textarea>
         <div class="flex gap-2 mt-3">
-            <button onclick="event.stopPropagation(); saveReminderScript(${propertyId})" 
+            <button onclick="event.stopPropagation(); saveReminderScript(${vehicleId})" 
                     class="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-sm transition">
                 Save
             </button>
-            <button onclick="event.stopPropagation(); cancelReminderEdit(${propertyId})" 
+            <button onclick="event.stopPropagation(); cancelReminderEdit(${vehicleId})" 
                     class="flex-1 bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-lg font-bold text-sm transition">
                 Cancel
             </button>
         </div>
     `;
     
-    const input = $(`input-reminderScript-${propertyId}`);
+    const input = $(`input-reminderScript-${vehicleId}`);
     if (input) {
         input.focus();
         input.setSelectionRange(input.value.length, input.value.length);
     }
 };
 
-window.saveReminderScript = async function(propertyId) {
-    const tile = $(`tile-reminderScript-${propertyId}`);
-    const input = $(`input-reminderScript-${propertyId}`);
+window.saveReminderScript = async function(vehicleId) {
+    const tile = $(`tile-reminderScript-${vehicleId}`);
+    const input = $(`input-reminderScript-${vehicleId}`);
     if (!tile || !input) return;
     
     const newValue = input.value.trim();
     
     // Show saving state
-    tile.innerHTML = `<div id="reminderScript-${propertyId}" class="text-gray-200 font-medium opacity-70">Saving...</div>`;
+    tile.innerHTML = `<div id="reminderScript-${vehicleId}" class="text-gray-200 font-medium opacity-70">Saving...</div>`;
     
     try {
-        await PropertyDataService.write(propertyId, 'customReminderScript', newValue);
+        await VehicleDataService.write(vehicleId, 'customReminderScript', newValue);
         
         // Refresh the stats page to show updated content
-        viewPropertyStats(propertyId);
+        viewVehicleStats(vehicleId);
     } catch (error) {
         console.error('Failed to save reminder script:', error);
         alert('Failed to save. Please try again.');
         // Restore the input
-        startEditReminderScript(propertyId);
+        startEditReminderScript(vehicleId);
     }
 };
 
-window.cancelReminderEdit = function(propertyId) {
-    const tile = $(`tile-reminderScript-${propertyId}`);
+window.cancelReminderEdit = function(vehicleId) {
+    const tile = $(`tile-reminderScript-${vehicleId}`);
     if (!tile) return;
     
     const originalValue = tile.dataset.originalValue || '';
-    tile.innerHTML = `<div id="reminderScript-${propertyId}" class="text-gray-200 font-medium whitespace-pre-wrap">${originalValue}</div>`;
+    tile.innerHTML = `<div id="reminderScript-${vehicleId}" class="text-gray-200 font-medium whitespace-pre-wrap">${originalValue}</div>`;
 };
 
-window.resetReminderScript = async function(propertyId) {
+window.resetReminderScript = async function(vehicleId) {
     if (!confirm('Reset to the auto-generated reminder script?')) return;
     
     try {
-        await PropertyDataService.write(propertyId, 'customReminderScript', '');
-        viewPropertyStats(propertyId);
+        await VehicleDataService.write(vehicleId, 'customReminderScript', '');
+        viewVehicleStats(vehicleId);
     } catch (error) {
         console.error('Failed to reset reminder script:', error);
         alert('Failed to reset. Please try again.');
@@ -3451,8 +3451,8 @@ window.resetReminderScript = async function(propertyId) {
 };
 
 // ==================== SCROLL TO IMAGES SECTION ====================
-window.scrollToImagesSection = function(propertyId) {
-    const imagesSection = document.getElementById(`property-images-section-${propertyId}`);
+window.scrollToImagesSection = function(vehicleId) {
+    const imagesSection = document.getElementById(`vehicle-images-section-${vehicleId}`);
     if (imagesSection) {
         // Scroll to the section with offset for header
         imagesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3468,7 +3468,7 @@ window.scrollToImagesSection = function(propertyId) {
 };
 
 // ==================== COPY RENTER PHONE ====================
-window.copyRenterPhone = function(phoneNumber, btn) {
+window.copyBuyerPhone = function(phoneNumber, btn) {
     // Sanitize phone number - remove all non-digits
     const cleanPhone = phoneNumber.replace(/\D/g, '');
     const originalHtml = btn.innerHTML;
@@ -3568,9 +3568,9 @@ async function init() {
                 NotificationManager.init();
             }
             
-            // Start real-time property sync listener (all users)
-            if (typeof startPropertySyncListener === 'function') {
-                startPropertySyncListener();
+            // Start real-time vehicle sync listener (all users)
+            if (typeof startVehicleSyncListener === 'function') {
+                startVehicleSyncListener();
             }
             
             // Start real-time celebration listener (gamification banners)
@@ -3588,14 +3588,14 @@ async function init() {
             state.userTier = null;
             updateAuthButton(false);
             
-            // Stop existing property sync listener
-            if (typeof stopPropertySyncListener === 'function') {
-                stopPropertySyncListener();
+            // Stop existing vehicle sync listener
+            if (typeof stopVehicleSyncListener === 'function') {
+                stopVehicleSyncListener();
             }
             
-            // Load public properties for unauthenticated visitors
-            if (typeof startPropertySyncListener === 'function') {
-                startPropertySyncListener();
+            // Load public vehicles for unauthenticated visitors
+            if (typeof startVehicleSyncListener === 'function') {
+                startVehicleSyncListener();
             }
         }
     });
@@ -3605,7 +3605,7 @@ async function init() {
     if (typeof applyAllFilters === 'function') {
         applyAllFilters();
     } else {
-        renderProperties(properties);
+        renderVehicles(vehicles);
     }
 }
 
@@ -3614,49 +3614,49 @@ async function init() {
 // ============================================================================
 
 /**
- * Show the Complete Lease confirmation modal
+ * Show the Complete Sale confirmation modal
  * Displays tenure summary and confirmation before completing
  */
-window.showCompleteLeaseModal = async function(propertyId) {
+window.showCompleteSaleModal = async function(vehicleId) {
     // Prevent opening multiple modals
-    if (document.getElementById('completeLeaseModal')) {
-        console.warn('[CompleteLease] Modal already open');
+    if (document.getElementById('completeSaleModal')) {
+        console.warn('[CompleteSale] Modal already open');
         return;
     }
     
-    const p = properties.find(prop => prop.id === propertyId);
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) return;
     
-    // Get FRESH data from PropertyDataService
-    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
-    const buyerPhone = PropertyDataService.getValue(propertyId, 'buyerPhone', p.buyerPhone || '');
-    const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p.paymentFrequency || '');
+    // Get FRESH data from VehicleDataService
+    const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p.buyerName || '');
+    const buyerPhone = VehicleDataService.getValue(vehicleId, 'buyerPhone', p.buyerPhone || '');
+    const paymentFrequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', p.paymentFrequency || '');
     
     if (!buyerName) {
-        showToast('No renter assigned to this property. The lease may have already been completed.', 'error');
+        showToast('No buyer assigned to this vehicle. The sale may have already been completed.', 'error');
         // Refresh the page to show correct state
-        viewPropertyStats(propertyId);
+        viewVehicleStats(vehicleId);
         return;
     }
     
     // Calculate tenure summary from payment history
-    const tenureSummary = await calculateTenureSummary(propertyId, buyerName);
+    const tenureSummary = await calculateTenureSummary(vehicleId, buyerName);
     
     const modalHTML = `
-        <div id="completeLeaseModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeCompleteLeaseModal()">
+        <div id="completeSaleModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeCompleteSaleModal()">
             <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-orange-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Complete Lease
+                        Complete Sale
                     </h3>
                     <p class="text-orange-100 text-sm mt-1">${p.title}</p>
                 </div>
                 
                 <!-- Content -->
                 <div class="p-6">
-                    <!-- Renter Summary -->
+                    <!-- Buyer Summary -->
                     <div class="bg-gray-800 rounded-xl p-4 mb-4">
                         <div class="flex items-center gap-3 mb-3">
                             <div class="w-12 h-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
@@ -3731,8 +3731,8 @@ window.showCompleteLeaseModal = async function(propertyId) {
                                 <div class="text-yellow-400 font-bold text-sm">This will:</div>
                                 <ul class="text-yellow-200/80 text-sm mt-1 space-y-1">
                                     <li>• Archive ${buyerName}'s tenure to payment history</li>
-                                    <li>• Clear renter name, phone, notes, and payment schedule</li>
-                                    <li>• Mark property as <span class="text-green-400 font-semibold">Available</span></li>
+                                    <li>• Clear buyer name, phone, notes, and payment schedule</li>
+                                    <li>• Mark vehicle as <span class="text-green-400 font-semibold">Available</span></li>
                                     <li>• Begin tracking vacancy period</li>
                                 </ul>
                             </div>
@@ -3744,24 +3744,24 @@ window.showCompleteLeaseModal = async function(propertyId) {
                         <input type="checkbox" id="confirmKeysRemoved" class="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 bg-gray-700">
                         <div>
                             <span class="text-amber-400 font-semibold">🔑 Keys Removed</span>
-                            <p class="text-gray-400 text-xs">Confirm renter has returned all keys/access</p>
+                            <p class="text-gray-400 text-xs">Confirm buyer has returned all keys/access</p>
                         </div>
                     </label>
                     
                     <!-- Confirmation checkbox -->
                     <label class="flex items-center gap-3 cursor-pointer mb-4">
-                        <input type="checkbox" id="confirmLeaseComplete" class="w-5 h-5 rounded border-gray-600 text-green-500 focus:ring-green-500 bg-gray-700">
-                        <span class="text-gray-300">I confirm ${buyerName} is moving out and the lease is complete</span>
+                        <input type="checkbox" id="confirmSaleComplete" class="w-5 h-5 rounded border-gray-600 text-green-500 focus:ring-green-500 bg-gray-700">
+                        <span class="text-gray-300">I confirm ${buyerName} is paid in full and the sale is complete</span>
                     </label>
                     
                     <!-- Actions -->
                     <div class="flex gap-3">
-                        <button onclick="closeCompleteLeaseModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
+                        <button onclick="closeCompleteSaleModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
                             Cancel
                         </button>
-                        <button id="completeLeaseBtn" onclick="completeLease(${propertyId})" disabled class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
+                        <button id="completeSaleBtn" onclick="completeSale(${vehicleId})" disabled class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Complete Lease
+                            Complete Sale
                         </button>
                     </div>
                 </div>
@@ -3773,8 +3773,8 @@ window.showCompleteLeaseModal = async function(propertyId) {
     
     // Add checkbox listeners - both must be checked to enable button
     const keysCheckbox = document.getElementById('confirmKeysRemoved');
-    const confirmCheckbox = document.getElementById('confirmLeaseComplete');
-    const btn = document.getElementById('completeLeaseBtn');
+    const confirmCheckbox = document.getElementById('confirmSaleComplete');
+    const btn = document.getElementById('completeSaleBtn');
     
     const updateButtonState = () => {
         if (keysCheckbox.checked && confirmCheckbox.checked) {
@@ -3794,23 +3794,23 @@ window.showCompleteLeaseModal = async function(propertyId) {
 
 /**
  * Show the Repossession modal
- * For non-payment repossessions with final message to renter
+ * For non-payment repossessions with final message to buyer
  */
-window.showRepossessionModal = async function(propertyId) {
+window.showRepossessionModal = async function(vehicleId) {
     // Prevent opening multiple modals
     if (document.getElementById('repossessionModal')) {
         console.warn('[Repossession] Modal already open');
         return;
     }
     
-    const p = properties.find(prop => prop.id === propertyId);
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) return;
     
-    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
+    const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p.buyerName || '');
     
     if (!buyerName) {
-        showToast('No renter assigned to this property.', 'error');
-        viewPropertyStats(propertyId);
+        showToast('No buyer assigned to this vehicle.', 'error');
+        viewVehicleStats(vehicleId);
         return;
     }
     
@@ -3824,14 +3824,14 @@ window.showRepossessionModal = async function(propertyId) {
                 <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                        Evict Renter
+                        Repossess Vehicle
                     </h3>
                     <p class="text-red-100 text-sm mt-1">${p.title}</p>
                 </div>
                 
                 <!-- Content -->
                 <div class="p-6">
-                    <!-- Renter Info -->
+                    <!-- Buyer Info -->
                     <div class="bg-gray-800 rounded-xl p-4 mb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-lg">
@@ -3866,8 +3866,8 @@ window.showRepossessionModal = async function(propertyId) {
                                 <div class="text-yellow-400 font-bold text-sm">This will:</div>
                                 <ul class="text-yellow-200/80 text-sm mt-1 space-y-1">
                                     <li>• Record repossession in payment history</li>
-                                    <li>• Clear renter name, phone, notes, and payment schedule</li>
-                                    <li>• Mark property as <span class="text-green-400 font-semibold">Available</span></li>
+                                    <li>• Clear buyer name, phone, notes, and payment schedule</li>
+                                    <li>• Mark vehicle as <span class="text-green-400 font-semibold">Available</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -3878,7 +3878,7 @@ window.showRepossessionModal = async function(propertyId) {
                         <input type="checkbox" id="confirmRepossessionKeysRemoved" class="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 bg-gray-700">
                         <div>
                             <span class="text-amber-400 font-semibold">🔑 Keys Removed / Changed Locks</span>
-                            <p class="text-gray-400 text-xs">Confirm renter no longer has access</p>
+                            <p class="text-gray-400 text-xs">Confirm buyer no longer has access</p>
                         </div>
                     </label>
                     
@@ -3893,9 +3893,9 @@ window.showRepossessionModal = async function(propertyId) {
                         <button onclick="closeRepossessionModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
                             Cancel
                         </button>
-                        <button id="evictBtn" onclick="processRepossession(${propertyId})" disabled class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-bold transition opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
+                        <button id="evictBtn" onclick="processRepossession(${vehicleId})" disabled class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-bold transition opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                            Evict Renter
+                            Repossess Vehicle
                         </button>
                     </div>
                 </div>
@@ -3951,24 +3951,24 @@ window.copyRepossessionMessage = function() {
 };
 
 /**
- * Process repossession - same as completeLease but with repossession flag
+ * Process repossession - same as completeSale but with repossession flag
  */
-window.processRepossession = async function(propertyId) {
+window.processRepossession = async function(vehicleId) {
     const btn = document.getElementById('evictBtn');
     btn.disabled = true;
     btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Processing...';
     
     try {
-        const p = properties.find(prop => prop.id === propertyId);
-        const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', '');
-        const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', '');
+        const p = vehicles.find(prop => prop.id === vehicleId);
+        const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', '');
+        const paymentFrequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', '');
         
-        // Calculate tenure summary before clearing renter
-        const tenure = await calculateTenureSummary(propertyId, buyerName);
+        // Calculate tenure summary before clearing buyer
+        const tenure = await calculateTenureSummary(vehicleId, buyerName);
         
         // Record repossession in tenure history (NOT payment history)
         try {
-            const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+            const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
             let tenureHistory = [];
             if (historyDoc.exists) {
                 tenureHistory = historyDoc.data().tenureHistory || [];
@@ -3986,36 +3986,36 @@ window.processRepossession = async function(propertyId) {
                 recordedAt: new Date().toISOString()
             });
             
-            await db.collection('paymentHistory').doc(String(propertyId)).set({
+            await db.collection('paymentHistory').doc(String(vehicleId)).set({
                 tenureHistory: tenureHistory
             }, { merge: true });
         } catch (e) {
             console.warn('[Repossession] Could not record tenure history:', e);
         }
         
-        // Clear renter info (same as completeLease)
-        await PropertyDataService.write(propertyId, 'buyerName', '');
-        await PropertyDataService.write(propertyId, 'buyerPhone', '');
-        await PropertyDataService.write(propertyId, 'buyerNotes', '');
-        await PropertyDataService.write(propertyId, 'lastPaymentDate', '');
-        await PropertyDataService.write(propertyId, 'paymentFrequency', '');
+        // Clear buyer info (same as completeSale)
+        await VehicleDataService.write(vehicleId, 'buyerName', '');
+        await VehicleDataService.write(vehicleId, 'buyerPhone', '');
+        await VehicleDataService.write(vehicleId, 'buyerNotes', '');
+        await VehicleDataService.write(vehicleId, 'lastPaymentDate', '');
+        await VehicleDataService.write(vehicleId, 'paymentFrequency', '');
         
         // Mark as available
-        state.availability[propertyId] = true;
-        await saveAvailability(propertyId, true);
+        state.availability[vehicleId] = true;
+        await saveAvailability(vehicleId, true);
         
         closeRepossessionModal();
-        showToast(`${buyerName} has been repossessed. Property marked as available.`, 'success');
+        showToast(`${buyerName} has been repossessed. Vehicle marked as available.`, 'success');
         
         // Refresh the page
-        viewPropertyStats(propertyId);
+        viewVehicleStats(vehicleId);
         renderOwnerDashboard();
         
     } catch (error) {
         console.error('[Repossession] Error:', error);
         showToast('Error processing repossession. Please try again.', 'error');
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg> Evict Renter';
+        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg> Repossess Vehicle';
     }
 };
 
@@ -4023,19 +4023,19 @@ window.processRepossession = async function(propertyId) {
  * Calculate tenure summary from payment history
  * Properly accounts for payment frequency to determine actual tenure duration
  */
-async function calculateTenureSummary(propertyId, buyerName) {
-    const payments = await getPaymentHistory(propertyId);
-    const p = properties.find(prop => prop.id === propertyId);
+async function calculateTenureSummary(vehicleId, buyerName) {
+    const payments = await getPaymentHistory(vehicleId);
+    const p = vehicles.find(prop => prop.id === vehicleId);
     
     // Get curfinancing payment frequency
-    const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
+    const paymentFrequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
     
-    // Filter payments for this renter (case-insensitive match)
-    const renterPayments = payments.filter(pay => 
+    // Filter payments for this buyer (case-insensitive match)
+    const buyerPayments = payments.filter(pay => 
         pay.buyerName && pay.buyerName.toLowerCase() === buyerName.toLowerCase()
     );
     
-    if (renterPayments.length === 0) {
+    if (buyerPayments.length === 0) {
         return {
             totalCollected: 0,
             paymentCount: 0,
@@ -4049,11 +4049,11 @@ async function calculateTenureSummary(propertyId, buyerName) {
     }
     
     // Sort by paymentDate
-    renterPayments.sort((a, b) => new Date(a.paymentDate) - new Date(b.paymentDate));
+    buyerPayments.sort((a, b) => new Date(a.paymentDate) - new Date(b.paymentDate));
     
-    const totalCollected = renterPayments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
-    const firstDate = new Date(renterPayments[0].paymentDate);
-    const lastPaymentDate = new Date(renterPayments[renterPayments.length - 1].paymentDate);
+    const totalCollected = buyerPayments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
+    const firstDate = new Date(buyerPayments[0].paymentDate);
+    const lastPaymentDate = new Date(buyerPayments[buyerPayments.length - 1].paymentDate);
     
     // Calculate days per payment cycle based on frequency
     let daysPerCycle = 7; // default weekly
@@ -4065,7 +4065,7 @@ async function calculateTenureSummary(propertyId, buyerName) {
     // Calculate actual tenure: from first payment through end of last payment period
     // If they paid once biweekly, they stayed for 2 weeks (14 days)
     // Tenure = (number of payments) × (days per payment cycle)
-    const tenureDays = renterPayments.length * daysPerCycle;
+    const tenureDays = buyerPayments.length * daysPerCycle;
     const tenureWeeks = Math.round(tenureDays / 7 * 10) / 10; // Round to 1 decimal
     
     // Calculate the coverage end date (when the last payment period ends)
@@ -4073,11 +4073,11 @@ async function calculateTenureSummary(propertyId, buyerName) {
     coverageEndDate.setDate(coverageEndDate.getDate() + daysPerCycle);
     
     // Average payment amount
-    const avgPayment = Math.round(totalCollected / renterPayments.length);
+    const avgPayment = Math.round(totalCollected / buyerPayments.length);
     
     return {
         totalCollected: totalCollected,
-        paymentCount: renterPayments.length,
+        paymentCount: buyerPayments.length,
         firstPayment: firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         lastPayment: lastPaymentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         coverageEnd: coverageEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -4086,31 +4086,31 @@ async function calculateTenureSummary(propertyId, buyerName) {
         frequency: paymentFrequency,
         daysPerCycle: daysPerCycle,
         avgPayment: avgPayment,
-        payments: renterPayments
+        payments: buyerPayments
     };
 }
 
 /**
- * Complete the lease - archive tenure, clear renter, mark available
+ * Complete the sale - archive tenure, clear buyer, mark available
  */
-window.completeLease = async function(propertyId) {
-    const btn = document.getElementById('completeLeaseBtn');
+window.completeSale = async function(vehicleId) {
+    const btn = document.getElementById('completeSaleBtn');
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...';
     }
     
     try {
-        const p = properties.find(prop => prop.id === propertyId);
-        if (!p) throw new Error('Property not found');
+        const p = vehicles.find(prop => prop.id === vehicleId);
+        if (!p) throw new Error('Vehicle not found');
         
-        const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
-        const buyerPhone = PropertyDataService.getValue(propertyId, 'buyerPhone', p.buyerPhone || '');
-        const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p.paymentFrequency || '');
-        const buyerNotes = PropertyDataService.getValue(propertyId, 'buyerNotes', p.buyerNotes || '');
+        const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p.buyerName || '');
+        const buyerPhone = VehicleDataService.getValue(vehicleId, 'buyerPhone', p.buyerPhone || '');
+        const paymentFrequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', p.paymentFrequency || '');
+        const buyerNotes = VehicleDataService.getValue(vehicleId, 'buyerNotes', p.buyerNotes || '');
         
         // Get tenure summary
-        const tenureSummary = await calculateTenureSummary(propertyId, buyerName);
+        const tenureSummary = await calculateTenureSummary(vehicleId, buyerName);
         
         // Create tenure record with all details
         const tenureRecord = {
@@ -4133,26 +4133,26 @@ window.completeLease = async function(propertyId) {
         };
         
         // Save tenure to history
-        await saveTenureHistory(propertyId, tenureRecord);
+        await saveTenureHistory(vehicleId, tenureRecord);
         
-        // Award XP for completing a lease
+        // Award XP for completing a sale
         if (typeof GamificationService !== 'undefined' && GamificationService.awardXP) {
             const userId = auth.currentUser?.uid;
             if (userId) {
-                const propertyTitle = p?.title || `Property #${propertyId}`;
-                await GamificationService.awardXP(userId, 100, `Completed lease on ${propertyTitle} - $${tenureSummary.totalCollected.toLocaleString()} collected`);
+                const vehicleTitle = p?.title || `Vehicle #${vehicleId}`;
+                await GamificationService.awardXP(userId, 100, `Completed sale of ${vehicleTitle} - $${tenureSummary.totalCollected.toLocaleString()} collected`);
             }
         }
         
-        // Clear renter data (this clears BOTH Firestore docs and all local caches)
-        await clearRenterData(propertyId);
+        // Clear buyer data (this clears BOTH Firestore docs and all local caches)
+        await clearBuyerData(vehicleId);
         
-        // Mark property as available
-        state.availability[propertyId] = true;
-        await saveAvailability(propertyId, true);
+        // Mark vehicle as available
+        state.availability[vehicleId] = true;
+        await saveAvailability(vehicleId, true);
         
         // Log vacancy start
-        await logVacancyStart(propertyId);
+        await logVacancyStart(vehicleId);
         
         // Update button to show success (prevent double-click)
         if (btn) {
@@ -4163,14 +4163,14 @@ window.completeLease = async function(propertyId) {
         
         // Close modal and show success after a brief delay for Firestore to propagate
         setTimeout(async () => {
-            closeCompleteLeaseModal();
+            closeCompleteSaleModal();
             
             // Show thank you message modal for owner to copy
-            showLeaseCompletionMessage(buyerName, p.title, tenureSummary.totalCollected);
+            showSaleCompletionMessage(buyerName, p.title, tenureSummary.totalCollected);
             
-            // Force refresh ALL data - clear local property object
-            const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
-            const prop = properties.find(p => p.id === numericId);
+            // Force refresh ALL data - clear local vehicle object
+            const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+            const prop = vehicles.find(p => p.id === numericId);
             if (prop) {
                 prop.buyerName = '';
                 prop.buyerPhone = '';
@@ -4179,23 +4179,23 @@ window.completeLease = async function(propertyId) {
                 prop.lastPaymentDate = '';
             }
             
-            console.log('[CompleteLease] Pre-refresh state clear done');
+            console.log('[CompleteSale] Pre-refresh state clear done');
             
             // Update all relevant UI components
-            renderProperties(state.filteredProperties);
+            renderVehicles(state.filteredVehicles);
             if (state.currentUser === 'owner') renderOwnerDashboard();
             
             // Force re-render the stats page with guaranteed clean data
-            renderPropertyStatsContent(propertyId);
+            renderVehicleStatsContent(vehicleId);
         }, 1200);
         
     } catch (error) {
-        console.error('[CompleteLease] Error:', error);
-        showToast('Error completing lease: ' + error.message, 'error');
+        console.error('[CompleteSale] Error:', error);
+        showToast('Error completing sale: ' + error.message, 'error');
         
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Complete Lease';
+            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Complete Sale';
         }
     }
 };
@@ -4203,9 +4203,9 @@ window.completeLease = async function(propertyId) {
 /**
  * Save tenure record to Firestore
  */
-async function saveTenureHistory(propertyId, tenureRecord) {
+async function saveTenureHistory(vehicleId, tenureRecord) {
     try {
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         let data = historyDoc.exists ? historyDoc.data() : { payments: [] };
         
         // Initialize tenureHistory array if doesn't exist
@@ -4217,7 +4217,7 @@ async function saveTenureHistory(propertyId, tenureRecord) {
         data.tenureHistory.push(tenureRecord);
         
         // Save back
-        await db.collection('paymentHistory').doc(String(propertyId)).set({
+        await db.collection('paymentHistory').doc(String(vehicleId)).set({
             ...data,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -4231,17 +4231,17 @@ async function saveTenureHistory(propertyId, tenureRecord) {
 
 /**
  * Delete a tenure record from Firestore
- * @param {number} propertyId - The property ID
+ * @param {number} vehicleId - The vehicle ID
  * @param {string} tenureId - The tenure record ID to delete
  */
-window.deleteTenureRecord = async function(propertyId, tenureId) {
+window.deleteTenureRecord = async function(vehicleId, tenureId) {
     // Confirm deletion
-    const confirmed = confirm('Are you sure you want to delete this tenure record?\n\nThis will remove the historical data for this renter\'s lease period.\n\nNote: This will also clear any associated vacancy tracking.\n\nThis action cannot be undone.');
+    const confirmed = confirm('Are you sure you want to delete this tenure record?\n\nThis will remove the historical data for this buyer\'s financing period.\n\nNote: This will also clear any associated vacancy tracking.\n\nThis action cannot be undone.');
     
     if (!confirmed) return;
     
     try {
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         if (!historyDoc.exists) {
             showToast('Error: Payment history not found', 'error');
             return;
@@ -4266,7 +4266,7 @@ window.deleteTenureRecord = async function(propertyId, tenureId) {
             return;
         }
         
-        // Also remove any ongoing vacancy period that was created when this lease completed
+        // Also remove any ongoing vacancy period that was created when this sale completed
         // This helps with testing and data consistency
         if (data.vacancyPeriods && data.vacancyPeriods.length > 0) {
             // Remove ongoing vacancy periods (usually there should only be one)
@@ -4274,7 +4274,7 @@ window.deleteTenureRecord = async function(propertyId, tenureId) {
         }
         
         // Save back to Firestore
-        await db.collection('paymentHistory').doc(String(propertyId)).set({
+        await db.collection('paymentHistory').doc(String(vehicleId)).set({
             ...data,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -4282,11 +4282,11 @@ window.deleteTenureRecord = async function(propertyId, tenureId) {
         showToast('✅ Tenure record deleted successfully', 'success');
         
         // Refresh the analytics section
-        if (typeof renderPropertyAnalytics === 'function') {
-            renderPropertyAnalytics(propertyId);
+        if (typeof renderVehicleAnalytics === 'function') {
+            renderVehicleAnalytics(vehicleId);
         }
         
-        console.log('[TenureHistory] Deleted tenure:', tenureId, 'from property:', propertyId);
+        console.log('[TenureHistory] Deleted tenure:', tenureId, 'from vehicle:', vehicleId);
         
     } catch (error) {
         console.error('[TenureHistory] Error deleting:', error);
@@ -4295,10 +4295,10 @@ window.deleteTenureRecord = async function(propertyId, tenureId) {
 };
 
 /**
- * Clear all renter-related data from property
- * UNIFIED ARCHITECTURE: All data writes to settings/properties
+ * Clear all buyer-related data from vehicle
+ * UNIFIED ARCHITECTURE: All data writes to settings/vehicles
  */
-async function clearRenterData(propertyId) {
+async function clearBuyerData(vehicleId) {
     const fieldsToClean = [
         'buyerName',
         'buyerPhone', 
@@ -4307,12 +4307,12 @@ async function clearRenterData(propertyId) {
         'lastPaymentDate'
     ];
     
-    const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
-    const prop = properties.find(p => p.id === numericId);
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+    const prop = vehicles.find(p => p.id === numericId);
     
-    console.log('[ClearRenterData] Starting clear for property:', numericId);
+    console.log('[ClearBuyerData] Starting clear for vehicle:', numericId);
     
-    // STEP 1: Clear local property object immediately
+    // STEP 1: Clear local vehicle object immediately
     if (prop) {
         prop.buyerName = '';
         prop.buyerPhone = '';
@@ -4321,10 +4321,10 @@ async function clearRenterData(propertyId) {
         prop.lastPaymentDate = '';
     }
     
-    console.log('[ClearRenterData] Local state cleared');
+    console.log('[ClearBuyerData] Local state cleared');
     
     try {
-        // UNIFIED: All properties write to settings/properties
+        // UNIFIED: All vehicles write to settings/vehicles
         const updateData = {};
         fieldsToClean.forEach(field => {
             updateData[`${numericId}.${field}`] = '';
@@ -4332,13 +4332,13 @@ async function clearRenterData(propertyId) {
         updateData[`${numericId}.updatedAt`] = firebase.firestore.FieldValue.serverTimestamp();
         updateData[`${numericId}.clearedBy`] = auth.currentUser?.email || 'system-clear';
         
-        await db.collection('settings').doc('properties').update(updateData);
+        await db.collection('settings').doc('vehicles').update(updateData);
         
-        console.log('[ClearRenterData] Successfully cleared all renter data for property:', numericId);
-        console.log('[ClearRenterData] property object:', prop ? { buyerName: prop.buyerName, paymentFrequency: prop.paymentFrequency } : 'not found');
+        console.log('[ClearBuyerData] Successfully cleared all buyer data for vehicle:', numericId);
+        console.log('[ClearBuyerData] vehicle object:', prop ? { buyerName: prop.buyerName, paymentFrequency: prop.paymentFrequency } : 'not found');
         
     } catch (error) {
-        console.error('[ClearRenterData] Error clearing data:', error);
+        console.error('[ClearBuyerData] Error clearing data:', error);
         throw error;
     }
 }
@@ -4346,9 +4346,9 @@ async function clearRenterData(propertyId) {
 /**
  * Log vacancy start date for tracking
  */
-async function logVacancyStart(propertyId) {
+async function logVacancyStart(vehicleId) {
     try {
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         let data = historyDoc.exists ? historyDoc.data() : { payments: [] };
         
         // Initialize vacancyPeriods array if doesn't exist
@@ -4356,7 +4356,7 @@ async function logVacancyStart(propertyId) {
             data.vacancyPeriods = [];
         }
         
-        // Add new vacancy period (start only, endDate will be set when new renter moves in)
+        // Add new vacancy period (start only, endDate will be set when new buyer assigned)
         data.vacancyPeriods.push({
             startDate: new Date().toISOString(),
             endDate: null,
@@ -4364,7 +4364,7 @@ async function logVacancyStart(propertyId) {
         });
         
         // Save back
-        await db.collection('paymentHistory').doc(String(propertyId)).set({
+        await db.collection('paymentHistory').doc(String(vehicleId)).set({
             ...data,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -4375,11 +4375,11 @@ async function logVacancyStart(propertyId) {
 }
 
 /**
- * End vacancy period when new renter moves in
+ * End vacancy period when new buyer assigned
  */
-async function endVacancyPeriod(propertyId) {
+async function endVacancyPeriod(vehicleId) {
     try {
-        const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+        const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
         if (!historyDoc.exists) return;
         
         let data = historyDoc.data();
@@ -4397,7 +4397,7 @@ async function endVacancyPeriod(propertyId) {
             data.vacancyPeriods[ongoingIndex].durationDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
             
             // Save back
-            await db.collection('paymentHistory').doc(String(propertyId)).set({
+            await db.collection('paymentHistory').doc(String(vehicleId)).set({
                 ...data,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -4412,34 +4412,34 @@ async function endVacancyPeriod(propertyId) {
 window.endVacancyPeriod = endVacancyPeriod;
 
 /**
- * Close the complete lease modal
+ * Close the complete sale modal
  */
-window.closeCompleteLeaseModal = function() {
-    const modal = document.getElementById('completeLeaseModal');
+window.closeCompleteSaleModal = function() {
+    const modal = document.getElementById('completeSaleModal');
     if (modal) modal.remove();
 };
 
 /**
- * Show thank you message modal after lease completion
- * Gives owner a copy-paste message to send to the renter
+ * Show thank you message modal after sale completion
+ * Gives owner a copy-paste message to send to the buyer
  */
-window.showLeaseCompletionMessage = function(buyerName, propertyTitle, totalCollected) {
+window.showSaleCompletionMessage = function(buyerName, vehicleTitle, totalCollected) {
     // Remove any existing modal
-    const existing = document.getElementById('leaseCompletionMessageModal');
+    const existing = document.getElementById('saleCompletionMessageModal');
     if (existing) existing.remove();
     
-    const thankYouMessage = `Hey ${buyerName}, congratulations on completing your financing plan for ${propertyTitle}! 🎉 It was a pleasure working with you. Your total payments of $${totalCollected.toLocaleString()} have all been recorded. The vehicle is now fully yours! If you're ever looking to buy or sell another vehicle, hit me up anytime! 🚗`;
+    const thankYouMessage = `Hey ${buyerName}, congratulations on completing your financing plan for ${vehicleTitle}! 🎉 It was a pleasure working with you. Your total payments of $${totalCollected.toLocaleString()} have all been recorded. The vehicle is now fully yours! If you're ever looking to buy or sell another vehicle, hit me up anytime! 🚗`;
     
     const modalHTML = `
-        <div id="leaseCompletionMessageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeLeaseCompletionMessageModal()">
+        <div id="saleCompletionMessageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeSaleCompletionMessageModal()">
             <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-green-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        Lease Completed Successfully!
+                        Sale Completed Successfully!
                     </h3>
-                    <p class="text-green-100 text-sm mt-1">${propertyTitle}</p>
+                    <p class="text-green-100 text-sm mt-1">${vehicleTitle}</p>
                 </div>
                 
                 <div class="p-6">
@@ -4450,7 +4450,7 @@ window.showLeaseCompletionMessage = function(buyerName, propertyTitle, totalColl
                                 🎉
                             </div>
                             <div>
-                                <div class="text-white font-bold">${buyerName}'s lease complete</div>
+                                <div class="text-white font-bold">${buyerName}'s sale complete</div>
                                 <div class="text-green-400 text-sm">Total collected: $${totalCollected.toLocaleString()}</div>
                             </div>
                         </div>
@@ -4463,12 +4463,12 @@ window.showLeaseCompletionMessage = function(buyerName, propertyTitle, totalColl
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                                 Thank You Message
                             </h4>
-                            <button onclick="copyLeaseCompletionMessage()" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-lg font-semibold transition flex items-center gap-1">
+                            <button onclick="copySaleCompletionMessage()" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-lg font-semibold transition flex items-center gap-1">
                                 📋 Copy
                             </button>
                         </div>
-                        <textarea id="leaseCompletionMessageText" class="w-full bg-gray-900 text-gray-200 rounded-lg p-3 text-sm resize-none border border-gray-600" rows="5">${thankYouMessage}</textarea>
-                        <p class="text-gray-500 text-xs mt-2">Send this message to thank your renter for their business!</p>
+                        <textarea id="saleCompletionMessageText" class="w-full bg-gray-900 text-gray-200 rounded-lg p-3 text-sm resize-none border border-gray-600" rows="5">${thankYouMessage}</textarea>
+                        <p class="text-gray-500 text-xs mt-2">Send this message to thank your buyer for their business!</p>
                     </div>
                     
                     <!-- XP Earned -->
@@ -4477,13 +4477,13 @@ window.showLeaseCompletionMessage = function(buyerName, propertyTitle, totalColl
                             <span class="text-2xl">⭐</span>
                             <div>
                                 <div class="text-amber-400 font-bold text-sm">+100 XP Earned!</div>
-                                <div class="text-amber-200/70 text-xs">For completing a lease successfully</div>
+                                <div class="text-amber-200/70 text-xs">For completing a sale successfully</div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Close Button -->
-                    <button onclick="closeLeaseCompletionMessageModal()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-4 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                    <button onclick="closeSaleCompletionMessageModal()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-4 rounded-xl font-bold transition flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         Done
                     </button>
@@ -4495,8 +4495,8 @@ window.showLeaseCompletionMessage = function(buyerName, propertyTitle, totalColl
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
 
-window.copyLeaseCompletionMessage = function() {
-    const textarea = document.getElementById('leaseCompletionMessageText');
+window.copySaleCompletionMessage = function() {
+    const textarea = document.getElementById('saleCompletionMessageText');
     if (textarea) {
         textarea.select();
         document.execCommand('copy');
@@ -4504,8 +4504,8 @@ window.copyLeaseCompletionMessage = function() {
     }
 };
 
-window.closeLeaseCompletionMessageModal = function() {
-    const modal = document.getElementById('leaseCompletionMessageModal');
+window.closeSaleCompletionMessageModal = function() {
+    const modal = document.getElementById('saleCompletionMessageModal');
     if (modal) modal.remove();
 };
 
@@ -4515,9 +4515,9 @@ window.closeLeaseCompletionMessageModal = function() {
 
 // Store wizard state
 window.rtoWizardState = {
-    propertyId: null,
+    vehicleId: null,
     step: 1,
-    property: null,
+    vehicle: null,
     buyer: {
         name: '',
         useExisting: true
@@ -4537,10 +4537,10 @@ window.rtoWizardState = {
 /**
  * Show the Financing Plan Wizard
  */
-window.showRentToOwnWizard = async function(propertyId) {
-    const p = properties.find(prop => prop.id === propertyId);
+window.showRentToOwnWizard = async function(vehicleId) {
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) {
-        showToast('Property not found', 'error');
+        showToast('Vehicle not found', 'error');
         return;
     }
     
@@ -4557,55 +4557,55 @@ window.showRentToOwnWizard = async function(propertyId) {
     // Get the PROPERTY OWNER's display name using the same method as owner badge
     let sellerName = '';
     try {
-        const ownerInfo = await getPropertyOwnerWithTier(propertyId);
+        const ownerInfo = await getVehicleOwnerWithTier(vehicleId);
         sellerName = ownerInfo.display || ownerInfo.username || '';
-        console.log('[RTO] Got owner from getPropertyOwnerWithTier:', sellerName);
+        console.log('[RTO] Got owner from getVehicleOwnerWithTier:', sellerName);
     } catch (e) {
-        console.warn('Could not get seller name from getPropertyOwnerWithTier:', e);
+        console.warn('Could not get seller name from getVehicleOwnerWithTier:', e);
     }
     
-    // Fallback to PropertyDataService
+    // Fallback to VehicleDataService
     if (!sellerName || sellerName === 'Unassigned') {
-        sellerName = PropertyDataService.getValue(propertyId, 'ownerName', p.ownerName || '');
+        sellerName = VehicleDataService.getValue(vehicleId, 'ownerName', p.ownerName || '');
     }
     
-    // Get renter name
-    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
+    // Get buyer name
+    const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p.buyerName || '');
     
-    // Get property description - stored in 'location' field in the database
+    // Get vehicle description - stored in 'location' field in the database
     // Try multiple sources to find the description
-    let propertyDescription = '';
+    let vehicleDescription = '';
     try {
-        // Try PropertyDataService first
-        propertyDescription = PropertyDataService.getValue(propertyId, 'location', '');
-        console.log('[RTO] Description from PropertyDataService:', propertyDescription);
+        // Try VehicleDataService first
+        vehicleDescription = VehicleDataService.getValue(vehicleId, 'location', '');
+        console.log('[RTO] Description from VehicleDataService:', vehicleDescription);
         
-        // Fallback to property object
-        if (!propertyDescription) {
-            propertyDescription = p.location || '';
-            console.log('[RTO] Description from p.location:', propertyDescription);
+        // Fallback to vehicle object
+        if (!vehicleDescription) {
+            vehicleDescription = p.location || '';
+            console.log('[RTO] Description from p.location:', vehicleDescription);
         }
         
         // Last fallback - try description field
-        if (!propertyDescription) {
-            propertyDescription = PropertyDataService.getValue(propertyId, 'description', '') || p.description || '';
-            console.log('[RTO] Description from description field:', propertyDescription);
+        if (!vehicleDescription) {
+            vehicleDescription = VehicleDataService.getValue(vehicleId, 'description', '') || p.description || '';
+            console.log('[RTO] Description from description field:', vehicleDescription);
         }
     } catch (e) {
-        propertyDescription = p.location || p.description || '';
-        console.log('[RTO] Description from fallback:', propertyDescription);
+        vehicleDescription = p.location || p.description || '';
+        console.log('[RTO] Description from fallback:', vehicleDescription);
     }
-    console.log('[RTO] Final property description:', propertyDescription);
+    console.log('[RTO] Final vehicle description:', vehicleDescription);
     
     // Get buy price
     let buyPrice = 0;
     try {
-        buyPrice = parseInt(PropertyDataService.getValue(propertyId, 'buyPrice', 0)) || parseInt(p.buyPrice) || 0;
+        buyPrice = parseInt(VehicleDataService.getValue(vehicleId, 'buyPrice', 0)) || parseInt(p.buyPrice) || 0;
     } catch (e) {
         buyPrice = parseInt(p.buyPrice) || 0;
     }
     
-    // Get PMA Government minimum final payment based on property type
+    // Get PMA Government minimum final payment based on vehicle type
     const minPriceInfo = getMinimumBuyPrice(p);
     const finalPaymentBase = minPriceInfo.min;
     const finalPaymentFee = Math.round(finalPaymentBase * 0.10);
@@ -4618,10 +4618,10 @@ window.showRentToOwnWizard = async function(propertyId) {
     
     // Initialize wizard state
     window.rtoWizardState = {
-        propertyId: propertyId,
+        vehicleId: vehicleId,
         step: 1,
-        property: { ...p, description: propertyDescription },
-        existingRenter: buyerName,
+        vehicle: { ...p, description: vehicleDescription },
+        existingBuyer: buyerName,
         existingSeller: sellerName,
         buyer: {
             name: buyerName,
@@ -4636,13 +4636,13 @@ window.showRentToOwnWizard = async function(propertyId) {
             finalPaymentBase: finalPaymentBase,
             finalPaymentFee: finalPaymentFee,
             finalPaymentTotal: finalPaymentTotal,
-            propertyCategory: minPriceInfo.category
+            vehicleCategory: minPriceInfo.category
         }
     };
     
     console.log('[RTO] Wizard initialized:', {
         seller: sellerName,
-        renter: buyerName,
+        buyer: buyerName,
         buyPrice: buyPrice,
         finalPayment: finalPaymentBase,
         category: minPriceInfo.category
@@ -4676,7 +4676,7 @@ function showRTOUpgradeRequired() {
                     <div class="bg-purple-900/30 border border-purple-500/30 rounded-xl p-4 mb-6">
                         <div class="text-purple-300 font-bold mb-2">Elite Benefits Include:</div>
                         <ul class="text-gray-300 text-sm space-y-1 text-left">
-                            <li>✓ Unlimited property listings</li>
+                            <li>✓ Unlimited vehicle listings</li>
                             <li>✓ Financing Plan contract generator</li>
                             <li>✓ Priority support</li>
                             <li>✓ Advanced analytics</li>
@@ -4693,7 +4693,7 @@ function showRTOUpgradeRequired() {
 }
 
 /**
- * Get PMA Government minimum final payment based on property type
+ * Get PMA Government minimum final payment based on vehicle type
  * These are FINAL PAYMENT minimums, not buy prices
  * Apartments 600 storage - $700k
  * Hotel 800 Storage - $750k
@@ -4702,25 +4702,25 @@ function showRTOUpgradeRequired() {
  * Instance House 1000+ - $1.2 Mil
  * Walk In House - $1.5m
  */
-function getMinimumBuyPrice(property) {
-    const title = (property.title || '').toLowerCase();
-    const type = (property.type || '').toLowerCase();
-    const description = (property.description || '').toLowerCase();
+function getMinimumBuyPrice(vehicle) {
+    const title = (vehicle.title || '').toLowerCase();
+    const type = (vehicle.type || '').toLowerCase();
+    const description = (vehicle.description || '').toLowerCase();
     
-    // Get interiorType from property - try PropertyDataService first, then property object
+    // Get interiorType from vehicle - try VehicleDataService first, then vehicle object
     let interiorType = '';
-    if (property.id) {
-        interiorType = (PropertyDataService.getValue(property.id, 'interiorType', property.interiorType || '') || '').toLowerCase();
+    if (vehicle.id) {
+        interiorType = (VehicleDataService.getValue(vehicle.id, 'interiorType', vehicle.interiorType || '') || '').toLowerCase();
     } else {
-        interiorType = (property.interiorType || '').toLowerCase();
+        interiorType = (vehicle.interiorType || '').toLowerCase();
     }
     
     // Get storage space - check multiple sources
     let storageSpace = 0;
-    if (property.id) {
-        storageSpace = parseInt(PropertyDataService.getValue(property.id, 'storageSpace', property.storageSpace || 0)) || 0;
+    if (vehicle.id) {
+        storageSpace = parseInt(VehicleDataService.getValue(vehicle.id, 'storageSpace', vehicle.storageSpace || 0)) || 0;
     } else {
-        storageSpace = parseInt(property.storageSpace) || 0;
+        storageSpace = parseInt(vehicle.storageSpace) || 0;
     }
     
     // Also try to find storage in title/description
@@ -4731,7 +4731,7 @@ function getMinimumBuyPrice(property) {
         }
     }
     
-    console.log('[RTO] Detecting property type:', { interiorType, type, storageSpace, title });
+    console.log('[RTO] Detecting vehicle type:', { interiorType, type, storageSpace, title });
     
     // Check for walk-in house first (highest tier) - $1.5M
     // Case-insensitive check for any variation of "walk-in" or "walkin"
@@ -4795,28 +4795,28 @@ function renderRTOWizardStep(step) {
     
     if (step === 1) {
         title = 'Step 1: Parties Information';
-        const existingRenter = state.existingRenter || '';
+        const existingBuyer = state.existingBuyer || '';
         const existingSeller = state.existingSeller || '';
-        const hasExisting = existingRenter && existingSeller;
+        const hasExisting = existingBuyer && existingSeller;
         
         content = `
             <div class="space-y-4">
                 <p class="text-gray-400 text-sm">Who are the parties for this rent-to-own agreement?</p>
                 
-                <!-- Option A: Use Current Renter & Seller -->
+                <!-- Option A: Use Current Buyer & Seller -->
                 <label class="block p-4 bg-gray-800 rounded-xl cursor-pointer border-2 ${state.buyer.useExisting ? 'border-amber-500' : 'border-transparent'} hover:border-amber-500 transition" onclick="selectRTOPartiesOption(true)">
                     <div class="flex items-center gap-3">
                         <input type="radio" name="partiesSource" id="useExisting" ${state.buyer.useExisting ? 'checked' : ''} class="w-5 h-5 text-amber-500">
                         <div class="flex-1">
-                            <div class="text-white font-semibold">Use Current Renter & Owner</div>
-                            <div class="text-gray-400 text-xs">Use the existing property parties</div>
+                            <div class="text-white font-semibold">Use Current Buyer & Owner</div>
+                            <div class="text-gray-400 text-xs">Use the existing vehicle parties</div>
                         </div>
                     </div>
                     ${hasExisting ? `
                     <div class="mt-3 pl-8 grid grid-cols-2 gap-4">
                         <div class="bg-gray-700/50 rounded-lg p-3">
                             <div class="text-gray-500 text-xs mb-1">Buyer/Tenant</div>
-                            <div class="text-green-400 font-semibold">👤 ${existingRenter}</div>
+                            <div class="text-green-400 font-semibold">👤 ${existingBuyer}</div>
                         </div>
                         <div class="bg-gray-700/50 rounded-lg p-3">
                             <div class="text-gray-500 text-xs mb-1">Seller/Landlord</div>
@@ -4825,7 +4825,7 @@ function renderRTOWizardStep(step) {
                     </div>
                     ` : `
                     <div class="mt-3 pl-8 text-red-400 text-sm">
-                        ⚠️ ${!existingRenter ? 'No renter assigned. ' : ''}${!existingSeller ? 'No owner found.' : ''}
+                        ⚠️ ${!existingBuyer ? 'No buyer assigned. ' : ''}${!existingSeller ? 'No owner found.' : ''}
                     </div>
                     `}
                 </label>
@@ -4931,7 +4931,7 @@ function renderRTOWizardStep(step) {
                     </h4>
                     <div class="bg-amber-900/40 border border-amber-600/50 rounded-lg p-2 mb-3">
                         <div class="text-amber-300 text-xs font-bold">📋 PMA Government Minimum</div>
-                        <div class="text-amber-200 text-xs">Category: <span id="rtoPropertyCategory">${f.propertyCategory || 'Detecting...'}</span></div>
+                        <div class="text-amber-200 text-xs">Category: <span id="rtoPropertyCategory">${f.vehicleCategory || 'Detecting...'}</span></div>
                     </div>
                     <div class="space-y-2">
                         <div class="flex justify-between items-center">
@@ -4947,7 +4947,7 @@ function renderRTOWizardStep(step) {
                             <span id="rtoFinalTotal" class="text-green-400 font-bold text-lg">$${(f.finalPaymentTotal || 0).toLocaleString()}</span>
                         </div>
                     </div>
-                    <p class="text-gray-500 text-xs mt-2">Final payment set by PMA Government regulations based on property type.</p>
+                    <p class="text-gray-500 text-xs mt-2">Final payment set by PMA Government regulations based on vehicle type.</p>
                 </div>
                 
                 <!-- Calculated Summary -->
@@ -4984,13 +4984,13 @@ function renderRTOWizardStep(step) {
         
         content = `
             <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                <!-- Property Info -->
+                <!-- Vehicle Info -->
                 <div class="bg-gray-800 rounded-xl p-4">
                     <h4 class="text-amber-400 font-bold mb-2 flex items-center gap-2">
-                        <span>🚗</span> Property
+                        <span>🚗</span> Vehicle
                     </h4>
-                    <div class="text-white font-semibold">${state.property.title}</div>
-                    <div class="text-gray-400 text-sm mt-1">${state.property.description || 'No description available'}</div>
+                    <div class="text-white font-semibold">${state.vehicle.title}</div>
+                    <div class="text-gray-400 text-sm mt-1">${state.vehicle.description || 'No description available'}</div>
                 </div>
                 
                 <!-- Parties -->
@@ -5050,7 +5050,7 @@ function renderRTOWizardStep(step) {
                             <span class="text-amber-300 font-bold">$${calc.finalPaymentTotal.toLocaleString()}</span>
                         </div>
                     </div>
-                    <div class="mt-2 text-xs text-amber-400">📋 Property Category: ${calc.propertyCategory}</div>
+                    <div class="mt-2 text-xs text-amber-400">📋 Vehicle Category: ${calc.vehicleCategory}</div>
                 </div>
                 
                 <!-- Agreement Date -->
@@ -5118,7 +5118,7 @@ function renderRTOWizardStep(step) {
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             Financing Plan Contract
                         </h3>
-                        <p class="text-gray-900/70 text-sm mt-1">${state.property.title}</p>
+                        <p class="text-gray-900/70 text-sm mt-1">${state.vehicle.title}</p>
                     </div>
                     <button onclick="closeRTOWizard()" class="bg-gray-900/30 hover:bg-gray-900/50 text-gray-900 p-2 rounded-full transition" title="Close">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -5172,7 +5172,7 @@ function renderRTOWizardStep(step) {
 }
 
 /**
- * Select buyer option (existing renter or manual entry)
+ * Select buyer option (existing buyer or manual entry)
  */
 /**
  * Select parties option (use existing or manual entry)
@@ -5202,7 +5202,7 @@ window.selectRTOPartiesOption = function(useExisting) {
         if (manualInputs) manualInputs.classList.add('hidden');
         
         // Use existing names
-        state.buyer.name = state.existingRenter || '';
+        state.buyer.name = state.existingBuyer || '';
         state.seller = state.existingSeller || '';
     } else {
         if (useExistingRadio) useExistingRadio.checked = false;
@@ -5226,7 +5226,7 @@ window.nextRTOStep = function() {
         let buyerName, sellerName;
         
         if (state.buyer.useExisting) {
-            buyerName = state.existingRenter;
+            buyerName = state.existingBuyer;
             sellerName = state.existingSeller;
         } else {
             buyerName = document.getElementById('rtoBuyerName')?.value?.trim();
@@ -5375,7 +5375,7 @@ window.updateRTOTermMonths = function(months) {
 /**
  * Update calculations in real-time
  * Logic:
- * - Final Payment = PMA Government Minimum (based on property type) + 10% PMA Realtor Fee
+ * - Final Payment = PMA Government Minimum (based on vehicle type) + 10% PMA Realtor Fee
  * - Amount for Monthly = Purchase Price - Down Payment - Final Payment Base
  * - Monthly Payment = Amount for Monthly / (Term Months - 1)
  */
@@ -5447,7 +5447,7 @@ window.updateRTOCalculations = function() {
     if (calcMonthsCount) calcMonthsCount.textContent = monthlyPayments;
     if (monthlyEl) monthlyEl.textContent = '$' + monthlyPayment.toLocaleString() + '/mo';
     
-    // Update state (preserve propertyCategory)
+    // Update state (preserve vehicleCategory)
     state.financial = {
         ...state.financial,
         purchasePrice,
@@ -5496,7 +5496,7 @@ function calculateRTOTerms() {
         finalPaymentBase,
         finalPaymentFee,
         finalPaymentTotal,
-        propertyCategory: f.propertyCategory || 'Unknown',
+        vehicleCategory: f.vehicleCategory || 'Unknown',
         realtorFeePercent: 10
     };
 }
@@ -5568,7 +5568,7 @@ function generateRTOContract() {
     }
     
     // Build preview text - use location as fallback for description
-    const propertyDesc = state.property.description || state.property.location || 'N/A';
+    const vehicleDesc = state.vehicle.description || state.vehicle.location || 'N/A';
     const preview = `
 ═══════════════════════════════════════════════════════════════
                     RENT-TO-OWN AGREEMENT
@@ -5577,10 +5577,10 @@ function generateRTOContract() {
 
 PROPERTY INFORMATION
 ────────────────────────────────────────────────────────────────
-Address: ${state.property.title}
-Property Description: ${propertyDesc}
+Address: ${state.vehicle.title}
+Vehicle Description: ${vehicleDesc}
 Listing Type: Financing Plan
-Property Category: ${calc.propertyCategory}
+Vehicle Category: ${calc.vehicleCategory}
 
 PARTIES INVOLVED
 ────────────────────────────────────────────────────────────────
@@ -5614,7 +5614,7 @@ FINAL PAYMENT BREAKDOWN
 • Base Final Payment (PMA Min): $${calc.finalPaymentBase.toLocaleString()}
 • PMA Realtor Fee (10%): $${calc.finalPaymentFee.toLocaleString()}
 • Total Final Payment: $${calc.finalPaymentTotal.toLocaleString()}
-• Property Category: ${calc.propertyCategory}
+• Vehicle Category: ${calc.vehicleCategory}
 
 CONTRACT TERMS
 ────────────────────────────────────────────────────────────────
@@ -5632,7 +5632,7 @@ Default:
 • Seller retains all previous payments as liquidated damages
 • Buyer must vacate within 72 hours of default notice
 
-Property Maintenance:
+Vehicle Maintenance:
 • Buyer responsible for all maintenance
 • No major modifications without seller consent
 
@@ -5749,9 +5749,9 @@ window.saveRTOContract = async function() {
         // Save contract to Firestore
         await db.collection('financingContracts').doc(contract.documentId).set({
             documentId: contract.documentId,
-            propertyId: state.propertyId,
-            propertyTitle: state.property.title,
-            propertyDescription: state.property.description,
+            vehicleId: state.vehicleId,
+            vehicleTitle: state.vehicle.title,
+            vehicleDescription: state.vehicle.description,
             seller: state.seller,
             buyer: state.buyer.name,
             financial: state.financial,
@@ -5776,8 +5776,8 @@ window.saveRTOContract = async function() {
             contractText: contract.preview
         });
         
-        // Update property with Financing info and clear daily/biweekly, set monthly to contract payment
-        const propertyUpdates = {
+        // Update vehicle with Financing info and clear daily/biweekly, set monthly to contract payment
+        const vehicleUpdates = {
             // Clear daily and biweekly
             dailyPrice: 0,
             biweeklyPrice: 0,
@@ -5803,11 +5803,11 @@ window.saveRTOContract = async function() {
             paymentFrequency: 'monthly'
         };
         
-        // Update property via PropertyDataService (writes to settings/properties)
-        await PropertyDataService.writeMultiple(state.propertyId, propertyUpdates);
+        // Update vehicle via VehicleDataService (writes to settings/vehicles)
+        await VehicleDataService.writeMultiple(state.vehicleId, vehicleUpdates);
         
         const depositMsg = isZeroDeposit ? ' ($0 deposit auto-marked as waived)' : '';
-        showToast(`✅ Contract saved!${depositMsg} Property updated to Financing monthly payments.`, 'success');
+        showToast(`✅ Contract saved!${depositMsg} Vehicle updated to Financing monthly payments.`, 'success');
         
         // Award XP for creating Financing contract
         if (typeof GamificationService !== 'undefined' && GamificationService.awardXP) {
@@ -5820,9 +5820,9 @@ window.saveRTOContract = async function() {
         // Close the modal after a short delay and refresh the page
         setTimeout(() => {
             closeRTOWizard();
-            // Refresh the property stats page
+            // Refresh the vehicle stats page
             if (typeof showPropertyStats === 'function') {
-                showPropertyStats(state.propertyId);
+                showPropertyStats(state.vehicleId);
             }
         }, 1500);
         
@@ -5907,10 +5907,10 @@ window.downloadRTOContractImage = async function() {
     ctx.textAlign = 'left';
     y += 8;
     drawText('PROPERTY INFORMATION', margin, 16, '#f59e0b', 'Arial Black');
-    drawText(`Address: ${state.property.title}`, margin, 13, '#ffffff');
+    drawText(`Address: ${state.vehicle.title}`, margin, 13, '#ffffff');
     
     // Description - use location field
-    const desc = state.property.description || state.property.location || 'N/A';
+    const desc = state.vehicle.description || state.vehicle.location || 'N/A';
     ctx.font = '11px Arial';
     const words = desc.split(' ');
     let line = 'Description: ';
@@ -5930,7 +5930,7 @@ window.downloadRTOContractImage = async function() {
     y += 16;
     
     drawText('Listing Type: Financing Plan', margin, 12, '#ffffff');
-    drawText(`Property Category: ${calc.propertyCategory}`, margin, 11, '#fbbf24');
+    drawText(`Vehicle Category: ${calc.vehicleCategory}`, margin, 11, '#fbbf24');
     y += 6;
     
     // === PARTIES INVOLVED ===
@@ -6099,7 +6099,7 @@ window.viewRTOContract = async function(contractId) {
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             Financing Plan Contract
                         </h3>
-                        <p class="text-cyan-100 text-sm mt-1">${contract.propertyTitle}</p>
+                        <p class="text-cyan-100 text-sm mt-1">${contract.vehicleTitle}</p>
                     </div>
                     
                     <div class="p-6 max-h-[70vh] overflow-y-auto">
@@ -6161,7 +6161,7 @@ window.viewRTOContract = async function(contractId) {
 /**
  * Show confirmation modal before deleting Financing contract
  */
-window.confirmDeleteRTOContract = function(propertyId, contractId) {
+window.confirmDeleteRTOContract = function(vehicleId, contractId) {
     if (!contractId) {
         showToast('No contract ID provided', 'error');
         return;
@@ -6186,7 +6186,7 @@ window.confirmDeleteRTOContract = function(propertyId, contractId) {
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="text-red-400">✗</span>
-                            <span>Clear all Financing status from the property</span>
+                            <span>Clear all Financing status from the vehicle</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="text-red-400">✗</span>
@@ -6200,7 +6200,7 @@ window.confirmDeleteRTOContract = function(propertyId, contractId) {
                     <button onclick="document.getElementById('deleteRTOConfirmModal').remove()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                         Cancel
                     </button>
-                    <button onclick="deleteRTOContract(${propertyId}, '${contractId}')" class="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                    <button onclick="deleteRTOContract(${vehicleId}, '${contractId}')" class="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
                         🗑️ Delete Contract
                     </button>
                 </div>
@@ -6216,9 +6216,9 @@ window.confirmDeleteRTOContract = function(propertyId, contractId) {
 };
 
 /**
- * Delete Financing contract and clear all related property data
+ * Delete Financing contract and clear all related vehicle data
  */
-window.deleteRTOContract = async function(propertyId, contractId) {
+window.deleteRTOContract = async function(vehicleId, contractId) {
     try {
         showToast('🗑️ Deleting contract...', 'info');
         
@@ -6234,7 +6234,7 @@ window.deleteRTOContract = async function(propertyId, contractId) {
         
         // 2. Remove last RTO-related payment(s) from payment history
         try {
-            const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
+            const historyDoc = await db.collection('paymentHistory').doc(String(vehicleId)).get();
             if (historyDoc.exists) {
                 let payments = historyDoc.data().payments || [];
                 const originalCount = payments.length;
@@ -6244,8 +6244,8 @@ window.deleteRTOContract = async function(propertyId, contractId) {
                 
                 const removedCount = originalCount - payments.length;
                 if (removedCount > 0) {
-                    await db.collection('paymentHistory').doc(String(propertyId)).set({
-                        propertyId: propertyId,
+                    await db.collection('paymentHistory').doc(String(vehicleId)).set({
+                        vehicleId: vehicleId,
                         payments: payments,
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     });
@@ -6256,7 +6256,7 @@ window.deleteRTOContract = async function(propertyId, contractId) {
             console.warn('[RTO] Could not clean up payment history:', e);
         }
         
-        // 3. Clear all RTO-related fields from the property (including monthlyPrice)
+        // 3. Clear all RTO-related fields from the vehicle (including monthlyPrice)
         const rtoFieldsToClear = {
             hasActiveFinancing: false,
             financingContractId: '',
@@ -6275,20 +6275,20 @@ window.deleteRTOContract = async function(propertyId, contractId) {
             monthlyPrice: 0
         };
         
-        await PropertyDataService.writeMultiple(propertyId, rtoFieldsToClear);
-        console.log(`[RTO] Cleared Financing fields and monthlyPrice from property ${propertyId}`);
+        await VehicleDataService.writeMultiple(vehicleId, rtoFieldsToClear);
+        console.log(`[RTO] Cleared Financing fields and monthlyPrice from vehicle ${vehicleId}`);
         
-        // 4. Update local properties array
-        const prop = properties.find(p => p.id === propertyId);
+        // 4. Update local vehicles array
+        const prop = vehicles.find(p => p.id === vehicleId);
         if (prop) {
             Object.assign(prop, rtoFieldsToClear);
         }
         
         showToast('✅ Contract deleted successfully!', 'success');
         
-        // 5. Refresh the property stats page
-        if (typeof renderPropertyStatsContent === 'function') {
-            renderPropertyStatsContent(propertyId);
+        // 5. Refresh the vehicle stats page
+        if (typeof renderVehicleStatsContent === 'function') {
+            renderVehicleStatsContent(vehicleId);
         }
         
     } catch (error) {
@@ -6302,21 +6302,21 @@ window.deleteRTOContract = async function(propertyId, contractId) {
 /**
  * Show the Financing Payment Modal for logging payments with custom amounts
  */
-window.showFinancingPaymentModal = function(propertyId) {
-    const p = properties.find(prop => prop.id === propertyId);
+window.showFinancingPaymentModal = function(vehicleId) {
+    const p = vehicles.find(prop => prop.id === vehicleId);
     if (!p) {
-        showToast('Property not found', 'error');
+        showToast('Vehicle not found', 'error');
         return;
     }
     
-    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
-    const financingDownPaymentPaid = PropertyDataService.getValue(propertyId, 'financingDownPaymentPaid', p?.financingDownPaymentPaid || false);
-    const financingDownPayment = PropertyDataService.getValue(propertyId, 'financingDownPayment', p?.financingDownPayment || 0);
-    const financingCurrentPayment = PropertyDataService.getValue(propertyId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
-    const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 24);
-    const rtoRemainingBalance = PropertyDataService.getValue(propertyId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
-    const rtoExpectedMonthly = PropertyDataService.getValue(propertyId, 'rtoExpectedMonthly', p?.rtoExpectedMonthly || 0);
-    const rtoFinalPaymentBase = PropertyDataService.getValue(propertyId, 'rtoFinalPaymentBase', p?.rtoFinalPaymentBase || 1650000);
+    const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p?.buyerName || 'Unknown');
+    const financingDownPaymentPaid = VehicleDataService.getValue(vehicleId, 'financingDownPaymentPaid', p?.financingDownPaymentPaid || false);
+    const financingDownPayment = VehicleDataService.getValue(vehicleId, 'financingDownPayment', p?.financingDownPayment || 0);
+    const financingCurrentPayment = VehicleDataService.getValue(vehicleId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
+    const financingTotalPayments = VehicleDataService.getValue(vehicleId, 'financingTotalPayments', p?.financingTotalPayments || 24);
+    const rtoRemainingBalance = VehicleDataService.getValue(vehicleId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
+    const rtoExpectedMonthly = VehicleDataService.getValue(vehicleId, 'rtoExpectedMonthly', p?.rtoExpectedMonthly || 0);
+    const rtoFinalPaymentBase = VehicleDataService.getValue(vehicleId, 'rtoFinalPaymentBase', p?.rtoFinalPaymentBase || 1650000);
     
     // Determine what type of payment this is
     let paymentType, paymentNumber, expectedAmount, maxPayment;
@@ -6355,7 +6355,7 @@ window.showFinancingPaymentModal = function(propertyId) {
                         <span>💰</span>
                         ${titleText}
                     </h3>
-                    <p class="text-amber-100 text-sm mt-1">Renter: ${buyerName}</p>
+                    <p class="text-amber-100 text-sm mt-1">Buyer: ${buyerName}</p>
                 </div>
                 
                 <div class="p-6 space-y-4">
@@ -6413,7 +6413,7 @@ window.showFinancingPaymentModal = function(propertyId) {
                     <button onclick="closeRTOPaymentModal()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                         Cancel
                     </button>
-                    <button onclick="submitRTOPayment(${propertyId}, '${paymentType}', ${expectedAmount}, ${maxPayment})" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                    <button onclick="submitRTOPayment(${vehicleId}, '${paymentType}', ${expectedAmount}, ${maxPayment})" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
                         ✓ Log Payment
                     </button>
                 </div>
@@ -6454,7 +6454,7 @@ window.closeRTOPaymentModal = function() {
 /**
  * Submit Financing Payment - handles both deposit and monthly payments
  */
-window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount, maxPayment) {
+window.submitRTOPayment = async function(vehicleId, paymentType, expectedAmount, maxPayment) {
     const amountInput = document.getElementById('rtoPaymentAmount');
     const dateInput = document.getElementById('rtoPaymentDate');
     
@@ -6487,15 +6487,15 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
         showToast('💰 Recording payment...', 'info');
         closeRTOPaymentModal();
         
-        const p = properties.find(prop => prop.id === propertyId);
-        const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
-        const financingContractId = PropertyDataService.getValue(propertyId, 'financingContractId', p?.financingContractId || '');
-        const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 24);
-        const rtoFinalPaymentBase = PropertyDataService.getValue(propertyId, 'rtoFinalPaymentBase', p?.rtoFinalPaymentBase || 1650000);
+        const p = vehicles.find(prop => prop.id === vehicleId);
+        const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p?.buyerName || 'Unknown');
+        const financingContractId = VehicleDataService.getValue(vehicleId, 'financingContractId', p?.financingContractId || '');
+        const financingTotalPayments = VehicleDataService.getValue(vehicleId, 'financingTotalPayments', p?.financingTotalPayments || 24);
+        const rtoFinalPaymentBase = VehicleDataService.getValue(vehicleId, 'rtoFinalPaymentBase', p?.rtoFinalPaymentBase || 1650000);
         
         if (paymentType === 'deposit') {
             // Record deposit payment
-            await PropertyDataService.writeMultiple(propertyId, {
+            await VehicleDataService.writeMultiple(vehicleId, {
                 financingDownPaymentPaid: true,
                 financingDownPaymentPaidDate: paymentDate,
                 lastPaymentDate: paymentDate
@@ -6511,7 +6511,7 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             }
             
             // Log to payment history
-            await logPayment(propertyId, {
+            await logPayment(vehicleId, {
                 paymentDate: paymentDate,
                 recordedAt: new Date().toISOString(),
                 buyerName: buyerName,
@@ -6529,8 +6529,8 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             const nextDueDateStr = nextDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
             
             // Get expected monthly for message
-            const rtoExpectedMonthly = PropertyDataService.getValue(propertyId, 'rtoExpectedMonthly', p?.rtoExpectedMonthly || 0);
-            const rtoRemainingBalance = PropertyDataService.getValue(propertyId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
+            const rtoExpectedMonthly = VehicleDataService.getValue(vehicleId, 'rtoExpectedMonthly', p?.rtoExpectedMonthly || 0);
+            const rtoRemainingBalance = VehicleDataService.getValue(vehicleId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
             
             // Show confirmation
             showRTOPaymentConfirmation(buyerName, actualAmount, expectedAmount, {
@@ -6542,8 +6542,8 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             
         } else {
             // Record monthly payment with recalculation
-            const financingCurrentPayment = PropertyDataService.getValue(propertyId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
-            const rtoRemainingBalance = PropertyDataService.getValue(propertyId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
+            const financingCurrentPayment = VehicleDataService.getValue(vehicleId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
+            const rtoRemainingBalance = VehicleDataService.getValue(vehicleId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
             
             const newPaymentNumber = financingCurrentPayment + 1;
             const newRemainingBalance = rtoRemainingBalance - actualAmount;
@@ -6553,8 +6553,8 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             const amountForMonthly = newRemainingBalance - rtoFinalPaymentBase;
             const newExpectedMonthly = remainingMonths > 0 ? Math.round(amountForMonthly / remainingMonths) : 0;
             
-            // Update property
-            await PropertyDataService.writeMultiple(propertyId, {
+            // Update vehicle
+            await VehicleDataService.writeMultiple(vehicleId, {
                 financingCurrentPayment: newPaymentNumber,
                 rtoRemainingBalance: newRemainingBalance,
                 rtoExpectedMonthly: newExpectedMonthly,
@@ -6593,7 +6593,7 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             }
             
             // Log to payment history
-            await logPayment(propertyId, {
+            await logPayment(vehicleId, {
                 paymentDate: paymentDate,
                 recordedAt: new Date().toISOString(),
                 buyerName: buyerName,
@@ -6625,15 +6625,15 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             if (newRemainingBalance <= 0) {
                 // Delay to let confirmation modal show first, then prompt for sale
                 setTimeout(() => {
-                    showRTOCompletionPrompt(propertyId, financingContractId, buyerName, p?.title);
+                    showRTOCompletionPrompt(vehicleId, financingContractId, buyerName, p?.title);
                 }, 2000);
             }
         }
         
-        // Refresh the property stats page
+        // Refresh the vehicle stats page
         setTimeout(() => {
-            if (typeof renderPropertyStatsContent === 'function') {
-                renderPropertyStatsContent(propertyId);
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(vehicleId);
             }
         }, 500);
         
@@ -6731,7 +6731,7 @@ window.showRTOPaymentConfirmation = function(buyerName, actualAmount, expectedAm
 /**
  * Show Financing Completion prompt when contract is fully paid
  */
-window.showRTOCompletionPrompt = function(propertyId, financingContractId, buyerName, propertyTitle) {
+window.showRTOCompletionPrompt = function(vehicleId, financingContractId, buyerName, vehicleTitle) {
     const modalHTML = `
         <div id="rtoCompletionModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4">
             <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl max-w-lg w-full border-2 border-amber-500 shadow-2xl shadow-amber-500/20 overflow-hidden relative">
@@ -6750,7 +6750,7 @@ window.showRTOCompletionPrompt = function(propertyId, financingContractId, buyer
                 <div class="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 px-6 py-6 text-center">
                     <div class="text-5xl mb-2">🎉🏆🎉</div>
                     <h3 class="text-2xl font-black text-gray-900">RTO CONTRACT COMPLETE!</h3>
-                    <p class="text-gray-800 font-medium mt-1">${propertyTitle}</p>
+                    <p class="text-gray-800 font-medium mt-1">${vehicleTitle}</p>
                 </div>
                 
                 <div class="p-6 space-y-4">
@@ -6767,7 +6767,7 @@ window.showRTOCompletionPrompt = function(propertyId, financingContractId, buyer
                         <ul class="space-y-2 text-sm">
                             <li class="flex items-start gap-2">
                                 <span class="text-amber-400">•</span>
-                                <span>Mark the property as <span class="text-rose-400 font-bold">SOLD</span></span>
+                                <span>Mark the vehicle as <span class="text-rose-400 font-bold">SOLD</span></span>
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="text-amber-400">•</span>
@@ -6789,7 +6789,7 @@ window.showRTOCompletionPrompt = function(propertyId, financingContractId, buyer
                     <button onclick="closeRTOCompletionModal()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                         Later
                     </button>
-                    <button onclick="finalizeRTOSale(${propertyId}, '${financingContractId}')" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 rounded-xl font-black hover:opacity-90 transition flex items-center justify-center gap-2">
+                    <button onclick="finalizeRTOSale(${vehicleId}, '${financingContractId}')" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 rounded-xl font-black hover:opacity-90 transition flex items-center justify-center gap-2">
                         <span>🏆</span> Finalize Sale
                     </button>
                 </div>
@@ -6808,10 +6808,10 @@ window.closeRTOCompletionModal = function() {
 /**
  * Finalize Financing as a vehicle sale
  */
-window.finalizeRTOSale = function(propertyId, financingContractId) {
+window.finalizeRTOSale = function(vehicleId, financingContractId) {
     closeRTOCompletionModal();
     // Open the log sale modal pre-filled for Financing completion
-    showLogSaleModal(propertyId, financingContractId);
+    showLogSaleModal(vehicleId, financingContractId);
 };
 
 // ==================== Financing PAYMENT HISTORY ====================
@@ -6819,9 +6819,9 @@ window.finalizeRTOSale = function(propertyId, financingContractId) {
 /**
  * Show Financing Payment History modal with edit/delete capabilities
  */
-window.showRTOPaymentHistory = async function(propertyId) {
-    const p = properties.find(prop => prop.id === propertyId);
-    const financingContractId = PropertyDataService.getValue(propertyId, 'financingContractId', p?.financingContractId || '');
+window.showRTOPaymentHistory = async function(vehicleId) {
+    const p = vehicles.find(prop => prop.id === vehicleId);
+    const financingContractId = VehicleDataService.getValue(vehicleId, 'financingContractId', p?.financingContractId || '');
     
     if (!financingContractId) {
         showToast('No active Financing contract found', 'error');
@@ -6859,8 +6859,8 @@ window.showRTOPaymentHistory = async function(propertyId) {
                     </td>
                     <td class="py-3 px-4 text-right">
                         ${depositPaid ? `
-                            <button onclick="editRTODeposit(${propertyId}, '${financingContractId}')" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
-                            <button onclick="deleteRTODeposit(${propertyId}, '${financingContractId}')" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+                            <button onclick="editRTODeposit(${vehicleId}, '${financingContractId}')" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
+                            <button onclick="deleteRTODeposit(${vehicleId}, '${financingContractId}')" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
                         ` : ''}
                     </td>
                 </tr>
@@ -6881,8 +6881,8 @@ window.showRTOPaymentHistory = async function(propertyId) {
                     <td class="py-3 px-4 text-gray-400">${payment.date}</td>
                     <td class="py-3 px-4 text-green-400">✓ Paid</td>
                     <td class="py-3 px-4 text-right">
-                        <button onclick="editRTOPaymentEntry(${propertyId}, '${financingContractId}', ${index})" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
-                        <button onclick="deleteRTOPaymentEntry(${propertyId}, '${financingContractId}', ${index})" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+                        <button onclick="editRTOPaymentEntry(${vehicleId}, '${financingContractId}', ${index})" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
+                        <button onclick="deleteRTOPaymentEntry(${vehicleId}, '${financingContractId}', ${index})" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
                     </td>
                 </tr>
             `;
@@ -6905,7 +6905,7 @@ window.showRTOPaymentHistory = async function(propertyId) {
                             <span>📜</span>
                             Financing Payment History
                         </h3>
-                        <p class="text-cyan-100 text-sm mt-1">${contract.propertyTitle}</p>
+                        <p class="text-cyan-100 text-sm mt-1">${contract.vehicleTitle}</p>
                     </div>
                     
                     <div class="p-6 max-h-[60vh] overflow-y-auto">
@@ -6957,7 +6957,7 @@ window.showRTOPaymentHistory = async function(propertyId) {
 /**
  * Edit a monthly payment entry
  */
-window.editRTOPaymentEntry = async function(propertyId, contractId, paymentIndex) {
+window.editRTOPaymentEntry = async function(vehicleId, contractId, paymentIndex) {
     try {
         const contractDoc = await db.collection('financingContracts').doc(contractId).get();
         if (!contractDoc.exists) {
@@ -7005,7 +7005,7 @@ window.editRTOPaymentEntry = async function(propertyId, contractId, paymentIndex
                         <button onclick="document.getElementById('editPaymentModal').remove()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                             Cancel
                         </button>
-                        <button onclick="saveRTOPaymentEdit(${propertyId}, '${contractId}', ${paymentIndex})" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                        <button onclick="saveRTOPaymentEdit(${vehicleId}, '${contractId}', ${paymentIndex})" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
                             Save Changes
                         </button>
                     </div>
@@ -7024,7 +7024,7 @@ window.editRTOPaymentEntry = async function(propertyId, contractId, paymentIndex
 /**
  * Save edited payment
  */
-window.saveRTOPaymentEdit = async function(propertyId, contractId, paymentIndex) {
+window.saveRTOPaymentEdit = async function(vehicleId, contractId, paymentIndex) {
     const amountInput = document.getElementById('editPaymentAmount');
     const dateInput = document.getElementById('editPaymentDate');
     
@@ -7077,8 +7077,8 @@ window.saveRTOPaymentEdit = async function(propertyId, contractId, paymentIndex)
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Update property
-        await PropertyDataService.writeMultiple(propertyId, {
+        // Update vehicle
+        await VehicleDataService.writeMultiple(vehicleId, {
             rtoRemainingBalance: newRemainingBalance,
             rtoExpectedMonthly: newExpectedMonthly,
             monthlyPrice: newExpectedMonthly
@@ -7092,9 +7092,9 @@ window.saveRTOPaymentEdit = async function(propertyId, contractId, paymentIndex)
         
         // Refresh
         setTimeout(() => {
-            showRTOPaymentHistory(propertyId);
-            if (typeof renderPropertyStatsContent === 'function') {
-                renderPropertyStatsContent(propertyId);
+            showRTOPaymentHistory(vehicleId);
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(vehicleId);
             }
         }, 300);
         
@@ -7107,7 +7107,7 @@ window.saveRTOPaymentEdit = async function(propertyId, contractId, paymentIndex)
 /**
  * Delete a monthly payment entry
  */
-window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentIndex) {
+window.deleteRTOPaymentEntry = async function(vehicleId, contractId, paymentIndex) {
     if (!confirm('Are you sure you want to delete this payment? This will recalculate the remaining balance.')) {
         return;
     }
@@ -7149,8 +7149,8 @@ window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentInd
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Update property
-        await PropertyDataService.writeMultiple(propertyId, {
+        // Update vehicle
+        await VehicleDataService.writeMultiple(vehicleId, {
             financingCurrentPayment: newPaymentNumber,
             rtoRemainingBalance: newRemainingBalance,
             rtoExpectedMonthly: newExpectedMonthly,
@@ -7164,9 +7164,9 @@ window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentInd
         
         // Refresh
         setTimeout(() => {
-            showRTOPaymentHistory(propertyId);
-            if (typeof renderPropertyStatsContent === 'function') {
-                renderPropertyStatsContent(propertyId);
+            showRTOPaymentHistory(vehicleId);
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(vehicleId);
             }
         }, 300);
         
@@ -7179,7 +7179,7 @@ window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentInd
 /**
  * Edit deposit payment
  */
-window.editRTODeposit = async function(propertyId, contractId) {
+window.editRTODeposit = async function(vehicleId, contractId) {
     try {
         const contractDoc = await db.collection('financingContracts').doc(contractId).get();
         if (!contractDoc.exists) {
@@ -7221,7 +7221,7 @@ window.editRTODeposit = async function(propertyId, contractId) {
                         <button onclick="document.getElementById('editDepositModal').remove()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                             Cancel
                         </button>
-                        <button onclick="saveRTODepositEdit(${propertyId}, '${contractId}')" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                        <button onclick="saveRTODepositEdit(${vehicleId}, '${contractId}')" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
                             Save Changes
                         </button>
                     </div>
@@ -7240,7 +7240,7 @@ window.editRTODeposit = async function(propertyId, contractId) {
 /**
  * Save edited deposit
  */
-window.saveRTODepositEdit = async function(propertyId, contractId) {
+window.saveRTODepositEdit = async function(vehicleId, contractId) {
     const amountInput = document.getElementById('editDepositAmount');
     const dateInput = document.getElementById('editDepositDate');
     
@@ -7259,8 +7259,8 @@ window.saveRTODepositEdit = async function(propertyId, contractId) {
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Update property
-        await PropertyDataService.writeMultiple(propertyId, {
+        // Update vehicle
+        await VehicleDataService.writeMultiple(vehicleId, {
             financingDownPayment: newAmount,
             financingDownPaymentPaidDate: newDate
         });
@@ -7273,7 +7273,7 @@ window.saveRTODepositEdit = async function(propertyId, contractId) {
         
         // Refresh
         setTimeout(() => {
-            showRTOPaymentHistory(propertyId);
+            showRTOPaymentHistory(vehicleId);
         }, 300);
         
     } catch (error) {
@@ -7285,7 +7285,7 @@ window.saveRTODepositEdit = async function(propertyId, contractId) {
 /**
  * Delete deposit payment (reset to unpaid)
  */
-window.deleteRTODeposit = async function(propertyId, contractId) {
+window.deleteRTODeposit = async function(vehicleId, contractId) {
     if (!confirm('Are you sure you want to delete this deposit payment? It will be marked as unpaid.')) {
         return;
     }
@@ -7300,8 +7300,8 @@ window.deleteRTODeposit = async function(propertyId, contractId) {
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Update property
-        await PropertyDataService.writeMultiple(propertyId, {
+        // Update vehicle
+        await VehicleDataService.writeMultiple(vehicleId, {
             financingDownPaymentPaid: false,
             financingDownPaymentPaidDate: ''
         });
@@ -7313,9 +7313,9 @@ window.deleteRTODeposit = async function(propertyId, contractId) {
         
         // Refresh
         setTimeout(() => {
-            showRTOPaymentHistory(propertyId);
-            if (typeof renderPropertyStatsContent === 'function') {
-                renderPropertyStatsContent(propertyId);
+            showRTOPaymentHistory(vehicleId);
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(vehicleId);
             }
         }, 300);
         

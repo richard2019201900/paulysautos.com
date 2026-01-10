@@ -5,14 +5,14 @@
  * 
  * CONTENTS:
  * - Main navigation functions
- * - Section navigation (home, dashboard, properties, etc.)
+ * - Section navigation (home, dashboard, vehicles, etc.)
  * - User dropdown menu
  * - Blog page rendering
  * - Auth UI handlers
  * - Mobile menu
  * - Back navigation
  * 
- * DEPENDENCIES: TierService, PropertyDataService
+ * DEPENDENCIES: TierService, VehicleDataService
  * ============================================================================
  */
 
@@ -48,9 +48,9 @@ function updateAuthButton(isLoggedIn) {
             navUserDisplay.className = 'hidden md:flex items-center gap-2';
             updateNavUserDisplay();
         }
-        // Show "My Properties" filter
-        const myPropertiesFilter = $('myPropertiesFilter');
-        if (myPropertiesFilter) myPropertiesFilter.className = 'flex items-center gap-2 text-gray-300 font-semibold cursor-pointer text-sm md:text-base hover:text-white transition';
+        // Show "My Vehicles" filter
+        const myVehiclesFilter = $('myVehiclesFilter');
+        if (myVehiclesFilter) myVehiclesFilter.className = 'flex items-center gap-2 text-gray-300 font-semibold cursor-pointer text-sm md:text-base hover:text-white transition';
     } else {
         // Desktop nav
         navBtn.textContent = 'Register / Sign In';
@@ -72,11 +72,11 @@ function updateAuthButton(isLoggedIn) {
         if (mobileCreateBtn) mobileCreateBtn.className = 'hidden';
         // Hide user display
         if (navUserDisplay) navUserDisplay.className = 'hidden';
-        // Hide "My Properties" filter and uncheck it
-        const myPropertiesFilter = $('myPropertiesFilter');
-        const showMyProperties = $('showMyProperties');
-        if (myPropertiesFilter) myPropertiesFilter.className = 'hidden';
-        if (showMyProperties) showMyProperties.checked = false;
+        // Hide "My Vehicles" filter and uncheck it
+        const myVehiclesFilter = $('myVehiclesFilter');
+        const showMyVehicles = $('showMyVehicles');
+        if (myVehiclesFilter) myVehiclesFilter.className = 'hidden';
+        if (showMyVehicles) showMyVehicles.checked = false;
     }
 }
 
@@ -147,7 +147,7 @@ async function updateNavUserDisplay() {
                 }
             }
             
-            // Update rent badges for all property owners (not just admin)
+            // Update rent badges for all vehicle owners (not just admin)
             updateMobileRentBadge();
         }
     } catch (error) {
@@ -253,9 +253,9 @@ document.addEventListener('click', function(e) {
 // Navigate to profile settings section
 window.goToProfileSettings = function() {
     goToDashboard();
-    // Switch to My Properties tab (where profile settings lives) if admin
+    // Switch to My Vehicles tab (where profile settings lives) if admin
     if (TierService.isMasterAdmin(auth.currentUser?.email)) {
-        switchDashboardTab('myProperties');
+        switchDashboardTab('myVehicles');
     }
     // Scroll to profile settings after a short delay
     setTimeout(() => {
@@ -306,7 +306,7 @@ window.renderBlogPage = function() {
                 
                 <h4 class="font-bold text-white mb-2 mt-6">🏠 Financing Plan System <span class="text-amber-400">(Elite Members)</span>:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Create Financing contracts on any property with custom terms</li>
+                    <li>Create Financing contracts on any vehicle with custom terms</li>
                     <li>Flexible deposit amounts and payment schedules</li>
                     <li>Track every payment with automatic balance calculations</li>
                     <li>Listing ownership transfers on the site when contract completes</li>
@@ -315,7 +315,7 @@ window.renderBlogPage = function() {
                 
                 <h4 class="font-bold text-white mb-2 mt-6">🏷️ Vehicle Sales Tracking:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Log property sales and track the financials on your dashboard</li>
+                    <li>Log vehicle sales and track the financials on your dashboard</li>
                     <li>Celebration banners when you complete a sale</li>
                     <li>Earn XP and climb the leaderboard with each sale</li>
                     <li>Everything still happens in city — the site just keeps you organized</li>
@@ -334,12 +334,12 @@ window.renderBlogPage = function() {
                     <li>Automatic alerts when rent is overdue, due today, or coming up</li>
                     <li>One-click copy for reminder messages to send to tenants</li>
                     <li>Dashboard notifications so you never miss a payment</li>
-                    <li>Works for all property owners, not just admin</li>
+                    <li>Works for all vehicle owners, not just admin</li>
                 </ul>
                 
                 <h4 class="font-bold text-white mb-2 mt-6">📸 Bulk Image Uploads:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Upload multiple property photos at once</li>
+                    <li>Upload multiple vehicle photos at once</li>
                     <li>Drag and drop to reorder your gallery</li>
                     <li>Horizontal layout for easier browsing</li>
                 </ul>
@@ -347,7 +347,7 @@ window.renderBlogPage = function() {
                 <h4 class="font-bold text-white mb-2 mt-6">🏆 Improved Leaderboard:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
                     <li>XP now updates in real-time as you complete actions</li>
-                    <li>Earn XP for logging payments, completing leases, and making sales</li>
+                    <li>Earn XP for logging payments, completing sales, and making sales</li>
                     <li>Privacy protections keep your buyers' info private</li>
                 </ul>
                 
@@ -366,7 +366,7 @@ window.renderBlogPage = function() {
         },
         {
             date: 'December 15, 2024',
-            title: '🚀 Two Weeks In - A Complete Property Management Platform',
+            title: '🚀 Two Weeks In - A Complete Vehicle Management Platform',
             category: 'Milestone',
             categoryColor: 'bg-amber-500',
             content: `
@@ -398,7 +398,7 @@ window.renderBlogPage = function() {
                     <li>4-Week Cash Flow Forecast to project your upcoming income</li>
                     <li>Overdue and upcoming payment alerts at a glance</li>
                     <li>Top earners ranked by current rent and all-time collections</li>
-                    <li>Occupancy breakdowns by property type</li>
+                    <li>Occupancy breakdowns by vehicle type</li>
                 </ul>
                 
                 <h4 class="font-bold text-white mb-2 mt-6">3-Tier Subscription System:</h4>
@@ -420,7 +420,7 @@ window.renderBlogPage = function() {
                     <li>Real-time dashboard with 8 interactive stat tiles</li>
                     <li>User management: create accounts, adjust tiers, handle upgrades</li>
                     <li>4-type notification system for new users, listings, upgrade requests, and premium activations</li>
-                    <li>Property reassignment between owners</li>
+                    <li>Vehicle reassignment between owners</li>
                     <li>CSV export for external reporting</li>
                     <li>Activity logging and VIP leads tracking</li>
                 </ul>
@@ -664,8 +664,8 @@ window.hideMobileMenu = function() {
 window.goToDashboard = function() {
     hideElement($('mobileMenu'));
     if (state.currentUser === 'owner') {
-        hideElement($('renterSection'));
-        hideElement($('propertyDetailPage'));
+        hideElement($('browseSection'));
+        hideElement($('vehicleDetailPage'));
         hideElement($('vehicleStatsPage'));
         hideElement($('blogPage'));
         hideElement($('leaderboardPage'));
@@ -690,12 +690,12 @@ window.goToDashboard = function() {
     }
 };
 
-// Go to Dashboard -> My Properties tab and highlight rent alerts
+// Go to Dashboard -> My Vehicles tab and highlight rent alerts
 window.goToRentAlerts = function() {
     // Use the enterprise scroll-to-highlight pattern
     scrollToAndHighlightElement({
         targetSelector: '#rentNotificationsPanel',
-        tabName: 'myProperties',
+        tabName: 'myVehicles',
         maxWaitMs: 3000,
         highlightColor: 'rgba(239, 68, 68, 0.7)',
         glowColor: 'rgba(239, 68, 68, 0.4)',
@@ -810,10 +810,10 @@ window.goHome = function() {
         return;
     }
     hideElement($('ownerDashboard'));
-    hideElement($('propertyDetailPage'));
+    hideElement($('vehicleDetailPage'));
     hideElement($('vehicleStatsPage'));
     hideElement($('blogPage'));
-    showElement($('renterSection'));
+    showElement($('browseSection'));
     window.scrollTo(0, 0);
 };
 
@@ -825,7 +825,7 @@ window.navigateTo = function(section) {
     }
     hideElement($('mobileMenu'));
     hideElement($('ownerDashboard'));
-    hideElement($('propertyDetailPage'));
+    hideElement($('vehicleDetailPage'));
     hideElement($('vehicleDetailPage'));
     hideElement($('vehicleStatsPage'));
     hideElement($('blogPage'));
@@ -833,7 +833,7 @@ window.navigateTo = function(section) {
     
     // Handle blog page specially
     if (section === 'blog') {
-        hideElement($('renterSection'));
+        hideElement($('browseSection'));
         showElement($('blogPage'));
         renderBlogPage();
         window.scrollTo(0, 0);
@@ -842,18 +842,28 @@ window.navigateTo = function(section) {
     
     // Handle leaderboard page
     if (section === 'leaderboard') {
-        hideElement($('renterSection'));
+        hideElement($('browseSection'));
         showElement($('leaderboardPage'));
         renderLeaderboardPage();
         window.scrollTo(0, 0);
         return;
     }
     
-    showElement($('renterSection'));
+    showElement($('browseSection'));
     
-    // Re-apply filters when navigating to vehicles/properties section
+    // If vehicles array is empty, try to reload
+    if (vehicles.length === 0) {
+        console.log('[navigateTo] Vehicles array empty, reloading...');
+        if (auth.currentUser && typeof startVehicleSyncListener === 'function') {
+            startVehicleSyncListener();
+        } else if (typeof loadPublicProperties === 'function') {
+            loadPublicProperties();
+        }
+    }
+    
+    // Re-apply filters when navigating to vehicles/vehicles section
     // This ensures checkbox state matches displayed vehicles
-    if ((section === 'properties' || section === 'vehicles') && typeof applyAllFilters === 'function') {
+    if ((section === 'vehicles' || section === 'vehicles') && typeof applyAllFilters === 'function') {
         applyAllFilters();
     }
     
@@ -861,13 +871,23 @@ window.navigateTo = function(section) {
 };
 
 window.goBack = function() {
-    hideElement($('propertyDetailPage'));
+    hideElement($('vehicleDetailPage'));
     hideElement($('vehicleDetailPage'));
     hideElement($('vehicleStatsPage'));
     hideElement($('leaderboardPage'));
     hideElement($('blogPage'));
     hideElement($('ownerDashboard'));
-    showElement($('renterSection'));
+    showElement($('browseSection'));
+    
+    // If vehicles array is somehow empty, try to reload
+    if (vehicles.length === 0) {
+        console.log('[goBack] Vehicles array empty, reloading...');
+        if (auth.currentUser && typeof startVehicleSyncListener === 'function') {
+            startVehicleSyncListener();
+        } else if (typeof loadPublicProperties === 'function') {
+            loadPublicProperties();
+        }
+    }
     
     // Re-apply filters to ensure checkbox state matches displayed vehicles
     if (typeof applyAllFilters === 'function') {
@@ -876,7 +896,7 @@ window.goBack = function() {
     
     // Restore scroll position (saved when user clicked on a vehicle)
     if (typeof window.savedScrollPosition === 'number') {
-        // Small delay to ensure DOM is ready after showing renterSection
+        // Small delay to ensure DOM is ready after showing browseSection
         setTimeout(() => {
             window.scrollTo(0, window.savedScrollPosition);
         }, 50);

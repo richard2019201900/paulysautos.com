@@ -4,21 +4,14 @@
 // Empty vehicles array - all data comes from Firestore
 const vehicles = [];
 
-// Alias for backwards compatibility with property-based code
-const properties = vehicles;
-
 // ==================== OWNER VEHICLE ASSIGNMENTS ====================
 // Maps owner emails to their vehicle IDs (populated from Firestore)
 const ownerVehicleMap = {
     'richard2019201900@gmail.com': [] // Master admin
 };
 
-// Alias for backwards compatibility
-const ownerPropertyMap = ownerVehicleMap;
-
 // Create reverse map: vehicleId -> ownerEmail
 const vehicleOwnerEmail = {};
-const propertyOwnerEmail = vehicleOwnerEmail; // Alias
 
 Object.keys(ownerVehicleMap).forEach(email => {
     ownerVehicleMap[email].forEach(vehicleId => {

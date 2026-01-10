@@ -279,13 +279,13 @@ function calculateXPBreakdown(activityLog) {
         
         if (reason.includes('payment') || reason.includes('rent') || reason.includes('collected')) {
             category = '💰 Payments';
-        } else if (reason.includes('listing') || reason.includes('property') || reason.includes('created')) {
+        } else if (reason.includes('listing') || reason.includes('vehicle') || reason.includes('created')) {
             category = '🏠 Listings';
         } else if (reason.includes('profile') || reason.includes('username')) {
             category = '👤 Profile';
         } else if (reason.includes('premium')) {
             category = '👑 Premium';
-        } else if (reason.includes('lease') || reason.includes('rto') || reason.includes('sale')) {
+        } else if (reason.includes('sale') || reason.includes('financing') || reason.includes('lease') || reason.includes('rto')) {
             category = '🤝 Transactions';
         } else if (reason.includes('level')) {
             category = '⭐ Achievements';

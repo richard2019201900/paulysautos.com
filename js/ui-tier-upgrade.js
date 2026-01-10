@@ -75,7 +75,7 @@ Display Name: ${displayName}
 Requested Plan: ${info.name} (${info.listings} listings)
 Monthly Cost: ${info.price}
 
-I'm ready to pay and start listing more properties!`;
+I'm ready to pay and start listing more vehicles!`;
     
     messageBox.value = message;
 };

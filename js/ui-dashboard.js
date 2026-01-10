@@ -7,9 +7,9 @@
  * - Auth UI functions (login/logout display)
  * - Revenue/rent calculations
  * - Dashboard card rendering
- * - Inline cell editing for property tiles
+ * - Inline cell editing for vehicle tiles
  * 
- * DEPENDENCIES: TierService, PropertyDataService, OwnershipService
+ * DEPENDENCIES: TierService, VehicleDataService, OwnershipService
  * ============================================================================
  */
 
@@ -37,8 +37,8 @@ window.hideOwnerLoginForm = function() {
     if (passwordField) passwordField.value = '';
 };
 
-window.loginAsRenter = function() {
-    state.currentUser = 'renter';
+window.loginAsBuyer = function() {
+    state.currentUser = 'buyer';
     closeModal('loginModal');
     window.goHome();
 };
@@ -161,7 +161,7 @@ window.showDeletedAccountToast = function() {
 // ==================== CALCULATIONS ====================
 function getAvailableCount() {
     // Use owned vehicles for counts
-    const ownedVehicles = getOwnedProperties();
+    const ownedVehicles = getOwnedVehicles();
     return ownedVehicles.filter(v => state.availability[v.id] !== false && !v.isSold).length;
 }
 
@@ -170,7 +170,7 @@ function getAvailableCount() {
  * Shows: Total Sales Revenue, Active Listings, Pending Contracts, Sold Vehicles, Portfolio Value, Premium Listings
  */
 async function calculateTotalsAsync() {
-    const ownedVehicles = getOwnedProperties();
+    const ownedVehicles = getOwnedVehicles();
     
     // Initialize data structure for vehicle sales
     const data = {
@@ -187,7 +187,7 @@ async function calculateTotalsAsync() {
         pendingContractsValue: 0, // Value of pending sales
         
         // For backwards compatibility with existing tile system
-        activeRenters: { daily: [], weekly: [], biweekly: [], monthly: [] },
+        activeBuyers: { daily: [], weekly: [], biweekly: [], monthly: [] },
         incomeByFrequency: { daily: 0, weekly: 0, biweekly: 0, monthly: 0 },
         sold: [],
         available: [],
@@ -200,11 +200,11 @@ async function calculateTotalsAsync() {
     
     // Process each owned vehicle
     ownedVehicles.forEach(v => {
-        const isSold = PropertyDataService.getValue(v.id, 'isSold', v.isSold || false);
-        const isPremium = PropertyDataService.getValue(v.id, 'isPremium', v.isPremium || false);
-        const isPremiumTrial = PropertyDataService.getValue(v.id, 'isPremiumTrial', v.isPremiumTrial || false);
-        const salePrice = PropertyDataService.getValue(v.id, 'price', v.price || 0);
-        const pendingSale = PropertyDataService.getValue(v.id, 'pendingSale', v.pendingSale || false);
+        const isSold = VehicleDataService.getValue(v.id, 'isSold', v.isSold || false);
+        const isPremium = VehicleDataService.getValue(v.id, 'isPremium', v.isPremium || false);
+        const isPremiumTrial = VehicleDataService.getValue(v.id, 'isPremiumTrial', v.isPremiumTrial || false);
+        const salePrice = VehicleDataService.getValue(v.id, 'price', v.price || 0);
+        const pendingSale = VehicleDataService.getValue(v.id, 'pendingSale', v.pendingSale || false);
         
         const vehicleInfo = {
             id: v.id,
@@ -222,10 +222,10 @@ async function calculateTotalsAsync() {
             // Also add to vehicleSales for backwards compatibility
             data.vehicleSales.push({
                 id: v.id,
-                propertyTitle: vehicleInfo.title,
+                vehicleTitle: vehicleInfo.title,
                 salePrice: salePrice,
-                saleDate: PropertyDataService.getValue(v.id, 'soldDate', ''),
-                buyerName: PropertyDataService.getValue(v.id, 'buyerName', 'Unknown')
+                saleDate: VehicleDataService.getValue(v.id, 'soldDate', ''),
+                buyerName: VehicleDataService.getValue(v.id, 'buyerName', 'Unknown')
             });
             data.vehicleSalesTotal += salePrice;
         } else if (pendingSale) {
@@ -266,7 +266,7 @@ async function calculateTotalsAsync() {
                     });
                     data.vehicleSales.push({
                         id: doc.id,
-                        propertyTitle: sale.vehicleTitle || 'Vehicle',
+                        vehicleTitle: sale.vehicleTitle || 'Vehicle',
                         salePrice: sale.salePrice || 0,
                         saleDate: sale.saleDate || '',
                         buyerName: sale.buyerName || 'Unknown'
@@ -290,11 +290,11 @@ async function calculateTotalsAsync() {
 
 // Synchronous version for backward compatibility (uses cached data or basic calculation)
 function calculateTotals() {
-    const ownedVehicles = getOwnedProperties();
+    const ownedVehicles = getOwnedVehicles();
     
     // Data structure for vehicle sales
     const data = {
-        activeRenters: { daily: [], weekly: [], biweekly: [], monthly: [] },
+        activeBuyers: { daily: [], weekly: [], biweekly: [], monthly: [] },
         incomeByFrequency: { daily: 0, weekly: 0, biweekly: 0, monthly: 0 },
         sold: [],
         available: [],
@@ -312,9 +312,9 @@ function calculateTotals() {
     };
     
     ownedVehicles.forEach(v => {
-        const isPremium = PropertyDataService.getValue(v.id, 'isPremium', v.isPremium || false);
-        const isSold = PropertyDataService.getValue(v.id, 'isSold', v.isSold || false);
-        const price = PropertyDataService.getValue(v.id, 'price', v.price || 0);
+        const isPremium = VehicleDataService.getValue(v.id, 'isPremium', v.isPremium || false);
+        const isSold = VehicleDataService.getValue(v.id, 'isSold', v.isSold || false);
+        const price = VehicleDataService.getValue(v.id, 'price', v.price || 0);
         
         const vehicleInfo = {
             id: v.id,
@@ -417,7 +417,7 @@ function updateDashboardTiles(totals) {
     
     // All Vehicles count
     const totalListingsEl = $('totalListingsDisplay');
-    const totalSubtitleEl = $('propertiesSubtitle');
+    const totalSubtitleEl = $('vehiclesSubtitle');
     if (totalListingsEl) totalListingsEl.textContent = ownedCount.toString();
     if (totalSubtitleEl) totalSubtitleEl.textContent = `${activeCount} active • ${soldCount} sold`;
     
@@ -439,7 +439,7 @@ function updateDashboardTiles(totals) {
 }
 
 // Render vehicle sales breakdown for tile flip (backwards compat with old function name)
-function renderActiveRentersBreakdown(vehicles, type) {
+function renderActiveBuyersBreakdown(vehicles, type) {
     if (!vehicles || vehicles.length === 0) {
         return `<div class="opacity-70 italic">No vehicles</div>`;
     }
@@ -455,7 +455,7 @@ function renderActiveRentersBreakdown(vehicles, type) {
 }
 
 // Render total income/portfolio breakdown for tile flip
-function renderTotalIncomeBreakdown(income, renters, data) {
+function renderTotalIncomeBreakdown(income, buyers, data) {
     const items = [];
     
     if (data.activeListings?.length > 0) {
@@ -505,7 +505,7 @@ function renderHouseSalesBreakdown(sales) {
     return sales.slice(0, 5).map(s => `
         <div class="flex justify-between items-center py-1 border-b border-white/10">
             <div class="truncate pr-2">
-                <div class="font-medium truncate">🚗 ${sanitize(s.propertyTitle || s.title || 'Vehicle')}</div>
+                <div class="font-medium truncate">🚗 ${sanitize(s.vehicleTitle || s.title || 'Vehicle')}</div>
                 <div class="opacity-70 text-[10px]">${s.buyerName ? `Buyer: ${sanitize(s.buyerName)}` : ''}</div>
             </div>
             <div class="text-right font-bold whitespace-nowrap">${formatPrice(s.salePrice || s.price || 0)}</div>
@@ -557,7 +557,7 @@ function renderOwnerDashboard() {
     updateEliteReportsButton();
     
     // Vehicles user actually OWNS (dashboard should only show your vehicles)
-    const ownedVehicles = getOwnedProperties();
+    const ownedVehicles = getOwnedVehicles();
     
     // Calculate and update dashboard tiles
     const basicTotals = calculateTotals();
@@ -593,9 +593,9 @@ function renderOwnerDashboard() {
     const tableEl = $('ownerVehiclesTable');
     if (tableEl) {
         tableEl.innerHTML = ownedVehicles.map((v, index) => {
-            const price = PropertyDataService.getValue(v.id, 'price', v.price || 0);
-            const isSold = PropertyDataService.getValue(v.id, 'isSold', v.isSold || false);
-            const isPremium = PropertyDataService.getValue(v.id, 'isPremium', v.isPremium || false);
+            const price = VehicleDataService.getValue(v.id, 'price', v.price || 0);
+            const isSold = VehicleDataService.getValue(v.id, 'isSold', v.isSold || false);
+            const isPremium = VehicleDataService.getValue(v.id, 'isPremium', v.isPremium || false);
             const isAvailable = state.availability[v.id] !== false && !isSold;
             
             // Status display
@@ -619,7 +619,7 @@ function renderOwnerDashboard() {
                     <td class="px-4 py-3 text-right font-bold text-green-400">${formatPrice(price)}</td>
                     <td class="px-4 py-3 text-center">${statusBadge}</td>
                     <td class="px-4 py-3 text-center">
-                        <button onclick="viewProperty(${v.id})" class="text-blue-400 hover:text-blue-300 text-sm">
+                        <button onclick="viewVehicle(${v.id})" class="text-blue-400 hover:text-blue-300 text-sm">
                             View
                         </button>
                     </td>
@@ -661,25 +661,25 @@ function updateSiteUpdateBadge() {
 }
 
 // ==================== INLINE CELL EDITING ====================
-window.startCellEdit = function(propertyId, field, cell, type) {
+window.startCellEdit = function(vehicleId, field, cell, type) {
     // Don't start if already editing
     if (cell.querySelector('input, select')) return;
     
     // VALIDATION: Block lastPaymentDate if frequency is not set
     if (field === 'lastPaymentDate') {
-        const p = properties.find(prop => prop.id === propertyId);
-        const frequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || '');
+        const p = vehicles.find(prop => prop.id === vehicleId);
+        const frequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', p?.paymentFrequency || '');
         if (!frequency) {
             alert('⚠️ Please set the Payment Frequency first!\n\nThe frequency determines how the next due date is calculated and how payments are logged.\n\nClick on "Frequency" in the row above to set it.');
             return;
         }
     }
     
-    const currentValue = PropertyDataService.getValue(propertyId, field, properties.find(p => p.id === propertyId)?.[field]) || '';
+    const currentValue = VehicleDataService.getValue(vehicleId, field, vehicles.find(p => p.id === vehicleId)?.[field]) || '';
     const originalHTML = cell.innerHTML;
     
     cell.dataset.originalHTML = originalHTML;
-    cell.dataset.propertyId = propertyId;
+    cell.dataset.vehicleId = vehicleId;
     cell.dataset.field = field;
     cell.dataset.type = type;
     
@@ -688,16 +688,16 @@ window.startCellEdit = function(propertyId, field, cell, type) {
     if (type === 'select' && field === 'upgraded') {
         inputHTML = `
             <select class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm w-full" 
-                    onchange="saveCellEdit(this, ${propertyId}, '${field}', '${type}')"
+                    onchange="saveCellEdit(this, ${vehicleId}, '${field}', '${type}')"
                     onblur="setTimeout(() => cancelCellEdit(this), 150)">
                 <option value="Yes" ${currentValue === 'Yes' ? 'selected' : ''}>Yes</option>
                 <option value="No" ${currentValue === 'No' ? 'selected' : ''}>No</option>
             </select>
         `;
-    } else if (type === 'propertyType') {
+    } else if (type === 'vehicleType') {
         inputHTML = `
             <select class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm w-full" 
-                    onchange="saveCellEdit(this, ${propertyId}, '${field}', '${type}')"
+                    onchange="saveCellEdit(this, ${vehicleId}, '${field}', '${type}')"
                     onblur="setTimeout(() => cancelCellEdit(this), 150)">
                 <option value="car" ${currentValue === 'car' ? 'selected' : ''}>Car</option>
                 <option value="truck" ${currentValue === 'truck' ? 'selected' : ''}>Truck</option>
@@ -710,7 +710,7 @@ window.startCellEdit = function(propertyId, field, cell, type) {
     } else if (type === 'frequency') {
         inputHTML = `
             <select class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm" 
-                    onchange="saveCellEdit(this, ${propertyId}, '${field}', '${type}')"
+                    onchange="saveCellEdit(this, ${vehicleId}, '${field}', '${type}')"
                     onblur="setTimeout(() => cancelCellEdit(this), 150)">
                 <option value="" ${!currentValue ? 'selected' : ''}>-- Select --</option>
                 <option value="daily" ${currentValue === 'daily' ? 'selected' : ''}>Daily</option>
@@ -724,8 +724,8 @@ window.startCellEdit = function(propertyId, field, cell, type) {
             <input type="date" 
                    class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm" 
                    value="${currentValue}"
-                   onkeydown="handleCellKeydown(event, this, ${propertyId}, '${field}', '${type}')"
-                   onblur="saveCellEdit(this, ${propertyId}, '${field}', '${type}')">
+                   onkeydown="handleCellKeydown(event, this, ${vehicleId}, '${field}', '${type}')"
+                   onblur="saveCellEdit(this, ${vehicleId}, '${field}', '${type}')">
         `;
     } else if (type === 'text') {
         inputHTML = `
@@ -733,8 +733,8 @@ window.startCellEdit = function(propertyId, field, cell, type) {
                    class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm w-32" 
                    value="${currentValue}"
                    placeholder="Enter name..."
-                   onkeydown="handleCellKeydown(event, this, ${propertyId}, '${field}', '${type}')"
-                   onblur="saveCellEdit(this, ${propertyId}, '${field}', '${type}')">
+                   onkeydown="handleCellKeydown(event, this, ${vehicleId}, '${field}', '${type}')"
+                   onblur="saveCellEdit(this, ${vehicleId}, '${field}', '${type}')">
         `;
     } else {
         // number type
@@ -742,8 +742,8 @@ window.startCellEdit = function(propertyId, field, cell, type) {
             <input type="number" 
                    class="cell-input bg-gray-800 border border-purple-500 rounded px-2 py-1 text-white text-sm w-20" 
                    value="${currentValue}"
-                   onkeydown="handleCellKeydown(event, this, ${propertyId}, '${field}', '${type}')"
-                   onblur="saveCellEdit(this, ${propertyId}, '${field}', '${type}')">
+                   onkeydown="handleCellKeydown(event, this, ${vehicleId}, '${field}', '${type}')"
+                   onblur="saveCellEdit(this, ${vehicleId}, '${field}', '${type}')">
         `;
     }
     
@@ -754,16 +754,16 @@ window.startCellEdit = function(propertyId, field, cell, type) {
     if (input.select) input.select();
 };
 
-window.handleCellKeydown = function(event, input, propertyId, field, type) {
+window.handleCellKeydown = function(event, input, vehicleId, field, type) {
     if (event.key === 'Enter') {
         event.preventDefault();
-        saveCellEdit(input, propertyId, field, type);
+        saveCellEdit(input, vehicleId, field, type);
     } else if (event.key === 'Escape') {
         cancelCellEdit(input);
     }
 };
 
-window.saveCellEdit = async function(input, propertyId, field, type) {
+window.saveCellEdit = async function(input, vehicleId, field, type) {
     const cell = input.closest('td, div');
     let newValue = input.value;
     const originalHTML = cell.dataset.originalHTML;
@@ -775,7 +775,7 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
             cell.innerHTML = originalHTML;
             return;
         }
-    } else if (type === 'text' || type === 'date' || type === 'frequency' || type === 'select' || type === 'propertyType') {
+    } else if (type === 'text' || type === 'date' || type === 'frequency' || type === 'select' || type === 'vehicleType') {
         // Keep as string, allow empty for text and date fields (so they can be cleared)
         if (!newValue && type !== 'text' && type !== 'date') {
             cell.innerHTML = originalHTML;
@@ -788,17 +788,17 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
     
     try {
         // For empty date values, save empty string to clear the field
-        await PropertyDataService.write(propertyId, field, newValue);
+        await VehicleDataService.write(vehicleId, field, newValue);
         
-        // LOG PAYMENT when lastPaymentDate is updated (same as property detail page)
+        // LOG PAYMENT when lastPaymentDate is updated (same as vehicle detail page)
         if (field === 'lastPaymentDate' && newValue && typeof logPayment === 'function') {
-            const p = properties.find(prop => prop.id === propertyId);
-            const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
-            const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
-            const dailyPrice = PropertyDataService.getValue(propertyId, 'dailyPrice', p?.dailyPrice || 0);
-            const weeklyPrice = PropertyDataService.getValue(propertyId, 'weeklyPrice', p?.weeklyPrice || 0);
-            const biweeklyPrice = PropertyDataService.getValue(propertyId, 'biweeklyPrice', p?.biweeklyPrice || 0);
-            const monthlyPrice = PropertyDataService.getValue(propertyId, 'monthlyPrice', p?.monthlyPrice || 0);
+            const p = vehicles.find(prop => prop.id === vehicleId);
+            const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p?.buyerName || 'Unknown');
+            const paymentFrequency = VehicleDataService.getValue(vehicleId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
+            const dailyPrice = VehicleDataService.getValue(vehicleId, 'dailyPrice', p?.dailyPrice || 0);
+            const weeklyPrice = VehicleDataService.getValue(vehicleId, 'weeklyPrice', p?.weeklyPrice || 0);
+            const biweeklyPrice = VehicleDataService.getValue(vehicleId, 'biweeklyPrice', p?.biweeklyPrice || 0);
+            const monthlyPrice = VehicleDataService.getValue(vehicleId, 'monthlyPrice', p?.monthlyPrice || 0);
             
             // Calculate payment amount based on frequency
             let paymentAmount = weeklyPrice;
@@ -811,7 +811,7 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
             }
             
             // Log payment to Firestore
-            const logSuccess = await logPayment(propertyId, {
+            const logSuccess = await logPayment(vehicleId, {
                 paymentDate: newValue,
                 recordedAt: new Date().toISOString(),
                 buyerName: buyerName,
@@ -839,45 +839,45 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
             }
         }
         
-        // Auto-flip to "sold" when setting renter name, phone, or payment date
+        // Auto-flip to "sold" when setting buyer name, phone, or payment date
         if ((field === 'buyerName' || field === 'buyerPhone' || field === 'lastPaymentDate') && newValue) {
-            if (state.availability[propertyId] !== false) {
-                // Property is currently available, flip to sold - this is a NEW sale!
-                state.availability[propertyId] = false;
-                await saveAvailability(propertyId, false);
+            if (state.availability[vehicleId] !== false) {
+                // Vehicle is currently available, flip to sold - this is a NEW sale!
+                state.availability[vehicleId] = false;
+                await saveAvailability(vehicleId, false);
                 
-                // Award XP for new rental (gamification)
+                // Award XP for new sale (gamification)
                 if (typeof GamificationService !== 'undefined' && field === 'buyerName') {
                     const user = auth.currentUser;
                     if (user) {
-                        // Get current rental count
+                        // Get current sale count
                         const userData = window.currentUserData || {};
                         const totalSales = userData.gamification?.stats?.totalSales || 0;
                         
                         if (totalSales === 0) {
-                            // First rental ever - award 1000 XP and create celebration
-                            GamificationService.awardAchievement(user.uid, 'first_rental', 1000, {
+                            // First sale ever - award 1000 XP and create celebration
+                            GamificationService.awardAchievement(user.uid, 'first_sale', 1000, {
                                 statUpdate: { totalSales: 1 }
                             }).then(async (result) => {
                                 if (result && !result.alreadyEarned) {
-                                    console.log('[Gamification] Awarded 1000 XP for first rental');
+                                    console.log('[Gamification] Awarded 1000 XP for first sale');
                                     // Create celebration
                                     const userName = userData.username || user.email.split('@')[0];
-                                    const propTitle = p?.title || 'a property';
+                                    const propTitle = p?.title || 'a vehicle';
                                     await GamificationService.createCelebration({
-                                        type: 'rental',
+                                        type: 'sale',
                                         userId: user.uid,
                                         userName: userName,
-                                        propertyTitle: propTitle,
+                                        vehicleTitle: propTitle,
                                         icon: '🤝',
-                                        message: `just leased ${propTitle}!`
+                                        message: `just sold ${propTitle}!`
                                     });
                                 }
                             }).catch(err => console.error('[Gamification] Error:', err));
                         } else {
-                            // Additional rental - award 500 XP and create celebration
-                            GamificationService.awardXP(user.uid, 500, 'additional_rental').then(async () => {
-                                console.log('[Gamification] Awarded 500 XP for additional rental');
+                            // Additional sale - award 500 XP and create celebration
+                            GamificationService.awardXP(user.uid, 500, 'additional_sale').then(async () => {
+                                console.log('[Gamification] Awarded 500 XP for additional sale');
                                 // Update stats
                                 await db.collection('users').doc(user.uid).update({
                                     'gamification.stats.totalSales': firebase.firestore.FieldValue.increment(1)
@@ -885,14 +885,14 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
                                 
                                 // Create celebration
                                 const userName = userData.username || user.email.split('@')[0];
-                                const propTitle = p?.title || 'a property';
+                                const propTitle = p?.title || 'a vehicle';
                                 await GamificationService.createCelebration({
-                                    type: 'rental',
+                                    type: 'sale',
                                     userId: user.uid,
                                     userName: userName,
-                                    propertyTitle: propTitle,
+                                    vehicleTitle: propTitle,
                                     icon: '🤝',
-                                    message: `just leased ${propTitle}!`
+                                    message: `just sold ${propTitle}!`
                                 });
                             }).catch(err => console.error('[Gamification] Error:', err));
                         }
@@ -901,12 +901,12 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
             }
         }
         
-        // Update filtered properties to reflect changes
-        state.filteredProperties = [...properties];
+        // Update filtered vehicles to reflect changes
+        state.filteredVehicles = [...vehicles];
         
         // Re-render dashboard to show updated values
         renderOwnerDashboard();
-        renderProperties(state.filteredProperties);
+        renderVehicles(state.filteredVehicles);
         
     } catch (error) {
         console.error('Save failed:', error);
@@ -923,23 +923,23 @@ window.cancelCellEdit = function(input) {
     }
 };
 
-async function renderProperties(list) {
+async function renderVehicles(list) {
     // Update vehicle count
-    const countEl = $('vehicleCount') || $('propertyCount');
+    const countEl = $('vehicleCount') || $('vehicleCount');
     if (countEl) {
         countEl.textContent = `(${list.length})`;
     }
     
     // Sort premium listings to the top
     const sortedList = [...list].sort((a, b) => {
-        const aPremium = PropertyDataService.getValue(a.id, 'isPremium', a.isPremium || false);
-        const bPremium = PropertyDataService.getValue(b.id, 'isPremium', b.isPremium || false);
+        const aPremium = VehicleDataService.getValue(a.id, 'isPremium', a.isPremium || false);
+        const bPremium = VehicleDataService.getValue(b.id, 'isPremium', b.isPremium || false);
         if (aPremium && !bPremium) return -1;
         if (!aPremium && bPremium) return 1;
         return 0;
     });
     
-    // Placeholder for properties with no/broken images
+    // Placeholder for vehicles with no/broken images
     const imagePlaceholder = `
         <div class="w-full h-64 md:h-72 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center">
             <span class="text-6xl mb-3">🚗</span>
@@ -950,12 +950,12 @@ async function renderProperties(list) {
     // Image error handler function name
     const imgErrorHandler = "this.onerror=null; this.parentElement.innerHTML=`<div class='w-full h-64 md:h-72 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-6xl mb-3'>🚗</span><span class='text-gray-400 font-semibold text-sm'>Photos Coming Soon</span></div>`;";
     
-    // First render with placeholder owner - include ALL properties, even those without images
+    // First render with placeholder owner - include ALL vehicles, even those without images
     $('vehiclesGrid').innerHTML = sortedList.filter(p => p).map(p => {
-        // Ensure property ID is numeric for consistent lookup
+        // Ensure vehicle ID is numeric for consistent lookup
         const propId = typeof p.id === 'string' ? parseInt(p.id) : p.id;
         const available = state.availability[propId] !== false;
-        const isPremium = PropertyDataService.getValue(propId, 'isPremium', p.isPremium || false);
+        const isPremium = VehicleDataService.getValue(propId, 'isPremium', p.isPremium || false);
         const hasImages = p.images && Array.isArray(p.images) && p.images.length > 0 && p.images[0];
         
         // Premium styling
@@ -976,7 +976,7 @@ async function renderProperties(list) {
             : imagePlaceholder;
         
         return `
-        <article class="property-card bg-gray-800 rounded-2xl shadow-xl overflow-hidden cursor-pointer ${cardBorder} ${premiumGlow} relative transform hover:scale-[1.02] hover:shadow-2xl transition-all duration-300" onclick="viewProperty(${p.id})">
+        <article class="vehicle-card bg-gray-800 rounded-2xl shadow-xl overflow-hidden cursor-pointer ${cardBorder} ${premiumGlow} relative transform hover:scale-[1.02] hover:shadow-2xl transition-all duration-300" onclick="viewVehicle(${p.id})">
             ${premiumBadge}
             <div class="relative ${imageMargin}">
                 ${!available ? '<div class="unavailable-overlay"><div class="unavailable-text">SOLD</div></div>' : ''}
@@ -987,11 +987,11 @@ async function renderProperties(list) {
             <div class="p-5 md:p-6">
                 <div class="flex justify-between items-start gap-2 mb-2">
                     <h4 class="text-xl md:text-2xl font-bold ${isPremium ? 'text-amber-300' : 'text-white'} min-h-[1.75rem] line-clamp-1">${sanitize(p.title)}</h4>
-                    <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-lg border border-amber-400/50">${PropertyDataService.getValue(p.id, 'type', p.type) || 'OTHER'}</span>
+                    <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-lg border border-amber-400/50">${VehicleDataService.getValue(p.id, 'type', p.type) || 'OTHER'}</span>
                 </div>
                 <div class="flex items-center gap-3 text-sm mb-3">
                     <span class="text-gray-400">🔖</span>
-                    <span class="text-white font-semibold">${PropertyDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span>
+                    <span class="text-white font-semibold">${VehicleDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span>
                 </div>
                 <p id="owner-${p.id}" class="text-xs text-blue-400 mb-3 font-semibold">👤 Owner: Loading...</p>
                 
@@ -999,22 +999,22 @@ async function renderProperties(list) {
                 <div class="flex items-center justify-between bg-gray-900/60 rounded-lg px-3 py-2 mb-3 text-xs border border-gray-700/50">
                     <div class="flex items-center gap-1" title="Upgrades">
                         <span class="text-amber-400">🔧</span>
-                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'upgrades', p.upgrades) || '—'}</span>
+                        <span class="text-white font-bold">${VehicleDataService.getValue(p.id, 'upgrades', p.upgrades) || '—'}</span>
                     </div>
                     <div class="w-px h-4 bg-gray-600"></div>
                     <div class="flex items-center gap-1" title="Speed">
                         <span class="text-cyan-400">⚡</span>
-                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'speed', p.speed) || '—'}</span>
+                        <span class="text-white font-bold">${VehicleDataService.getValue(p.id, 'speed', p.speed) || '—'}</span>
                     </div>
                     <div class="w-px h-4 bg-gray-600"></div>
                     <div class="flex items-center gap-1" title="Storage">
                         <span class="text-green-400">📦</span>
-                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'storage', p.storage) || '—'}</span>
+                        <span class="text-white font-bold">${VehicleDataService.getValue(p.id, 'storage', p.storage) || '—'}</span>
                     </div>
                     <div class="w-px h-4 bg-gray-600"></div>
                     <div class="flex items-center gap-1" title="Seats">
                         <span class="text-purple-400">💺</span>
-                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'seats', p.seats) || '—'}</span>
+                        <span class="text-white font-bold">${VehicleDataService.getValue(p.id, 'seats', p.seats) || '—'}</span>
                     </div>
                 </div>
                 
@@ -1022,14 +1022,14 @@ async function renderProperties(list) {
                 <div class="bg-gradient-to-r from-green-900/40 to-emerald-900/40 border border-green-500/30 rounded-xl p-3 mb-4 text-center relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5"></div>
                     <div class="relative">
-                        <div class="text-green-400 text-2xl md:text-3xl font-black tracking-tight">$${(PropertyDataService.getValue(p.id, 'buyPrice', p.buyPrice) || 0).toLocaleString()}</div>
+                        <div class="text-green-400 text-2xl md:text-3xl font-black tracking-tight">$${(VehicleDataService.getValue(p.id, 'buyPrice', p.buyPrice) || 0).toLocaleString()}</div>
                         <div class="text-green-500/60 text-[10px] uppercase tracking-wider mt-1">+$25k city sales fee</div>
                     </div>
                 </div>
                 
                 <!-- Action Buttons - Stacked -->
                 <div class="space-y-2">
-                    <button onclick="event.stopPropagation(); viewProperty(${p.id})" class="w-full ${isPremium ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900' : 'bg-gray-700 hover:bg-gray-600 text-white'} px-4 py-2.5 rounded-xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2">
+                    <button onclick="event.stopPropagation(); viewVehicle(${p.id})" class="w-full ${isPremium ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900' : 'bg-gray-700 hover:bg-gray-600 text-white'} px-4 py-2.5 rounded-xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         View Details
                     </button>
@@ -1043,10 +1043,10 @@ async function renderProperties(list) {
     
     // Then fetch and update owner names with tier icons asynchronously
     for (const p of sortedList) {
-        const ownerInfo = await getPropertyOwnerWithTier(p.id);
+        const ownerInfo = await getVehicleOwnerWithTier(p.id);
         const ownerEl = $(`owner-${p.id}`);
         if (ownerEl) {
-            // Use different label based on whether property is managed by agent
+            // Use different label based on whether vehicle is managed by agent
             if (ownerInfo.isManaged) {
                 ownerEl.innerHTML = ownerInfo.display;
             } else {

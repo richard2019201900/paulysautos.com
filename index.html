@@ -1672,7 +1672,7 @@
                 </div>
             </div>
 
-            <!-- Row 1: Vehicle Sales Stats (PaulysAutos - No Rentals) -->
+            <!-- Row 1: Vehicle Sales Stats (PaulysAutos - No Financing) -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4">
                 <!-- Total Sales Revenue -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
@@ -1777,7 +1777,7 @@
                                 <h3 class="text-xs font-bold">Value Breakdown</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
-                            <div id="totalRentalIncomeBreakdown" class="text-xs space-y-1"></div>
+                            <div id="totalSalesIncomeBreakdown" class="text-xs space-y-1"></div>
                         </div>
                     </div>
                 </div>
@@ -1791,7 +1791,7 @@
                                 <span class="text-xl">🚗</span>
                             </div>
                             <p id="totalListingsDisplay" class="text-2xl md:text-3xl font-black">0</p>
-                            <p id="propertiesSubtitle" class="text-xs opacity-70 mt-1">0 active • 0 sold</p>
+                            <p id="vehiclesSubtitle" class="text-xs opacity-70 mt-1">0 active • 0 sold</p>
                         </div>
                         <div class="flip-card-back bg-gradient-to-br from-slate-700 to-slate-900 rounded-2xl shadow-2xl p-3 text-white border border-slate-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
@@ -2030,8 +2030,8 @@
         </div>
     </section>
 
-    <!-- Renter Section -->
-    <div id="renterSection">
+    <!-- Browse Section -->
+    <div id="browseSection">
         <!-- Photo Services Promo Banner (floating left side) -->
         <div id="photoPromoBar" class="hidden lg:block fixed left-0 top-1/3 z-40 transform -translate-y-1/2">
             <!-- Expanded state -->

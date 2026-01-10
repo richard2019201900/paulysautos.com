@@ -12,7 +12,7 @@
  * - Admin XP adjustment
  * - Delete/reverse sale system
  * 
- * DEPENDENCIES: TierService, PropertyDataService, UserPreferencesService, GamificationService
+ * DEPENDENCIES: TierService, VehicleDataService, UserPreferencesService, GamificationService
  * ============================================================================
  */
 
@@ -57,18 +57,18 @@ async function checkCelebrationBanners() {
 /**
  * Create a vehicle sale celebration banner (24 hours)
  */
-window.createSaleCelebration = async function(sellerDisplayName, propertyTitle, salePrice, buyerName) {
+window.createSaleCelebration = async function(sellerDisplayName, vehicleTitle, salePrice, buyerName) {
     try {
         const celebrationId = `sale_${Date.now()}`;
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
         
-        // Only show seller name and property - no buyer or price for privacy
+        // Only show seller name and vehicle - no buyer or price for privacy
         const celebration = {
             id: celebrationId,
             type: 'house_sale',
             icon: '🏆',
             userName: sellerDisplayName,
-            message: `just sold ${propertyTitle}! 🎉`,
+            message: `just sold ${vehicleTitle}! 🎉`,
             createdAt: new Date().toISOString(),
             expiresAt: expiresAt
         };
@@ -102,17 +102,17 @@ window.createSaleCelebration = async function(sellerDisplayName, propertyTitle, 
 /**
  * Show the Log Vehicle Sale modal
  */
-window.showLogSaleModal = function(propertyId, financingContractId = null) {
+window.showLogSaleModal = function(vehicleId, financingContractId = null) {
     // Ensure numeric ID for comparison
-    const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
-    const p = properties.find(prop => prop.id === numericId);
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+    const p = vehicles.find(prop => prop.id === numericId);
     if (!p) {
         showToast('Vehicle not found', 'error');
         return;
     }
     
-    const buyPrice = PropertyDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
-    const buyerName = PropertyDataService.getValue(numericId, 'buyerName', p.buyerName || '');
+    const buyPrice = VehicleDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
+    const buyerName = VehicleDataService.getValue(numericId, 'buyerName', p.buyerName || '');
     const today = new Date().toISOString().split('T')[0];
     const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     
@@ -121,7 +121,7 @@ window.showLogSaleModal = function(propertyId, financingContractId = null) {
     const saleType = isRTOCompletion ? 'financing_completion' : 'direct_sale';
     
     // Get current vehicle owner info
-    const vehicleOwnerEmail = PropertyDataService.getValue(numericId, 'owner', p.owner || '');
+    const vehicleOwnerEmail = VehicleDataService.getValue(numericId, 'owner', p.owner || '');
     const currentUserEmail = auth.currentUser?.email || '';
     const currentUserDisplayName = window.currentUserData?.displayName || currentUserEmail.split('@')[0];
     
@@ -237,7 +237,7 @@ window.showLogSaleModal = function(propertyId, financingContractId = null) {
     
     // Populate seller dropdown for admins
     if (isAdmin) {
-        populateSellerDropdown(propertyId, propertyOwnerEmail);
+        populateSellerDropdown(vehicleId, vehicleOwnerEmail);
     }
 };
 
@@ -247,14 +247,14 @@ window.closeLogSaleModal = function() {
 };
 
 /**
- * Populate seller dropdown with property owners (for admin use)
+ * Populate seller dropdown with vehicle owners (for admin use)
  */
-async function populateSellerDropdown(propertyId, defaultOwnerEmail) {
+async function populateSellerDropdown(vehicleId, defaultOwnerEmail) {
     const select = document.getElementById('saleSellerSelect');
     if (!select) return;
     
     try {
-        // Get all users who own properties
+        // Get all users who own vehicles
         const usersSnapshot = await db.collection('users').get();
         const owners = [];
         
@@ -341,7 +341,7 @@ window.submitVehicleSale = async function(vehicleId, saleType, financingContract
         showToast('🚗 Recording sale...', 'info');
         closeLogSaleModal();
         
-        const p = properties.find(prop => prop.id === numericId);
+        const p = vehicles.find(prop => prop.id === numericId);
         
         const salesFee = Math.round(salePrice * 0.10);
         const netProceeds = salePrice - salesFee;
@@ -366,8 +366,8 @@ window.submitVehicleSale = async function(vehicleId, saleType, financingContract
             notes: notes,
             recordedAt: new Date().toISOString(),
             recordedBy: auth.currentUser?.email,  // Who logged it (for audit)
-            // Keep propertyId for backwards compatibility
-            propertyId: numericId
+            // Keep vehicleId for backwards compatibility
+            vehicleId: numericId
         };
         
         // Save to vehicleSales collection
@@ -375,7 +375,7 @@ window.submitVehicleSale = async function(vehicleId, saleType, financingContract
         console.log('[VehicleSale] Created sale record:', saleRef.id);
         
         // Mark vehicle as sold
-        await PropertyDataService.writeMultiple(numericId, {
+        await VehicleDataService.writeMultiple(numericId, {
             isSold: true,
             soldDate: saleDate,
             soldTo: buyerName,
@@ -413,8 +413,8 @@ window.submitVehicleSale = async function(vehicleId, saleType, financingContract
         
         // Refresh the vehicle stats page
         setTimeout(() => {
-            if (typeof renderPropertyStatsContent === 'function') {
-                renderPropertyStatsContent(numericId);
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(numericId);
             }
             if (typeof renderOwnerDashboard === 'function') {
                 renderOwnerDashboard();
@@ -432,13 +432,13 @@ window.submitVehicleSale = async function(vehicleId, saleType, financingContract
 /**
  * Create an ownership transfer request for admin approval
  */
-async function createOwnershipTransferRequest(propertyId, newOwnerName, currentOwnerEmail, saleId) {
+async function createOwnershipTransferRequest(vehicleId, newOwnerName, currentOwnerEmail, saleId) {
     try {
-        const p = properties.find(prop => prop.id === propertyId);
+        const p = vehicles.find(prop => prop.id === vehicleId);
         
         const transferRequest = {
-            propertyId: propertyId,
-            propertyTitle: p?.title || `Property #${propertyId}`,
+            vehicleId: vehicleId,
+            vehicleTitle: p?.title || `Vehicle #${vehicleId}`,
             currentOwnerEmail: currentOwnerEmail,
             newOwnerName: newOwnerName,
             newOwnerEmail: null, // To be filled by admin when approving
@@ -450,7 +450,7 @@ async function createOwnershipTransferRequest(propertyId, newOwnerName, currentO
         };
         
         await db.collection('ownershipTransfers').add(transferRequest);
-        console.log('[OwnershipTransfer] Created transfer request for property', propertyId);
+        console.log('[OwnershipTransfer] Created transfer request for vehicle', vehicleId);
         
         showToast('📝 Ownership transfer request submitted for admin review', 'info');
     } catch (e) {
@@ -475,10 +475,10 @@ window.approveOwnershipTransfer = async function(transferId, newOwnerEmail) {
         }
         
         const transfer = transferDoc.data();
-        const propertyId = transfer.propertyId;
+        const vehicleId = transfer.vehicleId;
         
-        // Update property owner
-        await PropertyDataService.write(propertyId, 'owner', newOwnerEmail);
+        // Update vehicle owner
+        await VehicleDataService.write(vehicleId, 'owner', newOwnerEmail);
         
         // Update transfer status
         await db.collection('ownershipTransfers').doc(transferId).update({
@@ -629,7 +629,7 @@ window.adminRemoveActivityEntry = async function(userEmail, searchText) {
 /**
  * Show confirmation modal to delete a sale (admin only)
  */
-window.showDeleteSaleModal = function(saleId, propertyTitle, sellerDisplayName, salePrice) {
+window.showDeleteSaleModal = function(saleId, vehicleTitle, sellerDisplayName, salePrice) {
     if (!TierService.isMasterAdmin(auth.currentUser?.email)) {
         showToast('Only admins can delete sales', 'error');
         return;
@@ -649,7 +649,7 @@ window.showDeleteSaleModal = function(saleId, propertyTitle, sellerDisplayName, 
                     <div class="bg-red-900/30 border border-red-500/50 rounded-xl p-4">
                         <p class="text-red-200 font-medium">This will permanently reverse the following sale:</p>
                         <ul class="mt-3 space-y-1 text-gray-300 text-sm">
-                            <li><strong>Property:</strong> ${propertyTitle}</li>
+                            <li><strong>Vehicle:</strong> ${vehicleTitle}</li>
                             <li><strong>Seller:</strong> ${sellerDisplayName}</li>
                             <li><strong>Amount:</strong> $${salePrice?.toLocaleString() || 0}</li>
                         </ul>
@@ -661,7 +661,7 @@ window.showDeleteSaleModal = function(saleId, propertyTitle, sellerDisplayName, 
                             <li>Delete the sale record from vehicleSales</li>
                             <li>Remove the sale celebration banner</li>
                             <li>Deduct 2,500 XP from the seller</li>
-                            <li>Mark the property as unsold</li>
+                            <li>Mark the vehicle as unsold</li>
                             <li>Clear sold date, buyer, and price</li>
                         </ul>
                     </div>
@@ -722,22 +722,22 @@ window.confirmDeleteSale = async function(saleId) {
         }
         
         const sale = saleDoc.data();
-        const propertyId = sale.propertyId;
+        const vehicleId = sale.vehicleId;
         const sellerUid = sale.sellerUid;
         const sellerDisplayName = sale.sellerDisplayName || sale.sellerName;
         
         // 2. Deduct XP from seller
         if (sellerUid && typeof GamificationService !== 'undefined' && GamificationService.deductXP) {
-            await GamificationService.deductXP(sellerUid, 2500, `Sale reversed: ${sale.propertyTitle} (Admin: ${reason})`);
+            await GamificationService.deductXP(sellerUid, 2500, `Sale reversed: ${sale.vehicleTitle} (Admin: ${reason})`);
         }
         
         // 3. Remove celebration banner
         const celebDoc = await db.collection('settings').doc('celebrations').get();
         if (celebDoc.exists) {
             let active = celebDoc.data().active || [];
-            // Remove any celebration matching this seller and property
+            // Remove any celebration matching this seller and vehicle
             active = active.filter(c => {
-                if (c.type === 'house_sale' && c.userName === sellerDisplayName && c.message.includes(sale.propertyTitle)) {
+                if (c.type === 'house_sale' && c.userName === sellerDisplayName && c.message.includes(sale.vehicleTitle)) {
                     return false;
                 }
                 return true;
@@ -745,8 +745,8 @@ window.confirmDeleteSale = async function(saleId) {
             await db.collection('settings').doc('celebrations').set({ active }, { merge: true });
         }
         
-        // 4. Unmark property as sold and clear renter info if RTO
-        const propertyUpdates = {
+        // 4. Unmark vehicle as sold and clear buyer info if RTO
+        const vehicleUpdates = {
             isSold: false,
             soldDate: null,
             soldTo: null,
@@ -754,18 +754,18 @@ window.confirmDeleteSale = async function(saleId) {
             saleId: null
         };
         
-        // If this was an Financing completion, also clear renter/payment info
+        // If this was an Financing completion, also clear buyer/payment info
         if (sale.saleType === 'financing_completion' || sale.financingContractId) {
-            propertyUpdates.buyerName = null;
-            propertyUpdates.buyerPhone = null;
-            propertyUpdates.buyerNotes = null;
-            propertyUpdates.paymentFrequency = null;
-            propertyUpdates.lastPaymentDate = null;
-            propertyUpdates.hasActiveFinancing = false;
-            propertyUpdates.financingContractId = null;
+            vehicleUpdates.buyerName = null;
+            vehicleUpdates.buyerPhone = null;
+            vehicleUpdates.buyerNotes = null;
+            vehicleUpdates.paymentFrequency = null;
+            vehicleUpdates.lastPaymentDate = null;
+            vehicleUpdates.hasActiveFinancing = false;
+            vehicleUpdates.financingContractId = null;
         }
         
-        await PropertyDataService.writeMultiple(propertyId, propertyUpdates);
+        await VehicleDataService.writeMultiple(vehicleId, vehicleUpdates);
         
         // 5. If there was an Financing contract, fully delete it (not just revert)
         if (sale.financingContractId) {
@@ -835,13 +835,13 @@ function calculateSaleBreakdown(vehiclePrice) {
 window.showStartSaleModal = function(vehicleId) {
     // Ensure numeric ID for comparison
     const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
-    const p = properties.find(prop => prop.id === numericId);
+    const p = vehicles.find(prop => prop.id === numericId);
     if (!p) {
         showToast('Vehicle not found', 'error');
         return;
     }
     
-    const buyPrice = PropertyDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
+    const buyPrice = VehicleDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
     const breakdown = calculateSaleBreakdown(buyPrice);
     
     // Set form values
@@ -1031,13 +1031,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            const p = properties.find(prop => prop.id === vehicleId);
+            const p = vehicles.find(prop => prop.id === vehicleId);
             if (!p) {
                 showToast('Vehicle not found', 'error');
                 return;
             }
             
-            const buyPrice = PropertyDataService.getValue(vehicleId, 'buyPrice', p.buyPrice || 0);
+            const buyPrice = VehicleDataService.getValue(vehicleId, 'buyPrice', p.buyPrice || 0);
             const breakdown = calculateSaleBreakdown(buyPrice);
             const contractId = generateContractId();
             
@@ -1060,8 +1060,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 contractId,
                 vehicleId,
                 vehicleTitle: p.title,
-                vehiclePlate: PropertyDataService.getValue(vehicleId, 'plate', p.plate || ''),
-                vehicleType: PropertyDataService.getValue(vehicleId, 'type', p.type || ''),
+                vehiclePlate: VehicleDataService.getValue(vehicleId, 'plate', p.plate || ''),
+                vehicleType: VehicleDataService.getValue(vehicleId, 'type', p.type || ''),
                 sellerName,
                 sellerEmail: p.ownerEmail,
                 buyerName,
@@ -1093,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await db.collection('saleContracts').doc(contractId).set(contractData);
                 
                 // Update vehicle with pending sale
-                await PropertyDataService.setValue(vehicleId, 'pendingSale', pendingSaleData);
+                await VehicleDataService.setValue(vehicleId, 'pendingSale', pendingSaleData);
                 
                 showToast('✅ Sale contract generated!', 'success');
                 closeModal('startSaleModal');
@@ -1102,8 +1102,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 viewSaleContract(contractId);
                 
                 // Refresh the stats view
-                if (typeof renderPropertyStatsContent === 'function') {
-                    setTimeout(() => renderPropertyStatsContent(vehicleId), 500);
+                if (typeof renderVehicleStatsContent === 'function') {
+                    setTimeout(() => renderVehicleStatsContent(vehicleId), 500);
                 }
                 
             } catch (error) {
@@ -1202,17 +1202,17 @@ window.confirmDownPaymentReceived = async function(vehicleId) {
     if (!confirmed) return;
     
     try {
-        const p = properties.find(prop => prop.id === vehicleId);
+        const p = vehicles.find(prop => prop.id === vehicleId);
         if (!p) throw new Error('Vehicle not found');
         
-        const pendingSale = PropertyDataService.getValue(vehicleId, 'pendingSale', p.pendingSale || null);
+        const pendingSale = VehicleDataService.getValue(vehicleId, 'pendingSale', p.pendingSale || null);
         if (!pendingSale) throw new Error('No pending sale found');
         
         // Update pending sale
         pendingSale.downPaymentReceived = true;
         pendingSale.downPaymentReceivedAt = new Date().toISOString();
         
-        await PropertyDataService.setValue(vehicleId, 'pendingSale', pendingSale);
+        await VehicleDataService.setValue(vehicleId, 'pendingSale', pendingSale);
         
         // Update contract in Firestore
         if (pendingSale.contractId) {
@@ -1225,8 +1225,8 @@ window.confirmDownPaymentReceived = async function(vehicleId) {
         showToast('✅ Down payment confirmed! Complete the LUX transfer now.', 'success');
         
         // Refresh stats view
-        if (typeof renderPropertyStatsContent === 'function') {
-            renderPropertyStatsContent(vehicleId);
+        if (typeof renderVehicleStatsContent === 'function') {
+            renderVehicleStatsContent(vehicleId);
         }
         
     } catch (error) {
@@ -1250,10 +1250,10 @@ window.cancelPendingSale = async function(vehicleId) {
     if (!confirmed) return;
     
     try {
-        const p = properties.find(prop => prop.id === vehicleId);
+        const p = vehicles.find(prop => prop.id === vehicleId);
         if (!p) throw new Error('Vehicle not found');
         
-        const pendingSale = PropertyDataService.getValue(vehicleId, 'pendingSale', p.pendingSale || null);
+        const pendingSale = VehicleDataService.getValue(vehicleId, 'pendingSale', p.pendingSale || null);
         
         // Update contract status if exists
         if (pendingSale && pendingSale.contractId) {
@@ -1264,13 +1264,13 @@ window.cancelPendingSale = async function(vehicleId) {
         }
         
         // Remove pending sale from vehicle
-        await PropertyDataService.setValue(vehicleId, 'pendingSale', null);
+        await VehicleDataService.setValue(vehicleId, 'pendingSale', null);
         
         showToast('✅ Sale cancelled', 'success');
         
         // Refresh stats view
-        if (typeof renderPropertyStatsContent === 'function') {
-            renderPropertyStatsContent(vehicleId);
+        if (typeof renderVehicleStatsContent === 'function') {
+            renderVehicleStatsContent(vehicleId);
         }
         
     } catch (error) {

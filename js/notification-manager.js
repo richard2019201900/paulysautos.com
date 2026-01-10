@@ -7,7 +7,7 @@
  * 
  * NOTIFICATION TYPES:
  * - user: New user registrations
- * - listing: New property listings
+ * - listing: New vehicle listings
  * - photo: Photo service requests
  * - premium: Premium listing requests
  * - rent: Financing payment alerts (computed, not stored)
@@ -76,7 +76,7 @@
         // Kept as Set for fast lookups, synced with Firestore via UserPreferencesService
         dismissed: new Set(),
         
-        // Rent alerts (computed from properties, not stored in Firestore)
+        // Rent alerts (computed from vehicles, not stored in Firestore)
         rentAlerts: {
             overdue: [],    // Past due date
             today: [],      // Due today
@@ -150,13 +150,13 @@
                 notification.title = isMissed 
                     ? (isPremiumTrial ? '🎁 Premium Trial Listing' : '📬 While You Were Away...')
                     : (isPremium ? '👑 New Premium Listing!' : isPremiumTrial ? '🎁 New Premium Trial!' : '🚗 New Listing Posted!');
-                notification.subtitle = `${rawData.title || 'New Property'} by ${ownerName}`;
+                notification.subtitle = `${rawData.title || 'New Vehicle'} by ${ownerName}`;
                 notification.ownerName = ownerName;
                 notification.urgency = isPremium ? CONFIG.URGENCY.WARNING : CONFIG.URGENCY.INFO;
                 notification.action = {
                     type: 'scrollToUserByEmail',
                     target: rawData.ownerEmail,
-                    propertyId: rawData.id,
+                    vehicleId: rawData.id,
                     tab: 'admin',
                     subtab: 'users',
                     highlightSelector: `.admin-user-card[data-email="${rawData.ownerEmail}"]`
@@ -167,7 +167,7 @@
                 
             case 'photo':
                 notification.title = '📸 Photo Service Request';
-                notification.subtitle = `${rawData.name || 'Someone'} requested photos for ${rawData.propertyAddress || 'a property'}`;
+                notification.subtitle = `${rawData.name || 'Someone'} requested photos for ${rawData.vehicleAddress || 'a vehicle'}`;
                 notification.urgency = CONFIG.URGENCY.INFO;
                 notification.action = {
                     type: 'scrollToSection',
@@ -180,7 +180,7 @@
                 
             case 'premium':
                 notification.title = '👑 Premium Listing Request';
-                notification.subtitle = `${rawData.title || 'Property'} wants premium placement`;
+                notification.subtitle = `${rawData.title || 'Vehicle'} wants premium placement`;
                 notification.urgency = CONFIG.URGENCY.WARNING;
                 notification.action = {
                     type: 'scrollToSection',
@@ -200,13 +200,13 @@
                     : isToday 
                         ? '⏰ Due Today'
                         : '📅 Due Tomorrow';
-                notification.subtitle = `${rawData.title || rawData.propertyId} - ${rawData.buyerName || 'Unknown'}`;
+                notification.subtitle = `${rawData.title || rawData.vehicleId} - ${rawData.buyerName || 'Unknown'}`;
                 notification.urgency = isOverdue ? CONFIG.URGENCY.CRITICAL : isToday ? CONFIG.URGENCY.WARNING : CONFIG.URGENCY.INFO;
                 notification.action = {
                     type: 'scrollToRent',
-                    target: rawData.propertyId,
-                    tab: 'myProperties',
-                    highlightSelector: `#rent-item-${rawData.propertyId}`
+                    target: rawData.vehicleId,
+                    tab: 'myVehicles',
+                    highlightSelector: `#rent-item-${rawData.vehicleId}`
                 };
                 break;
         }
@@ -404,7 +404,7 @@
                 break;
                 
             case 'rent':
-                // Navigate to My Properties tab, scroll to rent panel
+                // Navigate to My Vehicles tab, scroll to rent panel
                 if (typeof window.switchDashboardTab === 'function') {
                     window.switchDashboardTab('myVehicles');
                     await sleep(200);
@@ -729,22 +729,22 @@
             tomorrow: 'text-yellow-300'
         };
         
-        const propertyId = rent.propId || rent.propertyId || rent.id;
+        const vehicleId = rent.propId || rent.vehicleId || rent.id;
         const paymentAmount = rent.paymentAmount || rent.weeklyPrice || 0;
         const buyerName = rent.buyerName || 'Unknown';
-        const propertyTitle = rent.title || `Property ${propertyId}`;
+        const vehicleTitle = rent.title || `Vehicle ${vehicleId}`;
         const dueDisplay = rent.dueDate ? new Date(rent.dueDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Unknown';
         
         return `
-            <div id="rent-item-${propertyId}" class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
-                <div class="flex-1 min-w-0 cursor-pointer" onclick="viewPropertyStats(${propertyId})" style="outline: none;">
-                    <div class="text-white font-medium truncate">${propertyTitle}</div>
+            <div id="rent-item-${vehicleId}" class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
+                <div class="flex-1 min-w-0 cursor-pointer" onclick="viewVehicleStats(${vehicleId})" style="outline: none;">
+                    <div class="text-white font-medium truncate">${vehicleTitle}</div>
                     <div class="text-gray-400 text-sm">Buyer: ${buyerName}</div>
                     <div class="${statusColors[status]} text-xs">Due: ${dueDisplay}</div>
                 </div>
                 <div class="text-right">
                     <div class="text-white font-bold">$${paymentAmount.toLocaleString()}</div>
-                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyRentReminder('${propertyId}', '${buyerName.replace(/'/g, "\\'")}', '${propertyTitle.replace(/'/g, "\\'")}', ${paymentAmount})" 
+                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyRentReminder('${vehicleId}', '${buyerName.replace(/'/g, "\\'")}', '${vehicleTitle.replace(/'/g, "\\'")}', ${paymentAmount})" 
                             class="text-cyan-400 hover:text-cyan-300 text-xs mt-1 flex items-center gap-1"
                             style="outline: none;">
                         📋 Copy Reminder
@@ -764,10 +764,10 @@
         }
     }
     
-    function copyRentReminder(propertyId, buyerName, propertyTitle, amount) {
+    function copyRentReminder(vehicleId, buyerName, vehicleTitle, amount) {
         // Find the rent data to get full details (frequency, due date, days overdue)
         const allRents = [...state.rentAlerts.overdue, ...state.rentAlerts.today, ...state.rentAlerts.tomorrow];
-        const rentData = allRents.find(r => String(r.propId) === String(propertyId) || String(r.id) === String(propertyId));
+        const rentData = allRents.find(r => String(r.propId) === String(vehicleId) || String(r.id) === String(vehicleId));
         
         let message;
         
@@ -798,7 +798,7 @@
             }
         } else {
             // Fallback if rent data not found
-            message = `Hey ${buyerName}! 👋 Just a friendly reminder that rent for ${propertyTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🚗`;
+            message = `Hey ${buyerName}! 👋 Just a friendly reminder that rent for ${vehicleTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🚗`;
         }
         
         navigator.clipboard.writeText(message).then(() => {
@@ -942,13 +942,13 @@
     function startListingListener() {
         if (state.listeners.listings) state.listeners.listings();
         
-        state.listeners.listings = db.collection('settings').doc('properties')
+        state.listeners.listings = db.collection('settings').doc('vehicles')
             .onSnapshot(doc => {
                 if (!doc.exists) return;
                 
-                const properties = doc.data();
+                const vehicles = doc.data();
                 
-                Object.entries(properties).forEach(([propId, prop]) => {
+                Object.entries(vehicles).forEach(([propId, prop]) => {
                     if (!prop) return;
                     
                     const createdAt = prop.createdAtTimestamp?.toDate?.() || 
@@ -999,10 +999,10 @@
         if (!currentUser) return;
         
         try {
-            const propsDoc = await db.collection('settings').doc('properties').get();
+            const propsDoc = await db.collection('settings').doc('vehicles').get();
             if (!propsDoc.exists) return;
             
-            const properties = propsDoc.data();
+            const vehicles = propsDoc.data();
             const now = new Date();
             now.setHours(0, 0, 0, 0);
             const todayStr = now.toISOString().split('T')[0];
@@ -1015,7 +1015,7 @@
             
             const isAdmin = window.TierService?.isMasterAdmin(currentUser.email);
             
-            Object.entries(properties).forEach(([propId, prop]) => {
+            Object.entries(vehicles).forEach(([propId, prop]) => {
                 if (!prop) return;
                 
                 // Must have buyerName, lastPaymentDate, and paymentFrequency to calculate due date
@@ -1023,7 +1023,7 @@
                     return;
                 }
                 
-                // Rent alerts are ALWAYS filtered to current user's properties only
+                // Rent alerts are ALWAYS filtered to current user's vehicles only
                 // Even admins only see their own rent alerts (they can view all in admin panel)
                 if (prop.ownerEmail !== currentUser.email) return;
                 
@@ -1070,7 +1070,7 @@
                 
                 const rentData = {
                     propId,
-                    propertyId: propId,
+                    vehicleId: propId,
                     id: propId,
                     ...prop,
                     dueDate,

@@ -1,45 +1,45 @@
 /**
  * ============================================================================
- * UI PROFILE - User profile and property navigation
+ * UI PROFILE - User profile and vehicle navigation
  * ============================================================================
  * 
  * CONTENTS:
- * - Property navigation (next/prev property)
+ * - Vehicle navigation (next/prev vehicle)
  * - Username functions
  * - Profile completion check
  * - Tier badge updates
  * - Save username/phone
  * 
- * DEPENDENCIES: TierService, PropertyDataService, UserPreferencesService
+ * DEPENDENCIES: TierService, VehicleDataService, UserPreferencesService
  * ============================================================================
  */
 
 // ==================== PROPERTY NAVIGATION ====================
-// Navigate between properties (prev/next)
+// Navigate between vehicles (prev/next)
 window.navigateProperty = function(direction) {
-    const currentId = state.currentPropertyId;
+    const currentId = state.currentVehicleId;
     if (!currentId) return;
     
-    // Get the current list of visible/filtered properties
-    const visibleProperties = getVisibleProperties();
+    // Get the current list of visible/filtered vehicles
+    const visibleVehicles = getVisibleProperties();
     
-    if (visibleProperties.length === 0) return;
+    if (visibleVehicles.length === 0) return;
     
-    // Find current property index
-    const currentIndex = visibleProperties.findIndex(p => p.id === currentId);
+    // Find current vehicle index
+    const currentIndex = visibleVehicles.findIndex(p => p.id === currentId);
     if (currentIndex === -1) return;
     
     let newIndex;
     if (direction === 'prev') {
-        newIndex = currentIndex > 0 ? currentIndex - 1 : visibleProperties.length - 1;
+        newIndex = currentIndex > 0 ? currentIndex - 1 : visibleVehicles.length - 1;
     } else {
-        newIndex = currentIndex < visibleProperties.length - 1 ? currentIndex + 1 : 0;
+        newIndex = currentIndex < visibleVehicles.length - 1 ? currentIndex + 1 : 0;
     }
     
-    const newProperty = visibleProperties[newIndex];
-    if (newProperty) {
-        // Navigate to the new property
-        viewProperty(newProperty.id);
+    const newVehicle = visibleVehicles[newIndex];
+    if (newVehicle) {
+        // Navigate to the new vehicle
+        viewVehicle(newVehicle.id);
         // Scroll to top of page
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -48,33 +48,33 @@ window.navigateProperty = function(direction) {
 // Alias for vehicle navigation
 window.navigateVehicle = window.navigateProperty;
 
-// Get list of currently visible properties (respecting filters)
+// Get list of currently visible vehicles (respecting filters)
 window.getVisibleProperties = function() {
-    // If we have filtered properties, use those, otherwise use all
-    if (state.filteredProperties && state.filteredProperties.length > 0) {
-        return state.filteredProperties;
+    // If we have filtered vehicles, use those, otherwise use all
+    if (state.filteredVehicles && state.filteredVehicles.length > 0) {
+        return state.filteredVehicles;
     }
-    return properties;
+    return vehicles;
 };
 
-// Update the property navigation counter
+// Update the vehicle navigation counter
 window.updatePropertyNavCounter = function() {
-    const counter = $('propertyNavCounter');
+    const counter = $('vehicleNavCounter');
     const prevBtn = $('prevPropertyBtn');
     const nextBtn = $('nextPropertyBtn');
     
     if (!counter) return;
     
-    const currentId = state.currentPropertyId;
-    const visibleProperties = getVisibleProperties();
-    const currentIndex = visibleProperties.findIndex(p => p.id === currentId);
+    const currentId = state.currentVehicleId;
+    const visibleVehicles = getVisibleProperties();
+    const currentIndex = visibleVehicles.findIndex(p => p.id === currentId);
     
-    if (currentIndex !== -1 && visibleProperties.length > 0) {
-        counter.textContent = `${currentIndex + 1} of ${visibleProperties.length}`;
+    if (currentIndex !== -1 && visibleVehicles.length > 0) {
+        counter.textContent = `${currentIndex + 1} of ${visibleVehicles.length}`;
         
-        // Show/hide nav buttons based on property count
-        if (prevBtn) prevBtn.style.display = visibleProperties.length > 1 ? 'block' : 'none';
-        if (nextBtn) nextBtn.style.display = visibleProperties.length > 1 ? 'block' : 'none';
+        // Show/hide nav buttons based on vehicle count
+        if (prevBtn) prevBtn.style.display = visibleVehicles.length > 1 ? 'block' : 'none';
+        if (nextBtn) nextBtn.style.display = visibleVehicles.length > 1 ? 'block' : 'none';
     } else {
         counter.textContent = '';
         if (prevBtn) prevBtn.style.display = 'none';
@@ -82,15 +82,15 @@ window.updatePropertyNavCounter = function() {
     }
 };
 
-// Keyboard navigation for properties
+// Keyboard navigation for vehicles
 document.addEventListener('keydown', function(e) {
-    const detailPage = $('propertyDetailPage');
+    const detailPage = $('vehicleDetailPage');
     const statsPage = $('vehicleStatsPage');
     
     // Don't navigate if user is typing in an input
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
     
-    // Handle property detail page navigation
+    // Handle vehicle detail page navigation
     if (detailPage && !detailPage.classList.contains('hidden')) {
         if (e.key === 'ArrowLeft') {
             e.preventDefault();
@@ -119,40 +119,40 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Navigate between properties on stats page
+// Navigate between vehicles on stats page
 window.navigateStats = function(direction) {
-    const currentId = state.currentPropertyId;
+    const currentId = state.currentVehicleId;
     if (!currentId) return;
     
-    // Get owner's properties (or all if admin)
+    // Get owner's vehicles (or all if admin)
     const userEmail = auth.currentUser?.email?.toLowerCase();
     const isMasterAdmin = TierService.isMasterAdmin(userEmail);
     
-    let userProperties;
+    let userVehicles;
     if (isMasterAdmin) {
-        // Admin can navigate all properties
-        userProperties = properties;
+        // Admin can navigate all vehicles
+        userVehicles = vehicles;
     } else {
-        // Regular user can only navigate their own properties
-        userProperties = OwnershipService.getPropertiesForOwner(userEmail);
+        // Regular user can only navigate their own vehicles
+        userVehicles = OwnershipService.getVehiclesForOwner(userEmail);
     }
     
-    if (userProperties.length === 0) return;
+    if (userVehicles.length === 0) return;
     
-    // Find current property index
-    const currentIndex = userProperties.findIndex(p => p.id === currentId);
+    // Find current vehicle index
+    const currentIndex = userVehicles.findIndex(p => p.id === currentId);
     if (currentIndex === -1) return;
     
     let newIndex;
     if (direction === 'prev') {
-        newIndex = currentIndex > 0 ? currentIndex - 1 : userProperties.length - 1;
+        newIndex = currentIndex > 0 ? currentIndex - 1 : userVehicles.length - 1;
     } else {
-        newIndex = currentIndex < userProperties.length - 1 ? currentIndex + 1 : 0;
+        newIndex = currentIndex < userVehicles.length - 1 ? currentIndex + 1 : 0;
     }
     
-    const newProperty = userProperties[newIndex];
-    if (newProperty) {
-        viewPropertyStats(newProperty.id);
+    const newVehicle = userVehicles[newIndex];
+    if (newVehicle) {
+        viewVehicleStats(newVehicle.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 };
@@ -165,25 +165,25 @@ window.updateStatsNavCounter = function() {
     
     if (!counter) return;
     
-    const currentId = state.currentPropertyId;
+    const currentId = state.currentVehicleId;
     const userEmail = auth.currentUser?.email?.toLowerCase();
     const isMasterAdmin = TierService.isMasterAdmin(userEmail);
     
-    let userProperties;
+    let userVehicles;
     if (isMasterAdmin) {
-        userProperties = properties;
+        userVehicles = vehicles;
     } else {
-        userProperties = OwnershipService.getPropertiesForOwner(userEmail);
+        userVehicles = OwnershipService.getVehiclesForOwner(userEmail);
     }
     
-    const currentIndex = userProperties.findIndex(p => p.id === currentId);
+    const currentIndex = userVehicles.findIndex(p => p.id === currentId);
     
-    if (currentIndex !== -1 && userProperties.length > 0) {
-        counter.textContent = `${currentIndex + 1} of ${userProperties.length}`;
+    if (currentIndex !== -1 && userVehicles.length > 0) {
+        counter.textContent = `${currentIndex + 1} of ${userVehicles.length}`;
         
-        // Show/hide nav buttons based on property count
-        if (prevBtn) prevBtn.style.display = userProperties.length > 1 ? 'block' : 'none';
-        if (nextBtn) nextBtn.style.display = userProperties.length > 1 ? 'block' : 'none';
+        // Show/hide nav buttons based on vehicle count
+        if (prevBtn) prevBtn.style.display = userVehicles.length > 1 ? 'block' : 'none';
+        if (nextBtn) nextBtn.style.display = userVehicles.length > 1 ? 'block' : 'none';
     } else {
         counter.textContent = '';
         if (prevBtn) prevBtn.style.display = 'none';
@@ -426,7 +426,7 @@ window.saveUsername = async function() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
-        // IMPORTANT: Sync display name (and phone if available) to all user's properties
+        // IMPORTANT: Sync display name (and phone if available) to all user's vehicles
         // This allows non-admin users to see owner info without permission issues
         const phone = $('ownerPhone')?.value?.replace(/\D/g, '') || '';
         await syncOwnerProfileToProperties(user.email, username, phone);
@@ -510,7 +510,7 @@ window.saveOwnerPhone = async function() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
-        // IMPORTANT: Sync phone to all user's properties for public visibility
+        // IMPORTANT: Sync phone to all user's vehicles for public visibility
         // This allows non-admin users to see owner contact info
         const displayName = $('ownerUsername')?.value?.trim() || '';
         await syncOwnerProfileToProperties(user.email, displayName, phone);

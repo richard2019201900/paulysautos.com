@@ -7,10 +7,10 @@ window.activeInteriorFilter = null;
 window.activeTypeFilter = null;
 
 /**
- * Get property value from Firestore-synced data
+ * Get vehicle value from Firestore-synced data
  */
-function getPropertyValue(property, field) {
-    return PropertyDataService.getValue(property.id, field, property[field]);
+function getVehicleValue(vehicle, field) {
+    return VehicleDataService.getValue(vehicle.id, field, vehicle[field]);
 }
 
 /**
@@ -97,7 +97,7 @@ window.filterByInterior = function(interiorType, btn) {
 };
 
 /**
- * Filter by property type
+ * Filter by vehicle type
  */
 window.filterByType = function(type, btn) {
     if (type === 'all') {
@@ -124,32 +124,32 @@ window.filterProperties = function(type, btn) {
  */
 window.applyAllFilters = function() {
     // Debug: log current state
-    console.log('[Filters] Applying filters, properties count:', properties.length, 'activeTypeFilter:', activeTypeFilter);
+    console.log('[Filters] Applying filters, vehicles count:', vehicles.length, 'activeTypeFilter:', activeTypeFilter);
     
-    var filtered = properties.slice();
+    var filtered = vehicles.slice();
     
     // Interior filter
     if (activeInteriorFilter) {
         filtered = filtered.filter(function(p) {
-            return getPropertyValue(p, 'interiorType') === activeInteriorFilter;
+            return getVehicleValue(p, 'interiorType') === activeInteriorFilter;
         });
     }
     
     // Type filter (case-insensitive)
     if (activeTypeFilter) {
         filtered = filtered.filter(function(p) {
-            var pType = (getPropertyValue(p, 'type') || '').toLowerCase();
+            var pType = (getVehicleValue(p, 'type') || '').toLowerCase();
             return pType === activeTypeFilter.toLowerCase();
         });
         console.log('[Filters] After type filter:', filtered.length);
     }
     
-    // My Properties
-    var showMyProperties = $('showMyProperties');
-    if (showMyProperties && showMyProperties.checked && auth.currentUser) {
+    // My Vehicles
+    var showMyVehicles = $('showMyVehicles');
+    if (showMyVehicles && showMyVehicles.checked && auth.currentUser) {
         var userEmail = auth.currentUser.email.toLowerCase();
         filtered = filtered.filter(function(p) {
-            var ownerEmail = getPropertyValue(p, 'ownerEmail') || propertyOwnerEmail[p.id];
+            var ownerEmail = getVehicleValue(p, 'ownerEmail') || vehicleOwnerEmail[p.id];
             return ownerEmail && ownerEmail.toLowerCase() === userEmail;
         });
     }
@@ -162,14 +162,14 @@ window.applyAllFilters = function() {
             if (availability !== undefined) {
                 return availability !== false;
             }
-            return getPropertyValue(p, 'availability') !== false;
+            return getVehicleValue(p, 'availability') !== false;
         });
         console.log('[Filters] After hide sold filter:', filtered.length);
     }
     
-    state.filteredProperties = filtered;
+    state.filteredVehicles = filtered;
     console.log('[Filters] Final filtered count:', filtered.length);
-    renderProperties(state.filteredProperties);
+    renderVehicles(state.filteredVehicles);
 };
 
 /**
@@ -192,11 +192,11 @@ window.sortProperties = function() {
     
     var sortValue = sortBy.value;
     
-    state.filteredProperties.sort(function(a, b) {
+    state.filteredVehicles.sort(function(a, b) {
         if (sortValue === 'price-low') {
-            return (getPropertyValue(a, 'buyPrice') || 0) - (getPropertyValue(b, 'buyPrice') || 0);
+            return (getVehicleValue(a, 'buyPrice') || 0) - (getVehicleValue(b, 'buyPrice') || 0);
         } else if (sortValue === 'price-high') {
-            return (getPropertyValue(b, 'buyPrice') || 0) - (getPropertyValue(a, 'buyPrice') || 0);
+            return (getVehicleValue(b, 'buyPrice') || 0) - (getVehicleValue(a, 'buyPrice') || 0);
         } else if (sortValue === 'newest') {
             // Sort by createdAt timestamp, newest first
             var dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
@@ -206,7 +206,7 @@ window.sortProperties = function() {
         return 0;
     });
     
-    renderProperties(state.filteredProperties);
+    renderVehicles(state.filteredVehicles);
 };
 
 // Alias for HTML compatibility
@@ -225,8 +225,8 @@ window.clearFilters = function() {
     var hideUnavailable = $('hideUnavailable');
     if (hideUnavailable) hideUnavailable.checked = false;
     
-    var showMyProperties = $('showMyProperties');
-    if (showMyProperties) showMyProperties.checked = false;
+    var showMyVehicles = $('showMyVehicles');
+    if (showMyVehicles) showMyVehicles.checked = false;
     
     updateFilterButtonStates();
     applyAllFilters();
