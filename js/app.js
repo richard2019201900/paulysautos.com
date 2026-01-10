@@ -3103,7 +3103,7 @@ window.saveNewImagesConfirmed = async function() {
         }
         
         // Save to Firestore
-        await db.collection('settings').doc('vehicles').set({
+        await db.collection('settings').doc('properties').set({
             [vehicleId]: prop
         }, { merge: true });
         
@@ -3157,7 +3157,7 @@ window.deletePropertyImage = async function(vehicleId, imageIndex, imageUrl) {
         }
         
         // Save to Firestore
-        await db.collection('settings').doc('vehicles').set({
+        await db.collection('settings').doc('properties').set({
             [vehicleId]: prop
         }, { merge: true });
         
@@ -3305,7 +3305,7 @@ window.reorderPropertyImages = async function(vehicleId, fromIndex, toIndex) {
         }
         
         // Save to Firestore
-        await db.collection('settings').doc('vehicles').set({
+        await db.collection('settings').doc('properties').set({
             [vehicleId]: prop
         }, { merge: true });
         
@@ -4296,7 +4296,7 @@ window.deleteTenureRecord = async function(vehicleId, tenureId) {
 
 /**
  * Clear all buyer-related data from vehicle
- * UNIFIED ARCHITECTURE: All data writes to settings/vehicles
+ * UNIFIED ARCHITECTURE: All data writes to settings/properties
  */
 async function clearBuyerData(vehicleId) {
     const fieldsToClean = [
@@ -4324,7 +4324,7 @@ async function clearBuyerData(vehicleId) {
     console.log('[ClearBuyerData] Local state cleared');
     
     try {
-        // UNIFIED: All vehicles write to settings/vehicles
+        // UNIFIED: All vehicles write to settings/properties
         const updateData = {};
         fieldsToClean.forEach(field => {
             updateData[`${numericId}.${field}`] = '';
@@ -4332,7 +4332,7 @@ async function clearBuyerData(vehicleId) {
         updateData[`${numericId}.updatedAt`] = firebase.firestore.FieldValue.serverTimestamp();
         updateData[`${numericId}.clearedBy`] = auth.currentUser?.email || 'system-clear';
         
-        await db.collection('settings').doc('vehicles').update(updateData);
+        await db.collection('settings').doc('properties').update(updateData);
         
         console.log('[ClearBuyerData] Successfully cleared all buyer data for vehicle:', numericId);
         console.log('[ClearBuyerData] vehicle object:', prop ? { buyerName: prop.buyerName, paymentFrequency: prop.paymentFrequency } : 'not found');
@@ -5803,7 +5803,7 @@ window.saveRTOContract = async function() {
             paymentFrequency: 'monthly'
         };
         
-        // Update vehicle via VehicleDataService (writes to settings/vehicles)
+        // Update vehicle via VehicleDataService (writes to settings/properties)
         await VehicleDataService.writeMultiple(state.vehicleId, vehicleUpdates);
         
         const depositMsg = isZeroDeposit ? ' ($0 deposit auto-marked as waived)' : '';

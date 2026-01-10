@@ -11,7 +11,7 @@
  * 
  * Data Model:
  * - users/{odId}: isAgent (boolean), agentPhone (string)
- * - settings/vehicles: agents[] (array of agent emails per vehicle)
+ * - settings/properties: agents[] (array of agent emails per vehicle)
  * 
  * ============================================================================
  */
@@ -177,7 +177,7 @@ window.demoteFromAgent = async function(odId, email) {
     
     try {
         // Remove from all vehicle assignments first
-        var propsDoc = await db.collection('settings').doc('vehicles').get();
+        var propsDoc = await db.collection('settings').doc('properties').get();
         if (propsDoc.exists) {
             var vehicles = propsDoc.data();
             var updates = {};
@@ -200,7 +200,7 @@ window.demoteFromAgent = async function(odId, email) {
             });
             
             if (Object.keys(updates).length > 0) {
-                await db.collection('settings').doc('vehicles').update(updates);
+                await db.collection('settings').doc('properties').update(updates);
             }
             
             if (removedCount > 0) {
@@ -241,7 +241,7 @@ window.assignAgentToProperty = async function(vehicleId, agentEmail) {
     }
     
     try {
-        var propsDoc = await db.collection('settings').doc('vehicles').get();
+        var propsDoc = await db.collection('settings').doc('properties').get();
         var vehicles = propsDoc.exists ? propsDoc.data() : {};
         var propKey = String(vehicleId);
         
@@ -289,7 +289,7 @@ window.assignAgentToProperty = async function(vehicleId, agentEmail) {
         agentDisplayNames[agentEmail.toLowerCase()] = agentDisplayName;
         agentPhones[agentEmail.toLowerCase()] = agentPhone;
         
-        await db.collection('settings').doc('vehicles').update({
+        await db.collection('settings').doc('properties').update({
             [propKey + '.agents']: currentAgents,
             [propKey + '.agentDisplayNames']: agentDisplayNames,
             [propKey + '.agentPhones']: agentPhones
@@ -340,7 +340,7 @@ window.removeAgentFromProperty = async function(vehicleId, agentEmail, selfRemov
     }
     
     try {
-        var propsDoc = await db.collection('settings').doc('vehicles').get();
+        var propsDoc = await db.collection('settings').doc('properties').get();
         if (!propsDoc.exists) return false;
         
         var vehicles = propsDoc.data();
@@ -355,7 +355,7 @@ window.removeAgentFromProperty = async function(vehicleId, agentEmail, selfRemov
             return a.toLowerCase() !== agentEmail.toLowerCase();
         });
         
-        await db.collection('settings').doc('vehicles').update({
+        await db.collection('settings').doc('properties').update({
             [propKey + '.agents']: newAgents
         });
         
@@ -852,7 +852,7 @@ window.migrateAgentDisplayNames = async function() {
         // Load agents first
         await loadAgents();
         
-        var propsDoc = await db.collection('settings').doc('vehicles').get();
+        var propsDoc = await db.collection('settings').doc('properties').get();
         if (!propsDoc.exists) {
             console.log('[Agents] No vehicles found');
             return;
@@ -910,7 +910,7 @@ window.migrateAgentDisplayNames = async function() {
             return;
         }
         
-        await db.collection('settings').doc('vehicles').update(updates);
+        await db.collection('settings').doc('properties').update(updates);
         console.log('[Agents] ✅ Migration complete! Updated vehicles');
         showToast('Migration complete! Updated vehicles', 'success');
         

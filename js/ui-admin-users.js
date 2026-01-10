@@ -513,7 +513,7 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
         });
         
         // Save to Firestore
-        await db.collection('settings').doc('vehicles').set(updates, { merge: true });
+        await db.collection('settings').doc('properties').set(updates, { merge: true });
         
         // Update local vehicles array
         userVehicles.forEach(prop => {
@@ -648,12 +648,12 @@ window.orphanProperty = async function(vehicleId) {
         }
         
         // Update in Firestore
-        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const propsDoc = await db.collection('settings').doc('properties').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
             if (propsData[vehicleId]) {
                 propsData[vehicleId].ownerEmail = null;
-                await db.collection('settings').doc('vehicles').set(propsData);
+                await db.collection('settings').doc('properties').set(propsData);
             }
         }
         
@@ -797,14 +797,14 @@ window.confirmReassignProperty = async function() {
         }
         
         // Update in Firestore
-        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const propsDoc = await db.collection('settings').doc('properties').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
             if (propsData[vehicleId]) {
                 propsData[vehicleId].ownerEmail = actualNewEmail;
                 propsData[vehicleId].ownerDisplayName = ownerDisplayName;
                 propsData[vehicleId].ownerContactPhone = ownerContactPhone;
-                await db.collection('settings').doc('vehicles').set(propsData);
+                await db.collection('settings').doc('properties').set(propsData);
             }
         }
         
@@ -881,12 +881,12 @@ window.deletePropertyCompletely = async function(vehicleId, ownerEmail) {
         }
         
         // Remove from Firestore vehicles collection
-        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const propsDoc = await db.collection('settings').doc('properties').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
             if (propsData[vehicleId]) {
                 delete propsData[vehicleId];
-                await db.collection('settings').doc('vehicles').set(propsData);
+                await db.collection('settings').doc('properties').set(propsData);
             }
         }
         
@@ -1711,7 +1711,7 @@ window.confirmPremiumPayment = async function(vehicleId) {
     }
     
     try {
-        // Use VehicleDataService to write to the correct location (settings/vehicles)
+        // Use VehicleDataService to write to the correct location (settings/properties)
         await VehicleDataService.write(vehicleId, 'premiumLastPayment', dateStr);
         
         closePremiumPaymentModal();
@@ -1824,7 +1824,7 @@ window.previewBatchSync = async function() {
         });
         
         // Get all vehicles
-        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const propsDoc = await db.collection('settings').doc('properties').get();
         const allVehicles = propsDoc.exists ? propsDoc.data() : {};
         
         // Build preview
@@ -1912,7 +1912,7 @@ window.batchSyncOwnerProfiles = async function() {
         
         // Step 2: Get all vehicles
         statusDiv.textContent = 'Fetching vehicles...';
-        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const propsDoc = await db.collection('settings').doc('properties').get();
         const allVehicles = propsDoc.exists ? propsDoc.data() : {};
         console.log(`[BatchSync] Found ${Object.keys(allVehicles).length} vehicles`);
         
@@ -1962,7 +1962,7 @@ window.batchSyncOwnerProfiles = async function() {
         
         // Step 4: Save to Firestore
         statusDiv.textContent = `Saving ${updateCount} vehicle updates...`;
-        await db.collection('settings').doc('vehicles').set(updates, { merge: true });
+        await db.collection('settings').doc('properties').set(updates, { merge: true });
         
         // Step 5: Update local vehicles array
         for (const [propId, updatedProp] of Object.entries(updates)) {

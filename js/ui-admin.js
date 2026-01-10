@@ -1144,12 +1144,12 @@ window.startAdminUsersListener = function() {
 // Real-time listener for vehicles - detects new listings AND updates admin panel data
 window.startAdminPropertiesListener = function() {
     if (!TierService.isMasterAdmin(auth.currentUser?.email)) return;
-    // The actual vehicle data is stored in settings/vehicles document, not a 'vehicles' collection
+    // The actual vehicle data is stored in settings/properties document, not a 'vehicles' collection
     // So we just need to call the settings listener
     startSettingsPropertiesListener();
 };
 
-// Real-time listener for settings/vehicles document - this is where user-created vehicles are stored
+// Real-time listener for settings/properties document - this is where user-created vehicles are stored
 window.startSettingsPropertiesListener = function() {
     // Always unsubscribe existing listener first (prevents orphaned listeners)
     if (window.settingsPropertiesUnsubscribe) {
@@ -1184,7 +1184,7 @@ window.startSettingsPropertiesListener = function() {
         window.settingsPropertiesFirstLoadDone = false;
     }
     
-    window.settingsPropertiesUnsubscribe = db.collection('settings').doc('vehicles')
+    window.settingsPropertiesUnsubscribe = db.collection('settings').doc('properties')
         .onSnapshot((doc) => {
             if (!doc.exists) {
                 return;

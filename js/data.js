@@ -83,7 +83,7 @@ async function getUsernameByEmail(email) {
         if (error.code === 'permission-denied') {
             // Check if we have ownerDisplayName stored on any vehicle in Firestore settings
             try {
-                const vehiclesDoc = await db.collection('settings').doc('vehicles').get();
+                const vehiclesDoc = await db.collection('settings').doc('properties').get();
                 if (vehiclesDoc.exists) {
                     const vehiclesData = vehiclesDoc.data();
                     for (const vehicleId in vehiclesData) {

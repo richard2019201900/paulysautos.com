@@ -955,7 +955,7 @@
     function startListingListener() {
         if (state.listeners.listings) state.listeners.listings();
         
-        state.listeners.listings = db.collection('settings').doc('vehicles')
+        state.listeners.listings = db.collection('settings').doc('properties')
             .onSnapshot(doc => {
                 if (!doc.exists) return;
                 
@@ -1012,7 +1012,7 @@
         if (!currentUser) return;
         
         try {
-            const propsDoc = await db.collection('settings').doc('vehicles').get();
+            const propsDoc = await db.collection('settings').doc('properties').get();
             if (!propsDoc.exists) return;
             
             const vehicles = propsDoc.data();

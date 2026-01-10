@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await db.collection('settings').doc('vehicleAvailability').set({ [newId]: true }, { merge: true });
                 
                 // Save vehicle to Firestore (ownerEmail field is the source of truth)
-                await db.collection('settings').doc('vehicles').set({
+                await db.collection('settings').doc('properties').set({
                     [newId]: newVehicle
                 }, { merge: true });
                 
@@ -376,7 +376,7 @@ window.executeDeleteProperty = async function() {
         delete state.availability[vehicleId];
         
         // Remove from Firestore - vehicles doc (single source of truth)
-        await db.collection('settings').doc('vehicles').update({
+        await db.collection('settings').doc('properties').update({
             [vehicleId]: firebase.firestore.FieldValue.delete()
         });
         

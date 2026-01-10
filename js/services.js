@@ -170,7 +170,7 @@ const TierService = {
             // This ensures accurate count even after deletions
             let listingCount = 0;
             try {
-                const propsDoc = await db.collection('settings').doc('vehicles').get();
+                const propsDoc = await db.collection('settings').doc('properties').get();
                 if (propsDoc.exists) {
                     const propsData = propsDoc.data();
                     listingCount = Object.values(propsData).filter(p => 
@@ -406,18 +406,18 @@ window.MASTER_ADMIN_EMAIL = MASTER_ADMIN_EMAIL;
 /**
  * VehicleDataService - UNIFIED ARCHITECTURE for PaulysAutos.com
  * 
- * Single source of truth: settings/vehicles document
+ * Single source of truth: settings/properties document
  * ALL vehicles stored in same document
  * 
  * Document structure:
- * settings/vehicles: {
+ * settings/properties: {
  *   "1": { id: 1, make: "...", price: ..., ownerEmail: "", isPremium: false, ... },
  *   "2": { ... },
  * }
  */
 const VehicleDataService = {
     collectionName: 'settings',
-    docName: 'vehicles',  // Changed from 'vehicles' for PaulysAutos
+    docName: 'properties',  // Uses settings/properties document (original data location)
     
     // Active listener for cleanup
     unsubscribeListener: null,
@@ -472,7 +472,7 @@ const VehicleDataService = {
     
     /**
      * WRITE: Update vehicle data in Firestore
-     * UNIFIED: All vehicles write to settings/vehicles
+     * UNIFIED: All vehicles write to settings/properties
      * @param {number} vehicleId - The vehicle ID to update
      * @param {string} field - The field name to update
      * @param {any} value - The new value
@@ -483,7 +483,7 @@ const VehicleDataService = {
         const prop = vehicles.find(p => p.id === numericId);
         
         try {
-            // UNIFIED: Always write to settings/vehicles (or settings/vehicles for PaulysAutos)
+            // UNIFIED: Always write to settings/properties (or settings/properties for PaulysAutos)
             const updateData = {
                 [`${numericId}.${field}`]: value,
                 [`${numericId}.updatedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
@@ -622,11 +622,11 @@ window.viewFirestoreState = async function() {
     
     try {
         const [propsDoc, availDoc] = await Promise.all([
-            db.collection('settings').doc('vehicles').get(),
+            db.collection('settings').doc('properties').get(),
             db.collection('settings').doc('vehicleAvailability').get()
         ]);
         
-        console.log('\n📁 settings/vehicles (SINGLE SOURCE OF TRUTH):');
+        console.log('\n📁 settings/properties (SINGLE SOURCE OF TRUTH):');
         if (propsDoc.exists) {
             const data = propsDoc.data();
             const propIds = Object.keys(data).filter(k => data[k]?.title).sort((a,b) => parseInt(a) - parseInt(b));
@@ -680,9 +680,9 @@ window.showPropertyData = async function(vehicleId) {
     
     // Firestore data
     try {
-        const doc = await db.collection('settings').doc('vehicles').get();
+        const doc = await db.collection('settings').doc('properties').get();
         if (doc.exists && doc.data()[numericId]) {
-            console.log('\n☁️  Firestore settings/vehicles:');
+            console.log('\n☁️  Firestore settings/properties:');
             console.log(JSON.stringify(doc.data()[numericId], null, 2));
         } else {
             console.log('\n☁️  Firestore: Not found');
@@ -700,7 +700,7 @@ window.showPropertyData = async function(vehicleId) {
  * Set up real-time listeners for Firestore data
  * UNIFIED: Only two listeners needed:
  * 1. settings/vehicleAvailability - for availability status
- * 2. settings/vehicles - for ALL vehicle data (single source of truth)
+ * 2. settings/properties - for ALL vehicle data (single source of truth)
  */
 function setupRealtimeListener() {
     // Listener 1: Vehicle availability
@@ -727,7 +727,7 @@ function setupRealtimeListener() {
         });
     
     // Listener 2: ALL vehicle data (SINGLE SOURCE OF TRUTH)
-    db.collection('settings').doc('vehicles')
+    db.collection('settings').doc('properties')
         .onSnapshot(doc => {
             if (doc.exists) {
                 const data = doc.data();
@@ -854,7 +854,7 @@ async function initFirestore() {
         }
         
         // Load user-created vehicles
-        const propsDoc = await db.collection('settings').doc('vehicles').get();
+        const propsDoc = await db.collection('settings').doc('properties').get();
         if (propsDoc.exists) {
             const propsData = propsDoc.data();
             Object.keys(propsData).forEach(key => {
@@ -912,7 +912,7 @@ async function initFirestore() {
         // Rebuild ownerVehicleMap from vehicles array (single source of truth)
         OwnershipService.rebuildOwnerPropertyMap();
         
-        // NOTE: vehicleOverrides loading removed - unified architecture uses settings/vehicles only
+        // NOTE: vehicleOverrides loading removed - unified architecture uses settings/properties only
         // Old vehicleOverrides document should be deleted after migration
         
         // Sync all vehicle owner mappings to ensure consistency
@@ -970,7 +970,7 @@ window.loadPublicVehicles = async function(forceReload = false) {
     
     try {
         console.log('[Public] Loading vehicles for public view...');
-        const doc = await db.collection('settings').doc('vehicles').get();
+        const doc = await db.collection('settings').doc('properties').get();
         
         if (!doc.exists) {
             console.log('[Public] No vehicles document found');
@@ -1111,7 +1111,7 @@ window.startVehicleSyncListener = function() {
     
     let isFirstSnapshot = true;
     
-    window.vehicleSyncUnsubscribe = db.collection('settings').doc('vehicles')
+    window.vehicleSyncUnsubscribe = db.collection('settings').doc('properties')
         .onSnapshot((doc) => {
             if (!doc.exists) {
                 console.log('[VehicleSync] Document does not exist');

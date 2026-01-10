@@ -188,7 +188,7 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
         try {
             if (vehicleId && typeof db !== 'undefined') {
                 // Get vehicle data to find owner contact info
-                const propsDoc = await db.collection('settings').doc('vehicles').get();
+                const propsDoc = await db.collection('settings').doc('properties').get();
                 if (propsDoc.exists) {
                     const vehicles = propsDoc.data();
                     const vehicle = vehicles[vehicleId] || vehicles[String(vehicleId)];
