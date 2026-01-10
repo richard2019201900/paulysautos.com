@@ -483,15 +483,15 @@ const VehicleDataService = {
         const prop = vehicles.find(p => p.id === numericId);
         
         try {
-            // UNIFIED: Always write to settings/properties (or settings/properties for PaulysAutos)
+            // UNIFIED: Always write to settings/properties
             const updateData = {
                 [`${numericId}.${field}`]: value,
                 [`${numericId}.updatedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
                 [`${numericId}.updatedBy`]: auth.currentUser?.email || 'unknown'
             };
             
-            // Use set with merge to auto-create document if it doesn't exist
-            await db.collection(this.collectionName).doc(this.docName).set(updateData, { merge: true });
+            // Use update() - dot notation is interpreted as nested path
+            await db.collection(this.collectionName).doc(this.docName).update(updateData);
             
             // Update local vehicle object immediately
             if (prop) {
@@ -526,8 +526,8 @@ const VehicleDataService = {
                 updateData[`${numericId}.${field}`] = fields[field];
             });
             
-            // Use set with merge to auto-create document if it doesn't exist
-            await db.collection(this.collectionName).doc(this.docName).set(updateData, { merge: true });
+            // Use update() - dot notation is interpreted as nested path
+            await db.collection(this.collectionName).doc(this.docName).update(updateData);
             
             // Update local vehicle object
             if (prop) {

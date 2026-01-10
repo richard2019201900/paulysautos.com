@@ -962,7 +962,11 @@
                 const vehicles = doc.data();
                 
                 Object.entries(vehicles).forEach(([propId, prop]) => {
-                    if (!prop) return;
+                    // Skip flat keys (e.g., "1.plate") and non-numeric IDs
+                    if (propId.includes('.') || isNaN(parseInt(propId))) return;
+                    
+                    // Skip invalid vehicle data
+                    if (!prop || typeof prop !== 'object') return;
                     
                     const createdAt = prop.createdAtTimestamp?.toDate?.() || 
                                      (prop.createdAt ? new Date(prop.createdAt) : null);
