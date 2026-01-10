@@ -102,7 +102,7 @@ async function getUsernameByEmail(email) {
             
             // Check local OwnershipService for ownerDisplayName
             const userVehicles = typeof OwnershipService !== 'undefined' 
-                ? OwnershipService.getPropertiesForOwner(normalizedEmail)
+                ? OwnershipService.getVehiclesForOwner(normalizedEmail)
                 : [];
             
             // Look for ownerDisplayName on any of their vehicles
