@@ -983,25 +983,49 @@ window.loadPublicVehicles = async function(forceReload = false) {
         // Clear array for fresh load
         vehicles.length = 0;
         
+        // DEBUG: Log raw keys to understand data structure
+        console.log('[Public] Raw Firestore keys:', Object.keys(rawData).slice(0, 20));
+        
         // Reconstruct nested objects from flat keys (e.g., "1.title" -> { "1": { title: "..." } })
         const vehiclesData = {};
         Object.keys(rawData).forEach(key => {
             if (key.includes('.')) {
-                // Flat key like "1.title" or "1.updatedBy"
+                // Flat key like "1.title" or "1.images.0"
                 const parts = key.split('.');
                 const vehicleId = parts[0];
-                const field = parts.slice(1).join('.'); // Handle nested fields
                 
                 if (!vehiclesData[vehicleId]) {
                     vehiclesData[vehicleId] = {};
                 }
-                vehiclesData[vehicleId][field] = rawData[key];
+                
+                // Handle array indices (e.g., "images.0", "images.1")
+                if (parts.length === 3 && !isNaN(parseInt(parts[2]))) {
+                    // This is an array element like "1.images.0"
+                    const arrayField = parts[1];
+                    const arrayIndex = parseInt(parts[2]);
+                    
+                    if (!vehiclesData[vehicleId][arrayField]) {
+                        vehiclesData[vehicleId][arrayField] = [];
+                    }
+                    vehiclesData[vehicleId][arrayField][arrayIndex] = rawData[key];
+                } else {
+                    // Regular field like "1.title" or nested like "1.buyer.name"
+                    const field = parts.slice(1).join('.');
+                    vehiclesData[vehicleId][field] = rawData[key];
+                }
             } else {
                 // Nested object like "1": { title: "...", ... }
                 if (typeof rawData[key] === 'object' && rawData[key] !== null) {
                     vehiclesData[key] = rawData[key];
                 }
             }
+        });
+        
+        // DEBUG: Log reconstructed vehicle data
+        Object.keys(vehiclesData).forEach(vId => {
+            const v = vehiclesData[vId];
+            console.log('[Public] Vehicle', vId, 'fields:', Object.keys(v));
+            console.log('[Public] Vehicle', vId, 'ownerEmail:', v.ownerEmail, 'images:', v.images?.length || 0);
         });
         
         console.log('[Public] Reconstructed', Object.keys(vehiclesData).length, 'vehicles from Firestore');
@@ -1098,6 +1122,9 @@ window.startVehicleSyncListener = function() {
             let hasChanges = false;
             let processedCount = 0;
             
+            // DEBUG: Log raw keys to understand data structure
+            console.log('[VehicleSync] Raw Firestore keys:', Object.keys(rawData).slice(0, 20));
+            
             // Store current vehicle count before processing
             const vehicleCountBefore = vehicles.length;
             
@@ -1105,21 +1132,42 @@ window.startVehicleSyncListener = function() {
             const vehiclesData = {};
             Object.keys(rawData).forEach(key => {
                 if (key.includes('.')) {
-                    // Flat key like "1.title" or "1.updatedBy"
+                    // Flat key like "1.title" or "1.images.0"
                     const parts = key.split('.');
                     const vehicleId = parts[0];
-                    const field = parts.slice(1).join('.'); // Handle nested fields like "buyer.name"
                     
                     if (!vehiclesData[vehicleId]) {
                         vehiclesData[vehicleId] = {};
                     }
-                    vehiclesData[vehicleId][field] = rawData[key];
+                    
+                    // Handle array indices (e.g., "images.0", "images.1")
+                    if (parts.length === 3 && !isNaN(parseInt(parts[2]))) {
+                        // This is an array element like "1.images.0"
+                        const arrayField = parts[1];
+                        const arrayIndex = parseInt(parts[2]);
+                        
+                        if (!vehiclesData[vehicleId][arrayField]) {
+                            vehiclesData[vehicleId][arrayField] = [];
+                        }
+                        vehiclesData[vehicleId][arrayField][arrayIndex] = rawData[key];
+                    } else {
+                        // Regular field like "1.title" or nested like "1.buyer.name"
+                        const field = parts.slice(1).join('.');
+                        vehiclesData[vehicleId][field] = rawData[key];
+                    }
                 } else {
                     // Nested object like "1": { title: "...", ... }
                     if (typeof rawData[key] === 'object' && rawData[key] !== null) {
                         vehiclesData[key] = rawData[key];
                     }
                 }
+            });
+            
+            // DEBUG: Log reconstructed vehicle data
+            Object.keys(vehiclesData).forEach(vId => {
+                const v = vehiclesData[vId];
+                console.log('[VehicleSync] Vehicle', vId, 'fields:', Object.keys(v));
+                console.log('[VehicleSync] Vehicle', vId, 'ownerEmail:', v.ownerEmail, 'images:', v.images?.length || 0);
             });
             
             console.log('[VehicleSync] Reconstructed', Object.keys(vehiclesData).length, 'vehicles from Firestore');

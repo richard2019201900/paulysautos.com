@@ -188,8 +188,10 @@ const UserPreferencesService = (function() {
      * @param {string} notificationId 
      */
     async function dismissNotification(notificationId) {
+        console.log('[UserPreferences] Dismissing notification:', notificationId);
         if (!cache.dismissedNotifications.includes(notificationId)) {
             cache.dismissedNotifications.push(notificationId);
+            console.log('[UserPreferences] Added to cache, now have:', cache.dismissedNotifications.length, 'dismissed');
             
             // Also remove from pending if present
             cache.pendingUserNotifications = cache.pendingUserNotifications.filter(id => id !== notificationId);
@@ -200,6 +202,9 @@ const UserPreferencesService = (function() {
                 pendingUserNotifications: cache.pendingUserNotifications,
                 pendingListingNotifications: cache.pendingListingNotifications
             });
+            console.log('[UserPreferences] Saved dismissal to Firestore');
+        } else {
+            console.log('[UserPreferences] Already dismissed');
         }
     }
     
