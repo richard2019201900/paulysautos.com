@@ -3576,9 +3576,14 @@ async function init() {
             state.userTier = null;
             updateAuthButton(false);
             
-            // Stop property sync listener
+            // Stop existing property sync listener
             if (typeof stopPropertySyncListener === 'function') {
                 stopPropertySyncListener();
+            }
+            
+            // Load public properties for unauthenticated visitors
+            if (typeof startPropertySyncListener === 'function') {
+                startPropertySyncListener();
             }
         }
     });

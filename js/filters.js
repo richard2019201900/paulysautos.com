@@ -132,10 +132,11 @@ window.applyAllFilters = function() {
         });
     }
     
-    // Type filter
+    // Type filter (case-insensitive)
     if (activeTypeFilter) {
         filtered = filtered.filter(function(p) {
-            return getPropertyValue(p, 'type') === activeTypeFilter;
+            var pType = (getPropertyValue(p, 'type') || '').toLowerCase();
+            return pType === activeTypeFilter.toLowerCase();
         });
     }
     

@@ -957,9 +957,85 @@ function syncPropertyOwnerMappings() {
 // This listener keeps the properties array in sync for ALL logged-in users (not just admin)
 window.propertySyncUnsubscribe = null;
 
+// Load properties for public/unauthenticated users (one-time fetch)
+window.loadPublicProperties = async function() {
+    try {
+        console.log('[Public] Loading properties for public view...');
+        const doc = await db.collection('settings').doc('properties').get();
+        
+        if (!doc.exists) {
+            console.log('[Public] No properties document found');
+            return;
+        }
+        
+        const propsData = doc.data();
+        let loadedCount = 0;
+        
+        // Clear existing properties
+        properties.length = 0;
+        
+        Object.keys(propsData).forEach(key => {
+            const propId = parseInt(key);
+            if (isNaN(propId)) return;
+            
+            const prop = propsData[key];
+            
+            // Only include valid properties with a title
+            if (!prop || !prop.title) {
+                return;
+            }
+            
+            // Ensure images array exists
+            if (!prop.images || !Array.isArray(prop.images)) {
+                prop.images = [];
+            }
+            
+            prop.id = propId;
+            properties.push(prop);
+            loadedCount++;
+            
+            // Set up owner mappings
+            if (prop.ownerEmail) {
+                const email = prop.ownerEmail.toLowerCase();
+                if (!ownerPropertyMap[email]) {
+                    ownerPropertyMap[email] = [];
+                }
+                if (!ownerPropertyMap[email].includes(propId)) {
+                    ownerPropertyMap[email].push(propId);
+                }
+                propertyOwnerEmail[propId] = email;
+            }
+            
+            // Default availability to true
+            if (state.availability[propId] === undefined) {
+                state.availability[propId] = true;
+            }
+        });
+        
+        console.log('[Public] Loaded', loadedCount, 'properties');
+        
+        // Update filtered properties and render
+        state.filteredProperties = [...properties];
+        
+        if (typeof applyAllFilters === 'function') {
+            applyAllFilters();
+        } else if (typeof renderProperties === 'function') {
+            renderProperties(state.filteredProperties);
+        }
+        
+    } catch (error) {
+        console.error('[Public] Error loading properties:', error);
+    }
+};
+
 window.startPropertySyncListener = function() {
     const user = auth.currentUser;
-    if (!user) return;
+    
+    // For unauthenticated users, do a one-time load instead of real-time sync
+    if (!user) {
+        loadPublicProperties();
+        return;
+    }
     
     // Clean up existing listener
     if (window.propertySyncUnsubscribe) {
