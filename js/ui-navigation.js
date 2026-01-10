@@ -826,6 +826,7 @@ window.navigateTo = function(section) {
     hideElement($('mobileMenu'));
     hideElement($('ownerDashboard'));
     hideElement($('propertyDetailPage'));
+    hideElement($('vehicleDetailPage'));
     hideElement($('vehicleStatsPage'));
     hideElement($('blogPage'));
     hideElement($('leaderboardPage'));
@@ -850,9 +851,9 @@ window.navigateTo = function(section) {
     
     showElement($('renterSection'));
     
-    // Re-apply filters when navigating to properties section
-    // This ensures checkbox state matches displayed properties
-    if (section === 'properties' && typeof applyAllFilters === 'function') {
+    // Re-apply filters when navigating to vehicles/properties section
+    // This ensures checkbox state matches displayed vehicles
+    if ((section === 'properties' || section === 'vehicles') && typeof applyAllFilters === 'function') {
         applyAllFilters();
     }
     

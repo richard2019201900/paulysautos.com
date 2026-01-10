@@ -123,6 +123,9 @@ window.filterProperties = function(type, btn) {
  * Apply all active filters
  */
 window.applyAllFilters = function() {
+    // Debug: log current state
+    console.log('[Filters] Applying filters, properties count:', properties.length, 'activeTypeFilter:', activeTypeFilter);
+    
     var filtered = properties.slice();
     
     // Interior filter
@@ -138,6 +141,7 @@ window.applyAllFilters = function() {
             var pType = (getPropertyValue(p, 'type') || '').toLowerCase();
             return pType === activeTypeFilter.toLowerCase();
         });
+        console.log('[Filters] After type filter:', filtered.length);
     }
     
     // My Properties
@@ -150,7 +154,7 @@ window.applyAllFilters = function() {
         });
     }
     
-    // Hide Unavailable
+    // Hide Unavailable/Sold
     var hideUnavailable = $('hideUnavailable');
     if (hideUnavailable && hideUnavailable.checked) {
         filtered = filtered.filter(function(p) {
@@ -160,9 +164,11 @@ window.applyAllFilters = function() {
             }
             return getPropertyValue(p, 'availability') !== false;
         });
+        console.log('[Filters] After hide sold filter:', filtered.length);
     }
     
     state.filteredProperties = filtered;
+    console.log('[Filters] Final filtered count:', filtered.length);
     renderProperties(state.filteredProperties);
 };
 

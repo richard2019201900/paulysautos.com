@@ -958,7 +958,16 @@ function syncPropertyOwnerMappings() {
 window.propertySyncUnsubscribe = null;
 
 // Load properties for public/unauthenticated users (one-time fetch)
+// Flag to prevent duplicate loads
+window._publicPropertiesLoaded = false;
+
 window.loadPublicProperties = async function() {
+    // Prevent duplicate loads
+    if (window._publicPropertiesLoaded && properties.length > 0) {
+        console.log('[Public] Properties already loaded, skipping');
+        return;
+    }
+    
     try {
         console.log('[Public] Loading properties for public view...');
         const doc = await db.collection('settings').doc('properties').get();
@@ -971,8 +980,10 @@ window.loadPublicProperties = async function() {
         const propsData = doc.data();
         let loadedCount = 0;
         
-        // Clear existing properties
-        properties.length = 0;
+        // Only clear if this is a fresh load
+        if (!window._publicPropertiesLoaded) {
+            properties.length = 0;
+        }
         
         Object.keys(propsData).forEach(key => {
             const propId = parseInt(key);
@@ -991,8 +1002,16 @@ window.loadPublicProperties = async function() {
             }
             
             prop.id = propId;
-            properties.push(prop);
-            loadedCount++;
+            
+            // Check if already exists
+            const existingIndex = properties.findIndex(p => p.id === propId);
+            if (existingIndex === -1) {
+                properties.push(prop);
+                loadedCount++;
+            } else {
+                // Update existing
+                properties[existingIndex] = { ...properties[existingIndex], ...prop };
+            }
             
             // Set up owner mappings
             if (prop.ownerEmail) {
@@ -1012,7 +1031,8 @@ window.loadPublicProperties = async function() {
             }
         });
         
-        console.log('[Public] Loaded', loadedCount, 'properties');
+        window._publicPropertiesLoaded = true;
+        console.log('[Public] Loaded', loadedCount, 'new properties, total:', properties.length);
         
         // Update filtered properties and render
         state.filteredProperties = [...properties];
@@ -1143,7 +1163,8 @@ window.startPropertySyncListener = function() {
             
             state.filteredProperties = [...properties];
             
-            if (hasChanges && !isFirstSnapshot) {
+            // Always apply filters and render (including first snapshot)
+            if (hasChanges || isFirstSnapshot) {
                 // Apply filters including hideUnavailable if checked
                 if (typeof applyAllFilters === 'function') {
                     applyAllFilters();
@@ -1151,19 +1172,23 @@ window.startPropertySyncListener = function() {
                     renderProperties(state.filteredProperties);
                 }
                 
-                const dashboardEl = $('ownerDashboard');
-                if (dashboardEl && !dashboardEl.classList.contains('hidden') && typeof renderOwnerDashboard === 'function') {
-                    renderOwnerDashboard();
-                }
-                
-                if (TierService.isMasterAdmin(user.email) && window.adminUsersData && window.adminUsersData.length > 0) {
-                    updateAdminStats(window.adminUsersData);
-                    renderAdminUsersList(window.adminUsersData);
+                // Only update dashboard on subsequent changes, not first load
+                if (!isFirstSnapshot) {
+                    const dashboardEl = $('ownerDashboard');
+                    if (dashboardEl && !dashboardEl.classList.contains('hidden') && typeof renderOwnerDashboard === 'function') {
+                        renderOwnerDashboard();
+                    }
+                    
+                    if (TierService.isMasterAdmin(user.email) && window.adminUsersData && window.adminUsersData.length > 0) {
+                        updateAdminStats(window.adminUsersData);
+                        renderAdminUsersList(window.adminUsersData);
+                    }
                 }
             }
             
             if (isFirstSnapshot) {
                 isFirstSnapshot = false;
+                console.log('[PropertySync] Initial load complete, total properties:', properties.length);
             }
             
         }, (error) => {

@@ -2934,10 +2934,22 @@ window.startEditField = function(field, propertyId, element) {
                 // Update local property object
                 if (prop) prop[field] = newValue;
                 
-                // Update Firestore properties doc for user-created properties
-                await db.collection('settings').doc('properties').set({
-                    [propertyId]: properties.find(p => p.id === propertyId)
-                }, { merge: true });
+                // Get property and clean undefined values before Firestore write
+                const propToSave = properties.find(p => p.id === propertyId);
+                if (propToSave) {
+                    // Remove undefined values (Firestore doesn't accept them)
+                    const cleanProp = {};
+                    Object.keys(propToSave).forEach(key => {
+                        if (propToSave[key] !== undefined) {
+                            cleanProp[key] = propToSave[key];
+                        }
+                    });
+                    
+                    // Update Firestore properties doc
+                    await db.collection('settings').doc('properties').set({
+                        [propertyId]: cleanProp
+                    }, { merge: true });
+                }
                 
                 renderPropertyStatsContent(propertyId);
                 renderProperties(state.filteredProperties);
