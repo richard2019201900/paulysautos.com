@@ -976,7 +976,7 @@ async function renderProperties(list) {
             : imagePlaceholder;
         
         return `
-        <article class="property-card bg-gray-800 rounded-2xl shadow-xl overflow-hidden cursor-pointer ${cardBorder} ${premiumGlow} relative" onclick="viewProperty(${p.id})">
+        <article class="property-card bg-gray-800 rounded-2xl shadow-xl overflow-hidden cursor-pointer ${cardBorder} ${premiumGlow} relative transform hover:scale-[1.02] hover:shadow-2xl transition-all duration-300" onclick="viewProperty(${p.id})">
             ${premiumBadge}
             <div class="relative ${imageMargin}">
                 ${!available ? '<div class="unavailable-overlay"><div class="unavailable-text">SOLD</div></div>' : ''}
@@ -985,42 +985,58 @@ async function renderProperties(list) {
                 ${isPremium ? '<div class="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-3 py-1 rounded-full font-bold text-xs shadow-lg">⭐ FEATURED</div>' : ''}
             </div>
             <div class="p-5 md:p-6">
-                <div class="flex justify-between items-start gap-2 mb-3">
-                    <h4 class="text-xl md:text-2xl font-bold ${isPremium ? 'text-amber-300' : 'text-white'} min-h-[2rem] line-clamp-2">${sanitize(p.title)}</h4>
-                    <span class="badge text-white text-xs font-bold px-2 md:px-3 py-1 rounded-full uppercase shrink-0">${PropertyDataService.getValue(p.id, 'type', p.type)}</span>
+                <div class="flex justify-between items-start gap-2 mb-2">
+                    <h4 class="text-xl md:text-2xl font-bold ${isPremium ? 'text-amber-300' : 'text-white'} min-h-[1.75rem] line-clamp-1">${sanitize(p.title)}</h4>
+                    <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide shrink-0 shadow-lg">${PropertyDataService.getValue(p.id, 'type', p.type)}</span>
                 </div>
-                <p class="text-gray-300 mb-2 font-medium text-sm">🔖 Plate: <span class="text-white">${PropertyDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span></p>
-                ${p.location ? `<p class="text-gray-400 mb-2 text-xs">📝 ${sanitize(p.location)}</p>` : ''}
+                <div class="flex items-center gap-3 text-sm mb-3">
+                    <span class="text-gray-400">🔖</span>
+                    <span class="text-white font-semibold">${PropertyDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span>
+                </div>
                 <p id="owner-${p.id}" class="text-xs text-blue-400 mb-3 font-semibold">👤 Owner: Loading...</p>
                 
-                <!-- Vehicle Specs Grid - Benny's Style -->
-                <div class="grid grid-cols-4 gap-2 mb-3 text-xs text-gray-300 font-semibold bg-gray-900/50 rounded-lg p-2">
-                    <div class="text-center">
-                        <div class="text-amber-400">🔧</div>
-                        <div>${PropertyDataService.getValue(p.id, 'upgrades', p.upgrades) || 'N/A'}</div>
+                <!-- Vehicle Specs - Compact Single Row -->
+                <div class="flex items-center justify-between bg-gray-900/60 rounded-lg px-3 py-2 mb-3 text-xs border border-gray-700/50">
+                    <div class="flex items-center gap-1" title="Upgrades">
+                        <span class="text-amber-400">🔧</span>
+                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'upgrades', p.upgrades) || '—'}</span>
                     </div>
-                    <div class="text-center">
-                        <div class="text-cyan-400">⚡</div>
-                        <div>${PropertyDataService.getValue(p.id, 'speed', p.speed) || 'N/A'}</div>
+                    <div class="w-px h-4 bg-gray-600"></div>
+                    <div class="flex items-center gap-1" title="Speed">
+                        <span class="text-cyan-400">⚡</span>
+                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'speed', p.speed) || '—'}</span>
                     </div>
-                    <div class="text-center">
-                        <div class="text-amber-400">📦</div>
-                        <div>${PropertyDataService.getValue(p.id, 'storage', p.storage) || 'N/A'}</div>
+                    <div class="w-px h-4 bg-gray-600"></div>
+                    <div class="flex items-center gap-1" title="Storage">
+                        <span class="text-green-400">📦</span>
+                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'storage', p.storage) || '—'}</span>
                     </div>
-                    <div class="text-center">
-                        <div class="text-purple-400">💺</div>
-                        <div>${PropertyDataService.getValue(p.id, 'seats', p.seats) || 'N/A'}</div>
+                    <div class="w-px h-4 bg-gray-600"></div>
+                    <div class="flex items-center gap-1" title="Seats">
+                        <span class="text-purple-400">💺</span>
+                        <span class="text-white font-bold">${PropertyDataService.getValue(p.id, 'seats', p.seats) || '—'}</span>
                     </div>
                 </div>
                 
-                <!-- Price Display -->
-                <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 border border-green-500/50 rounded-lg p-3 mb-3 text-center">
-                    <div class="text-green-400 text-2xl font-black">$${(PropertyDataService.getValue(p.id, 'buyPrice', p.buyPrice) || 0).toLocaleString()}</div>
-                    <div class="text-green-400/60 text-xs">+$25k city sales fee</div>
+                <!-- Price Display - Enhanced -->
+                <div class="bg-gradient-to-r from-green-900/40 to-emerald-900/40 border border-green-500/30 rounded-xl p-3 mb-4 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5"></div>
+                    <div class="relative">
+                        <div class="text-green-400 text-2xl md:text-3xl font-black tracking-tight">$${(PropertyDataService.getValue(p.id, 'buyPrice', p.buyPrice) || 0).toLocaleString()}</div>
+                        <div class="text-green-500/60 text-[10px] uppercase tracking-wider mt-1">+$25k city sales fee</div>
+                    </div>
                 </div>
                 
-                <button onclick="viewProperty(${p.id})" class="w-full ${isPremium ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900' : 'gradient-bg text-white'} px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg mb-2 text-sm md:text-base">View Details</button>
-                <button onclick="event.stopPropagation(); viewPropertyAndHighlightOffers(${p.id})" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm md:text-base">📞 Contact Seller</button>
+                <!-- Action Buttons - Stacked -->
+                <div class="space-y-2">
+                    <button onclick="event.stopPropagation(); viewProperty(${p.id})" class="w-full ${isPremium ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900' : 'bg-gray-700 hover:bg-gray-600 text-white'} px-4 py-2.5 rounded-xl font-bold transition shadow-lg text-sm flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        View Details
+                    </button>
+                    <button onclick="event.stopPropagation(); openContactModal('offer', '${sanitize(p.title)}', ${p.id})" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm flex items-center justify-center gap-2">
+                        <span>📞</span> Contact Seller
+                    </button>
+                </div>
             </div>
         </article>`;
     }).join('');

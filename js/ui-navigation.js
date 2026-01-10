@@ -867,19 +867,23 @@ window.goBack = function() {
     hideElement($('ownerDashboard'));
     showElement($('renterSection'));
     
-    // Re-apply filters to ensure checkbox state matches displayed properties
+    // Re-apply filters to ensure checkbox state matches displayed vehicles
     if (typeof applyAllFilters === 'function') {
         applyAllFilters();
     }
     
-    // Restore scroll position (saved when user clicked on a property)
+    // Restore scroll position (saved when user clicked on a vehicle)
     if (typeof window.savedScrollPosition === 'number') {
         // Small delay to ensure DOM is ready after showing renterSection
         setTimeout(() => {
             window.scrollTo(0, window.savedScrollPosition);
         }, 50);
     } else {
-        $('properties').scrollIntoView({ behavior: 'smooth' });
+        // Scroll to vehicles section
+        const vehiclesEl = $('vehicles');
+        if (vehiclesEl) {
+            vehiclesEl.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 };
 

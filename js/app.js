@@ -144,9 +144,9 @@ window.viewProperty = function(id) {
             </button>
         </div>` : '';
 
-    // Premium badge for images section
+    // Premium badge for images section - high z-index to stay above image interactions
     const premiumImageBadge = isPremium 
-        ? '<div class="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2"><span>👑</span> Premium</div>' 
+        ? '<div class="absolute top-4 left-4 z-20 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2 pointer-events-none"><span>👑</span> Premium</div>' 
         : '';
 
     // Build images section - horizontal scroll layout with large main image and thumbnails below
@@ -613,10 +613,10 @@ function renderPropertyStatsContent(id) {
                        <span class="text-gray-400 font-semibold text-xl">Photos Coming Soon</span>
                        <span class="text-gray-500 text-sm mt-2">Check back later for vehicle images</span>
                    </div>`}
-            <div class="absolute top-4 right-4 bg-gradient-to-r ${statusClass} text-white px-4 py-2 rounded-xl font-bold shadow-lg">
+            <div class="absolute top-4 right-4 bg-gradient-to-r ${statusClass} text-white px-4 py-2 rounded-xl font-bold shadow-lg z-20">
                 ${statusText}
             </div>
-            ${isPremium ? '<div class="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2"><span>👑</span> Premium</div>' : ''}
+            ${isPremium ? '<div class="absolute top-4 left-4 z-20 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2 pointer-events-none"><span>👑</span> Premium</div>' : ''}
             </div>
             
             <div class="p-6 md:p-8">
