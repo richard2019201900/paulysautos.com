@@ -502,7 +502,7 @@ window.showPriceWarningModal = function(warnings, onConfirm, onCancel) {
                     <ul class="text-orange-300 text-sm space-y-1">
                         ${warnings.map(w => `<li>• ${w}</li>`).join('')}
                     </ul>
-                    <p class="text-orange-200/70 text-xs mt-3">Usually, longer rental terms (biweekly, monthly) cost more, not less.</p>
+                    <p class="text-orange-200/70 text-xs mt-3">Usually, longer financing terms (biweekly, monthly) cost more, not less.</p>
                 </div>
                 
                 <div class="flex gap-3">

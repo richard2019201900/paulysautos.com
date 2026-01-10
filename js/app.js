@@ -463,15 +463,15 @@ function renderPropertyStatsContent(id) {
     const biweeklyPrice = PropertyDataService.getValue(id, 'biweeklyPrice', p.biweeklyPrice || 0);
     const monthlyPrice = PropertyDataService.getValue(id, 'monthlyPrice', p.monthlyPrice || 0);
     
-    // Renter & Payment info
-    const renterName = PropertyDataService.getValue(id, 'renterName', p.renterName || '');
-    const renterPhoneRaw = PropertyDataService.getValue(id, 'renterPhone', p.renterPhone || '');
-    const renterPhone = renterPhoneRaw ? renterPhoneRaw.replace(/\D/g, '') : '';
-    const renterNotes = PropertyDataService.getValue(id, 'renterNotes', p.renterNotes || '');
+    // Buyer Renter & Payment info Payment info
+    const buyerName = PropertyDataService.getValue(id, 'buyerName', p.buyerName || '');
+    const buyerPhoneRaw = PropertyDataService.getValue(id, 'buyerPhone', p.buyerPhone || '');
+    const buyerPhone = buyerPhoneRaw ? buyerPhoneRaw.replace(/\D/g, '') : '';
+    const buyerNotes = PropertyDataService.getValue(id, 'buyerNotes', p.buyerNotes || '');
     const paymentFrequency = PropertyDataService.getValue(id, 'paymentFrequency', p.paymentFrequency || '');
     const lastPaymentDate = PropertyDataService.getValue(id, 'lastPaymentDate', p.lastPaymentDate || '');
     
-    // DEBUG: Log property render (without sensitive renter data)
+    // DEBUG: Log property render (without sensitive buyer data)
     // Debug log removed
     
     // NOTE: Removed AUTO-FIX logic that was causing race conditions with lease completion
@@ -484,10 +484,10 @@ function renderPropertyStatsContent(id) {
     let reminderScript = '';
     
     // Check for active RTO
-    const hasActiveRTO = PropertyDataService.getValue(id, 'hasActiveRTO', p.hasActiveRTO || false);
-    const rtoCurrentPayment = PropertyDataService.getValue(id, 'rtoCurrentPayment', p.rtoCurrentPayment || 0);
-    const rtoTotalPayments = PropertyDataService.getValue(id, 'rtoTotalPayments', p.rtoTotalPayments || 0);
-    const rtoPaymentInfo = hasActiveRTO ? ` (Payment ${rtoCurrentPayment + 1} of ${rtoTotalPayments} - Rent-to-Own)` : '';
+    const hasActiveFinancing = PropertyDataService.getValue(id, 'hasActiveFinancing', p.hasActiveFinancing || false);
+    const financingCurrentPayment = PropertyDataService.getValue(id, 'financingCurrentPayment', p.financingCurrentPayment || 0);
+    const financingTotalPayments = PropertyDataService.getValue(id, 'financingTotalPayments', p.financingTotalPayments || 0);
+    const financingPaymentInfo = hasActiveFinancing ? ` (Payment ${financingCurrentPayment + 1} of ${financingTotalPayments} - Financing Plan)` : '';
     
     // Check if property is sold
     const isSold = PropertyDataService.getValue(id, 'isSold', p.isSold || false);
@@ -495,7 +495,7 @@ function renderPropertyStatsContent(id) {
     const soldDate = PropertyDataService.getValue(id, 'soldDate', p.soldDate || '');
     const soldPrice = PropertyDataService.getValue(id, 'soldPrice', p.soldPrice || 0);
     
-    // Check if user can access RTO (Elite or Admin only)
+    // Check if user can access Financing (Elite or Admin only)
     const isRTOAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     const isRTOElite = state.userTier === 'elite';
     const canAccessRTO = isRTOAdmin || isRTOElite;
@@ -537,24 +537,24 @@ function renderPropertyStatsContent(id) {
             amountDue = weeklyPrice * 4;
         }
         
-        if (renterName && daysUntilDue <= 1) {
+        if (buyerName && daysUntilDue <= 1) {
             if (daysUntilDue === 1) {
-                reminderScript = `Hey ${renterName}! 👋 Just a friendly reminder that your ${paymentFrequency} rent payment of $${amountDue.toLocaleString()}${rtoPaymentInfo} is due tomorrow (${nextDueDate}). Let me know if you have any questions!`;
+                reminderScript = `Hey ${buyerName}! 👋 Just a friendly reminder that your ${paymentFrequency} financing payment of $${amountDue.toLocaleString()}${financingPaymentInfo} is due tomorrow (${nextDueDate}). Let me know if you have any questions!`;
             } else if (daysUntilDue === 0) {
-                reminderScript = `Hey ${renterName}! 👋 Just a friendly reminder that your ${paymentFrequency} rent payment of $${amountDue.toLocaleString()}${rtoPaymentInfo} is due today (${nextDueDate}). Let me know if you have any questions!`;
+                reminderScript = `Hey ${buyerName}! 👋 Just a friendly reminder that your ${paymentFrequency} financing payment of $${amountDue.toLocaleString()}${financingPaymentInfo} is due today (${nextDueDate}). Let me know if you have any questions!`;
             } else {
                 const daysOverdue = Math.abs(daysUntilDue);
                 if (daysOverdue >= 3) {
-                    // 3+ days overdue - eviction warning
-                    reminderScript = `Hey ${renterName}, your ${paymentFrequency} rent payment of $${amountDue.toLocaleString()}${rtoPaymentInfo} was due on ${nextDueDate} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for eviction in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
+                    // 3+ days overdue - repossession warning
+                    reminderScript = `Hey ${buyerName}, your ${paymentFrequency} financing payment of $${amountDue.toLocaleString()}${financingPaymentInfo} was due on ${nextDueDate} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for repossession in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
                 } else {
-                    reminderScript = `Hey ${renterName}, your ${paymentFrequency} rent payment of $${amountDue.toLocaleString()}${rtoPaymentInfo} was due on ${nextDueDate} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
+                    reminderScript = `Hey ${buyerName}, your ${paymentFrequency} financing payment of $${amountDue.toLocaleString()}${financingPaymentInfo} was due on ${nextDueDate} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
                 }
             }
         }
     }
     
-    const showReminderSection = renterName && (daysUntilDue !== null && daysUntilDue <= 1);
+    const showReminderSection = buyerName && (daysUntilDue !== null && daysUntilDue <= 1);
     
     // Premium styling - apply to container (same approach as Vehicle View)
     const statsContainer = $('vehicleStatsContent');
@@ -766,7 +766,7 @@ function renderPropertyStatsContent(id) {
                             </div>
                         `).join('')}
                     </div>
-                    ${p.images.length === 0 ? '<p class="text-gray-500 text-center py-8">No images yet. Click "Add Images" to showcase your property!</p>' : ''}
+                    ${p.images.length === 0 ? '<p class="text-gray-500 text-center py-8">No images yet. Click "Add Images" to showcase your vehicle!</p>' : ''}
                 </div>
                 
                 <!-- Sales Tracker Section -->
@@ -1266,10 +1266,10 @@ window.startEditTile = function(field, propertyId, type) {
             return;
         }
         
-        // Check if this is an RTO property - show custom RTO payment modal instead
-        const hasActiveRTO = PropertyDataService.getValue(propertyId, 'hasActiveRTO', p?.hasActiveRTO || false);
-        if (hasActiveRTO) {
-            showRTOPaymentModal(propertyId);
+        // Check if this is an Financing property - show custom Financing payment modal instead
+        const hasActiveFinancing = PropertyDataService.getValue(propertyId, 'hasActiveFinancing', p?.hasActiveFinancing || false);
+        if (hasActiveFinancing) {
+            showFinancingPaymentModal(propertyId);
             return; // Don't continue with normal tile editing
         }
     }
@@ -1334,15 +1334,15 @@ window.startEditTile = function(field, propertyId, type) {
             <textarea id="input-${field}-${propertyId}"
                    class="stat-input text-sm w-full"
                    rows="3"
-                   placeholder="Add notes about this renter...">${currentValue || ''}</textarea>
+                   placeholder="Add notes about this buyer...">${currentValue || ''}</textarea>
         `;
     } else {
         const rawValue = typeof currentValue === 'number' ? currentValue : String(currentValue || '').replace(/[$,]/g, '');
         const inputType = type === 'number' ? 'number' : (type === 'tel' ? 'tel' : 'text');
         const placeholder = field === 'ownerName' ? 'Enter contact name' : 
                            field === 'ownerPhone' ? 'Enter phone number' : 
-                           field === 'renterName' ? 'Enter renter name' : 
-                           field === 'renterPhone' ? 'Enter renter phone' : '';
+                           field === 'buyerName' ? 'Enter buyer name' : 
+                           field === 'buyerPhone' ? 'Enter buyer phone' : '';
         const phoneHandler = type === 'tel' ? 'oninput="this.value = this.value.replace(/\\D/g, \'\')" maxlength="10"' : '';
         
         // Add minimum price info for buyPrice field
@@ -1428,10 +1428,10 @@ window.saveTileEdit = async function(field, propertyId, type) {
         newValue = input.value.replace(/\D/g, '');
         input.value = newValue; // Update input to show cleaned number
     } else if (type === 'text') {
-        // Allow empty values for owner/renter info
+        // Allow empty values for owner/buyer info
         newValue = input.value.trim();
         // For non-contact fields, require a value
-        if (!newValue && field !== 'ownerName' && field !== 'ownerPhone' && field !== 'renterName' && field !== 'renterPhone') {
+        if (!newValue && field !== 'ownerName' && field !== 'ownerPhone' && field !== 'buyerName' && field !== 'buyerPhone') {
             tile.classList.add('error');
             setTimeout(() => tile.classList.remove('error'), 500);
             return;
@@ -1508,11 +1508,11 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
         } else {
             displayValue = field === 'weeklyPrice' || field === 'biweeklyPrice' || field === 'monthlyPrice' ? `${newValue.toLocaleString()}` : newValue.toLocaleString();
         }
-    } else if ((field === 'ownerName' || field === 'ownerPhone' || field === 'renterName' || field === 'renterPhone') && !newValue) {
+    } else if ((field === 'ownerName' || field === 'ownerPhone' || field === 'buyerName' || field === 'buyerPhone') && !newValue) {
         displayValue = '<span class="opacity-70">Not set</span>';
-    } else if (field === 'renterNotes' && !newValue) {
+    } else if (field === 'buyerNotes' && !newValue) {
         displayValue = '<span class="opacity-70">Add notes...</span>';
-    } else if (field === 'renterNotes' && newValue) {
+    } else if (field === 'buyerNotes' && newValue) {
         // Show full text - CSS line-clamp will handle overflow
         displayValue = newValue;
     } else if (type === 'date' && newValue) {
@@ -1531,7 +1531,7 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
         // LOG PAYMENT when lastPaymentDate is updated
         if (field === 'lastPaymentDate' && newValue) {
             const p = properties.find(prop => prop.id === propertyId);
-            const renterName = PropertyDataService.getValue(propertyId, 'renterName', p?.renterName || 'Unknown');
+            const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
             const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
             const dailyPrice = PropertyDataService.getValue(propertyId, 'dailyPrice', p?.dailyPrice || 0);
             const weeklyPrice = PropertyDataService.getValue(propertyId, 'weeklyPrice', p?.weeklyPrice || 0);
@@ -1548,31 +1548,31 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
                 paymentAmount = monthlyPrice > 0 ? monthlyPrice : weeklyPrice * 4;
             }
             
-            // Check for RTO - handle deposit vs monthly payments
-            const hasActiveRTO = PropertyDataService.getValue(propertyId, 'hasActiveRTO', p?.hasActiveRTO || false);
+            // Check for Financing - handle deposit vs monthly payments
+            const hasActiveFinancing = PropertyDataService.getValue(propertyId, 'hasActiveFinancing', p?.hasActiveFinancing || false);
             let isDepositPayment = false;
-            let rtoPaymentInfo = null;
+            let financingPaymentInfo = null;
             
-            if (hasActiveRTO) {
-                const rtoDepositPaid = PropertyDataService.getValue(propertyId, 'rtoDepositPaid', p?.rtoDepositPaid || false);
-                const rtoContractId = PropertyDataService.getValue(propertyId, 'rtoContractId', p?.rtoContractId || '');
+            if (hasActiveFinancing) {
+                const financingDownPaymentPaid = PropertyDataService.getValue(propertyId, 'financingDownPaymentPaid', p?.financingDownPaymentPaid || false);
+                const financingContractId = PropertyDataService.getValue(propertyId, 'financingContractId', p?.financingContractId || '');
                 
-                if (!rtoDepositPaid) {
+                if (!financingDownPaymentPaid) {
                     // DEPOSIT NOT YET PAID - record deposit payment
                     isDepositPayment = true;
-                    const rtoDepositAmount = PropertyDataService.getValue(propertyId, 'rtoDepositAmount', p?.rtoDepositAmount || 0);
-                    paymentAmount = rtoDepositAmount; // Override payment amount to deposit
+                    const financingDownPayment = PropertyDataService.getValue(propertyId, 'financingDownPayment', p?.financingDownPayment || 0);
+                    paymentAmount = financingDownPayment; // Override payment amount to deposit
                     
                     // Mark deposit as paid on property
                     await PropertyDataService.writeMultiple(propertyId, {
-                        rtoDepositPaid: true,
-                        rtoDepositPaidDate: newValue
+                        financingDownPaymentPaid: true,
+                        financingDownPaymentPaidDate: newValue
                     });
                     
-                    // Update the RTO contract in Firestore
-                    if (rtoContractId) {
+                    // Update the Financing contract in Firestore
+                    if (financingContractId) {
                         try {
-                            await db.collection('rentToOwnContracts').doc(rtoContractId).update({
+                            await db.collection('financingContracts').doc(financingContractId).update({
                                 depositPaid: true,
                                 depositPaidDate: newValue,
                                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -1581,26 +1581,26 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
                             console.warn('[RTO] Could not update contract deposit status:', e);
                         }
                     }
-                    console.log(`[RTO] Deposit of $${rtoDepositAmount.toLocaleString()} recorded for contract ${rtoContractId}`);
+                    console.log(`[RTO] Deposit of $${financingDownPayment.toLocaleString()} recorded for contract ${financingContractId}`);
                     
                     // Store info for confirmation modal
-                    const rtoTotalPayments = PropertyDataService.getValue(propertyId, 'rtoTotalPayments', p?.rtoTotalPayments || 0);
-                    rtoPaymentInfo = { 
+                    const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 0);
+                    financingPaymentInfo = { 
                         isDeposit: true, 
-                        depositAmount: rtoDepositAmount,
+                        depositAmount: financingDownPayment,
                         monthlyAmount: monthlyPrice,
-                        totalPayments: rtoTotalPayments
+                        totalPayments: financingTotalPayments
                     };
                 } else {
                     // DEPOSIT ALREADY PAID - record monthly payment
-                    const rtoCurrentPayment = PropertyDataService.getValue(propertyId, 'rtoCurrentPayment', p?.rtoCurrentPayment || 0);
-                    const newPaymentNumber = rtoCurrentPayment + 1;
-                    await PropertyDataService.write(propertyId, 'rtoCurrentPayment', newPaymentNumber);
+                    const financingCurrentPayment = PropertyDataService.getValue(propertyId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
+                    const newPaymentNumber = financingCurrentPayment + 1;
+                    await PropertyDataService.write(propertyId, 'financingCurrentPayment', newPaymentNumber);
                     
-                    // Update the RTO contract in Firestore
-                    if (rtoContractId) {
+                    // Update the Financing contract in Firestore
+                    if (financingContractId) {
                         try {
-                            await db.collection('rentToOwnContracts').doc(rtoContractId).update({
+                            await db.collection('financingContracts').doc(financingContractId).update({
                                 currentPaymentNumber: newPaymentNumber,
                                 lastPaymentDate: newValue,
                                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -1609,14 +1609,14 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
                             console.warn('[RTO] Could not update contract payment number:', e);
                         }
                     }
-                    console.log(`[RTO] Monthly payment ${newPaymentNumber} recorded for contract ${rtoContractId}`);
+                    console.log(`[RTO] Monthly payment ${newPaymentNumber} recorded for contract ${financingContractId}`);
                     
                     // Store info for confirmation modal
-                    const rtoTotalPayments = PropertyDataService.getValue(propertyId, 'rtoTotalPayments', p?.rtoTotalPayments || 0);
-                    rtoPaymentInfo = { 
+                    const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 0);
+                    financingPaymentInfo = { 
                         isDeposit: false, 
                         current: newPaymentNumber, 
-                        total: rtoTotalPayments 
+                        total: financingTotalPayments 
                     };
                 }
             }
@@ -1625,11 +1625,11 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
             const logSuccess = await logPayment(propertyId, {
                 paymentDate: newValue,
                 recordedAt: new Date().toISOString(),
-                renterName: renterName,
+                buyerName: buyerName,
                 frequency: isDepositPayment ? 'deposit' : paymentFrequency,
                 amount: paymentAmount,
                 recordedBy: auth.currentUser?.email || 'owner',
-                isRTOPayment: hasActiveRTO,
+                isRTOPayment: hasActiveFinancing,
                 isRTODeposit: isDepositPayment
             });
             
@@ -1649,23 +1649,23 @@ window.executeTileSave = async function(field, propertyId, type, newValue, tile,
             
             // Show thank you message popup with copy functionality
             if (logSuccess) {
-                showPaymentConfirmationModal(renterName, nextDueDateStr, paymentAmount, rtoPaymentInfo);
+                showPaymentConfirmationModal(buyerName, nextDueDateStr, paymentAmount, financingPaymentInfo);
                 
                 // Award XP for logging a payment
                 if (typeof GamificationService !== 'undefined' && GamificationService.awardXP) {
                     const userId = auth.currentUser?.uid;
                     if (userId) {
                         const propertyTitle = p?.title || `Property #${propertyId}`;
-                        await GamificationService.awardXP(userId, 100, `Collected $${paymentAmount.toLocaleString()} rent on ${propertyTitle}`);
+                        await GamificationService.awardXP(userId, 100, `Collected $${paymentAmount.toLocaleString()} payment on ${propertyTitle}`);
                     }
                 }
             }
         }
         
-        // Auto-flip to "rented" when setting renter name or phone
-        if ((field === 'renterName' || field === 'renterPhone') && newValue) {
+        // Auto-flip to "sold" when setting buyer name or phone
+        if ((field === 'buyerName' || field === 'buyerPhone') && newValue) {
             if (state.availability[propertyId] !== false) {
-                // Property is currently available, flip to rented
+                // Property is currently available, flip to sold
                 state.availability[propertyId] = false;
                 await saveAvailability(propertyId, false);
                 
@@ -1800,7 +1800,7 @@ window.savePropertyType = async function(propertyId, newValue) {
 };
 
 /**
- * Toggle property status (available/rented)
+ * Toggle property status (available/sold)
  */
 window.togglePropertyStatus = async function(propertyId) {
     await toggleAvailability(propertyId);
@@ -2076,9 +2076,9 @@ window.logPayment = async function(propertyId, paymentData) {
 };
 
 // Show payment confirmation modal with copyable thank you message
-window.showPaymentConfirmationModal = function(renterName, nextDueDate, amount, rtoInfo = null) {
+window.showPaymentConfirmationModal = function(buyerName, nextDueDate, amount, rtoInfo = null) {
     // Get display name - handle titles like Dr., Mr., Mrs., Ms.
-    const nameParts = renterName.trim().split(' ');
+    const nameParts = buyerName.trim().split(' ');
     const titles = ['dr.', 'dr', 'mr.', 'mr', 'mrs.', 'mrs', 'ms.', 'ms', 'miss', 'prof.', 'prof'];
     let displayName;
     
@@ -2098,19 +2098,19 @@ window.showPaymentConfirmationModal = function(renterName, nextDueDate, amount, 
     
     if (rtoInfo && rtoInfo.isDeposit) {
         // DEPOSIT PAYMENT MESSAGE
-        thankYouMessage = `Thanks ${displayName}! 🙏 Your deposit of $${amount.toLocaleString()} for your Rent-to-Own agreement has been received. Your first monthly payment of $${rtoInfo.monthlyAmount.toLocaleString()} will be due on ${nextDueDate}. Let me know if you have any questions!`;
-        headerSubtext = `$${amount.toLocaleString()} deposit from ${renterName}`;
-        rtoBadge = `<p class="text-emerald-400 text-sm mt-1">💰 RTO Deposit Received</p>`;
+        thankYouMessage = `Thanks ${displayName}! 🙏 Your deposit of $${amount.toLocaleString()} for your Financing Plan agreement has been received. Your first monthly payment of $${rtoInfo.monthlyAmount.toLocaleString()} will be due on ${nextDueDate}. Let me know if you have any questions!`;
+        headerSubtext = `$${amount.toLocaleString()} deposit from ${buyerName}`;
+        rtoBadge = `<p class="text-emerald-400 text-sm mt-1">💰 Financing Deposit Received</p>`;
     } else if (rtoInfo && !rtoInfo.isDeposit) {
-        // MONTHLY RTO PAYMENT MESSAGE
-        const rtoPaymentStr = ` (Payment ${rtoInfo.current} of ${rtoInfo.total} in your Rent-to-Own agreement)`;
+        // MONTHLY Financing PAYMENT MESSAGE
+        const rtoPaymentStr = ` (Payment ${rtoInfo.current} of ${rtoInfo.total} in your Financing Plan agreement)`;
         thankYouMessage = `Thanks ${displayName}! 🙏 Your payment of $${amount.toLocaleString()}${rtoPaymentStr} has been received. Your next payment is due on ${nextDueDate}. Let me know if you have any questions!`;
-        headerSubtext = `$${amount.toLocaleString()} from ${renterName}`;
-        rtoBadge = `<p class="text-amber-400 text-sm mt-1">📋 RTO Payment ${rtoInfo.current} of ${rtoInfo.total}</p>`;
+        headerSubtext = `$${amount.toLocaleString()} from ${buyerName}`;
+        rtoBadge = `<p class="text-amber-400 text-sm mt-1">📋 Financing Payment ${rtoInfo.current} of ${rtoInfo.total}</p>`;
     } else {
         // REGULAR (NON-RTO) PAYMENT MESSAGE
         thankYouMessage = `Thanks ${displayName}! 🙏 Your payment of $${amount.toLocaleString()} has been received. Your next payment is due on ${nextDueDate}. Let me know if you have any questions!`;
-        headerSubtext = `$${amount.toLocaleString()} from ${renterName}`;
+        headerSubtext = `$${amount.toLocaleString()} from ${buyerName}`;
     }
     
     // Create modal HTML
@@ -2308,10 +2308,10 @@ window.calculatePropertyAnalytics = function(payments, property) {
     const yearStart = new Date(now.getFullYear(), 0, 1);
     
     // Filter out premium_fee payments - these are fees the owner PAYS, not income they receive
-    const rentPayments = payments.filter(p => p.type !== 'premium_fee');
+    const salesPayments = payments.filter(p => p.type !== 'premium_fee');
     
     // Sort payments by date
-    const sortedPayments = [...rentPayments].sort((a, b) => 
+    const sortedPayments = [...salesPayments].sort((a, b) => 
         new Date(a.paymentDate) - new Date(b.paymentDate)
     );
     
@@ -2325,18 +2325,18 @@ window.calculatePropertyAnalytics = function(payments, property) {
     const ytdPaymentCount = ytdPayments.length;
     
     // Average rent calculation
-    const avgRent = totalPayments > 0 ? Math.round(totalEarnings / totalPayments) : 0;
+    const avgPayment = totalPayments > 0 ? Math.round(totalEarnings / totalPayments) : 0;
     
-    // Renter breakdown - also filter out premium_fee entries
-    const renterStats = {};
+    // Buyer breakdown - also filter out premium_fee entries
+    const buyerStats = {};
     sortedPayments.forEach(p => {
-        const name = p.renterName || 'Unknown';
-        if (!renterStats[name]) {
-            renterStats[name] = { count: 0, total: 0, payments: [] };
+        const name = p.buyerName || 'Unknown';
+        if (!buyerStats[name]) {
+            buyerStats[name] = { count: 0, total: 0, payments: [] };
         }
-        renterStats[name].count++;
-        renterStats[name].total += (p.amount || 0);
-        renterStats[name].payments.push(p);
+        buyerStats[name].count++;
+        buyerStats[name].total += (p.amount || 0);
+        buyerStats[name].payments.push(p);
     });
     
     // Monthly breakdown for charting
@@ -2351,7 +2351,7 @@ window.calculatePropertyAnalytics = function(payments, property) {
         monthlyData[monthKey].payments++;
     });
     
-    // Calculate rental period (time since first payment or first renter set)
+    // Calculate financing period (time since first payment or first buyer set)
     let firstPaymentDate = null;
     if (sortedPayments.length > 0) {
         firstPaymentDate = new Date(sortedPayments[0].paymentDate);
@@ -2390,8 +2390,8 @@ window.calculatePropertyAnalytics = function(payments, property) {
         ytdEarnings,
         totalPayments,
         ytdPaymentCount,
-        avgRent,
-        renterStats,
+        avgPayment,
+        buyerStats,
         monthlyData,
         firstPaymentDate,
         daysSinceFirstPayment,
@@ -2445,19 +2445,19 @@ window.renderPropertyAnalytics = async function(propertyId) {
     container.innerHTML = `
         <!-- Summary Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-gradient-to-br from-green-900/50 to-emerald-900/50 rounded-xl p-4 border border-green-600/30 cursor-help" title="Total rent collected from this property since tracking began">
+            <div class="bg-gradient-to-br from-green-900/50 to-emerald-900/50 rounded-xl p-4 border border-green-600/30 cursor-help" title="Total revenue collected from this property since tracking began">
                 <div class="text-green-400 text-sm font-semibold">💰 Total Earnings</div>
                 <div class="text-2xl font-black text-white">$${analytics.totalEarnings.toLocaleString()}</div>
                 <div class="text-green-300/70 text-xs">${analytics.totalPayments} payment${analytics.totalPayments !== 1 ? 's' : ''}</div>
             </div>
-            <div class="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-xl p-4 border border-blue-600/30 cursor-help" title="Rent collected in ${new Date().getFullYear()} only">
+            <div class="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-xl p-4 border border-blue-600/30 cursor-help" title="Revenue collected in ${new Date().getFullYear()} only">
                 <div class="text-blue-400 text-sm font-semibold">📅 YTD Earnings</div>
                 <div class="text-2xl font-black text-white">$${analytics.ytdEarnings.toLocaleString()}</div>
                 <div class="text-blue-300/70 text-xs">${analytics.ytdPaymentCount} payment${analytics.ytdPaymentCount !== 1 ? 's' : ''} this year</div>
             </div>
             <div class="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-xl p-4 border border-purple-600/30 cursor-help" title="Average amount per payment (Total ÷ # of payments)">
                 <div class="text-purple-400 text-sm font-semibold">💵 Avg Payment</div>
-                <div class="text-2xl font-black text-white">$${analytics.avgRent.toLocaleString()}</div>
+                <div class="text-2xl font-black text-white">$${analytics.avgPayment.toLocaleString()}</div>
                 <div class="text-purple-300/70 text-xs">per payment cycle</div>
             </div>
             <div class="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-xl p-4 border border-amber-600/30 cursor-help" title="Payment consistency: 100% = all expected payments made on time. Calculated as (payments received ÷ payments expected) based on payment frequency.">
@@ -2509,10 +2509,10 @@ window.renderPropertyAnalytics = async function(propertyId) {
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                                    ${tenure.renterName.charAt(0).toUpperCase()}
+                                    ${tenure.buyerName.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <div class="text-white font-bold">${tenure.renterName}</div>
+                                    <div class="text-white font-bold">${tenure.buyerName}</div>
                                     <div class="text-gray-400 text-sm">
                                         ${tenure.paymentCount || 0} × $${(tenure.avgPayment || tenure.totalCollected / (tenure.paymentCount || 1)).toLocaleString()} 
                                         <span class="capitalize">${tenure.paymentFrequency || 'payment'}${tenure.paymentCount !== 1 ? 's' : ''}</span>
@@ -2550,10 +2550,10 @@ window.renderPropertyAnalytics = async function(propertyId) {
                                 <div class="text-white font-bold text-sm">${tenure.endDate || 'N/A'}</div>
                             </div>
                         </div>
-                        ${tenure.renterNotes ? `
+                        ${tenure.buyerNotes ? `
                         <div class="mt-3 pt-3 border-t border-gray-700">
                             <div class="text-gray-400 text-xs uppercase mb-1">Notes</div>
-                            <div class="text-gray-300 text-sm">${tenure.renterNotes}</div>
+                            <div class="text-gray-300 text-sm">${tenure.buyerNotes}</div>
                         </div>
                         ` : ''}
                     </div>
@@ -2568,8 +2568,8 @@ window.renderPropertyAnalytics = async function(propertyId) {
                 <span>👥</span> Renter History
             </h4>
             <div class="space-y-3">
-                ${Object.entries(analytics.renterStats).length > 0 
-                    ? Object.entries(analytics.renterStats).map(([name, stats]) => `
+                ${Object.entries(analytics.buyerStats).length > 0 
+                    ? Object.entries(analytics.buyerStats).map(([name, stats]) => `
                         <div class="bg-gray-900/50 rounded-lg p-3 flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
@@ -2605,13 +2605,13 @@ window.renderPropertyAnalytics = async function(propertyId) {
                 ${payments.length > 0 
                     ? analytics.sortedPayments
                         .slice().reverse()
-                        .filter(p => p.type !== 'eviction' && (p.amount || 0) > 0) // Filter out evictions and $0 entries
+                        .filter(p => p.type !== 'repossession' && (p.amount || 0) > 0) // Filter out repossessions and $0 entries
                         .slice(0, 10).map((p, i) => `
                         <div class="bg-gray-900/50 rounded-lg p-3 flex items-center justify-between text-sm ${i === 0 ? 'ring-2 ring-green-500/50' : ''} group">
                             <div class="flex items-center gap-3">
                                 <div class="text-2xl">${i === 0 ? '✅' : '💵'}</div>
                                 <div>
-                                    <div class="text-white font-medium">${p.renterName || 'Unknown'}</div>
+                                    <div class="text-white font-medium">${p.buyerName || 'Unknown'}</div>
                                     <div class="text-gray-400 text-xs">
                                         Paid for: ${formatDate(p.paymentDate)} 
                                         <span class="text-gray-600">•</span> 
@@ -2742,7 +2742,7 @@ window.showFullLedger = async function(propertyId) {
                             ${sortedPayments.map((payment, i) => `
                                 <tr class="border-b border-gray-700/50 hover:bg-gray-700/30 group">
                                     <td class="py-3 text-white font-medium">${formatDate(payment.paymentDate)}</td>
-                                    <td class="py-3 text-gray-300">${payment.renterName || 'Unknown'}</td>
+                                    <td class="py-3 text-gray-300">${payment.buyerName || 'Unknown'}</td>
                                     <td class="py-3">
                                         <span class="px-2 py-1 rounded-full text-xs font-semibold ${
                                             payment.frequency === 'monthly' ? 'bg-purple-500/20 text-purple-300' :
@@ -3600,11 +3600,11 @@ window.showCompleteLeaseModal = async function(propertyId) {
     if (!p) return;
     
     // Get FRESH data from PropertyDataService
-    const renterName = PropertyDataService.getValue(propertyId, 'renterName', p.renterName || '');
-    const renterPhone = PropertyDataService.getValue(propertyId, 'renterPhone', p.renterPhone || '');
+    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
+    const buyerPhone = PropertyDataService.getValue(propertyId, 'buyerPhone', p.buyerPhone || '');
     const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p.paymentFrequency || '');
     
-    if (!renterName) {
+    if (!buyerName) {
         showToast('No renter assigned to this property. The lease may have already been completed.', 'error');
         // Refresh the page to show correct state
         viewPropertyStats(propertyId);
@@ -3612,7 +3612,7 @@ window.showCompleteLeaseModal = async function(propertyId) {
     }
     
     // Calculate tenure summary from payment history
-    const tenureSummary = await calculateTenureSummary(propertyId, renterName);
+    const tenureSummary = await calculateTenureSummary(propertyId, buyerName);
     
     const modalHTML = `
         <div id="completeLeaseModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeCompleteLeaseModal()">
@@ -3632,11 +3632,11 @@ window.showCompleteLeaseModal = async function(propertyId) {
                     <div class="bg-gray-800 rounded-xl p-4 mb-4">
                         <div class="flex items-center gap-3 mb-3">
                             <div class="w-12 h-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                                ${renterName.charAt(0).toUpperCase()}
+                                ${buyerName.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                                <div class="text-white font-bold">${renterName}</div>
-                                <div class="text-gray-400 text-sm">${renterPhone || 'No phone on file'}</div>
+                                <div class="text-white font-bold">${buyerName}</div>
+                                <div class="text-gray-400 text-sm">${buyerPhone || 'No phone on file'}</div>
                             </div>
                         </div>
                         <div class="text-gray-400 text-sm capitalize">${paymentFrequency || 'Unknown'} payment schedule</div>
@@ -3702,7 +3702,7 @@ window.showCompleteLeaseModal = async function(propertyId) {
                             <div>
                                 <div class="text-yellow-400 font-bold text-sm">This will:</div>
                                 <ul class="text-yellow-200/80 text-sm mt-1 space-y-1">
-                                    <li>• Archive ${renterName}'s tenure to payment history</li>
+                                    <li>• Archive ${buyerName}'s tenure to payment history</li>
                                     <li>• Clear renter name, phone, notes, and payment schedule</li>
                                     <li>• Mark property as <span class="text-green-400 font-semibold">Available</span></li>
                                     <li>• Begin tracking vacancy period</li>
@@ -3723,7 +3723,7 @@ window.showCompleteLeaseModal = async function(propertyId) {
                     <!-- Confirmation checkbox -->
                     <label class="flex items-center gap-3 cursor-pointer mb-4">
                         <input type="checkbox" id="confirmLeaseComplete" class="w-5 h-5 rounded border-gray-600 text-green-500 focus:ring-green-500 bg-gray-700">
-                        <span class="text-gray-300">I confirm ${renterName} is moving out and the lease is complete</span>
+                        <span class="text-gray-300">I confirm ${buyerName} is moving out and the lease is complete</span>
                     </label>
                     
                     <!-- Actions -->
@@ -3765,32 +3765,32 @@ window.showCompleteLeaseModal = async function(propertyId) {
 };
 
 /**
- * Show the Eviction modal
- * For non-payment evictions with final message to renter
+ * Show the Repossession modal
+ * For non-payment repossessions with final message to renter
  */
-window.showEvictionModal = async function(propertyId) {
+window.showRepossessionModal = async function(propertyId) {
     // Prevent opening multiple modals
-    if (document.getElementById('evictionModal')) {
-        console.warn('[Eviction] Modal already open');
+    if (document.getElementById('repossessionModal')) {
+        console.warn('[Repossession] Modal already open');
         return;
     }
     
     const p = properties.find(prop => prop.id === propertyId);
     if (!p) return;
     
-    const renterName = PropertyDataService.getValue(propertyId, 'renterName', p.renterName || '');
+    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
     
-    if (!renterName) {
+    if (!buyerName) {
         showToast('No renter assigned to this property.', 'error');
         viewPropertyStats(propertyId);
         return;
     }
     
-    // Generate eviction message
-    const evictionMessage = `Hey ${renterName}, thank you for renting with us. Unfortunately, due to non-payment your property has been cleaned out and placed back on the market for rent. If you have any questions or believe this was done in error, please contact me.`;
+    // Generate repossession message
+    const repossessionMessage = `Hey ${buyerName}, thank you for your business. Unfortunately, due to non-payment your vehicle financing agreement has been terminated and the vehicle has been repossessed. If you have any questions or believe this was done in error, please contact me.`;
     
     const modalHTML = `
-        <div id="evictionModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeEvictionModal()">
+        <div id="repossessionModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeRepossessionModal()">
             <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-red-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
@@ -3807,27 +3807,27 @@ window.showEvictionModal = async function(propertyId) {
                     <div class="bg-gray-800 rounded-xl p-4 mb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-white font-bold text-lg">
-                                ${renterName.charAt(0).toUpperCase()}
+                                ${buyerName.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                                <div class="text-white font-bold">${renterName}</div>
-                                <div class="text-red-400 text-sm">Being evicted for non-payment</div>
+                                <div class="text-white font-bold">${buyerName}</div>
+                                <div class="text-red-400 text-sm">Being repossessed for non-payment</div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Eviction Message -->
+                    <!-- Repossession Message -->
                     <div class="bg-red-900/30 border border-red-500/30 rounded-xl p-4 mb-4">
                         <div class="flex items-center justify-between mb-2">
                             <h4 class="text-red-400 font-bold flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                                Eviction Message
+                                Repossession Message
                             </h4>
-                            <button onclick="copyEvictionMessage()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-lg font-semibold transition flex items-center gap-1">
+                            <button onclick="copyRepossessionMessage()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-lg font-semibold transition flex items-center gap-1">
                                 📋 Copy
                             </button>
                         </div>
-                        <textarea id="evictionMessageText" class="w-full bg-gray-800 text-gray-200 rounded-lg p-3 text-sm resize-none" rows="4">${evictionMessage}</textarea>
+                        <textarea id="repossessionMessageText" class="w-full bg-gray-800 text-gray-200 rounded-lg p-3 text-sm resize-none" rows="4">${repossessionMessage}</textarea>
                     </div>
                     
                     <!-- Warning -->
@@ -3837,7 +3837,7 @@ window.showEvictionModal = async function(propertyId) {
                             <div>
                                 <div class="text-yellow-400 font-bold text-sm">This will:</div>
                                 <ul class="text-yellow-200/80 text-sm mt-1 space-y-1">
-                                    <li>• Record eviction in payment history</li>
+                                    <li>• Record repossession in payment history</li>
                                     <li>• Clear renter name, phone, notes, and payment schedule</li>
                                     <li>• Mark property as <span class="text-green-400 font-semibold">Available</span></li>
                                 </ul>
@@ -3847,7 +3847,7 @@ window.showEvictionModal = async function(propertyId) {
                     
                     <!-- Remove Keys checkbox -->
                     <label class="flex items-center gap-3 cursor-pointer mb-3 bg-gray-800 p-3 rounded-lg border border-gray-700">
-                        <input type="checkbox" id="confirmEvictionKeysRemoved" class="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 bg-gray-700">
+                        <input type="checkbox" id="confirmRepossessionKeysRemoved" class="w-5 h-5 rounded border-gray-600 text-amber-500 focus:ring-amber-500 bg-gray-700">
                         <div>
                             <span class="text-amber-400 font-semibold">🔑 Keys Removed / Changed Locks</span>
                             <p class="text-gray-400 text-xs">Confirm renter no longer has access</p>
@@ -3856,16 +3856,16 @@ window.showEvictionModal = async function(propertyId) {
                     
                     <!-- Confirmation checkbox -->
                     <label class="flex items-center gap-3 cursor-pointer mb-4">
-                        <input type="checkbox" id="confirmEviction" class="w-5 h-5 rounded border-gray-600 text-red-500 focus:ring-red-500 bg-gray-700">
-                        <span class="text-gray-300">I confirm ${renterName} is being evicted for non-payment</span>
+                        <input type="checkbox" id="confirmRepossession" class="w-5 h-5 rounded border-gray-600 text-red-500 focus:ring-red-500 bg-gray-700">
+                        <span class="text-gray-300">I confirm ${buyerName} is being repossessed for non-payment</span>
                     </label>
                     
                     <!-- Actions -->
                     <div class="flex gap-3">
-                        <button onclick="closeEvictionModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
+                        <button onclick="closeRepossessionModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
                             Cancel
                         </button>
-                        <button id="evictBtn" onclick="processEviction(${propertyId})" disabled class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-bold transition opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
+                        <button id="evictBtn" onclick="processRepossession(${propertyId})" disabled class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-bold transition opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
                             Evict Renter
                         </button>
@@ -3878,8 +3878,8 @@ window.showEvictionModal = async function(propertyId) {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
     // Add checkbox listeners - both must be checked to enable button
-    const keysCheckbox = document.getElementById('confirmEvictionKeysRemoved');
-    const confirmCheckbox = document.getElementById('confirmEviction');
+    const keysCheckbox = document.getElementById('confirmRepossessionKeysRemoved');
+    const confirmCheckbox = document.getElementById('confirmRepossession');
     const btn = document.getElementById('evictBtn');
     
     const updateButtonState = () => {
@@ -3899,46 +3899,46 @@ window.showEvictionModal = async function(propertyId) {
 };
 
 /**
- * Close eviction modal
+ * Close repossession modal
  */
-window.closeEvictionModal = function() {
-    const modal = document.getElementById('evictionModal');
+window.closeRepossessionModal = function() {
+    const modal = document.getElementById('repossessionModal');
     if (modal) modal.remove();
 };
 
 /**
- * Copy eviction message to clipboard
+ * Copy repossession message to clipboard
  */
-window.copyEvictionMessage = function() {
-    const textarea = document.getElementById('evictionMessageText');
+window.copyRepossessionMessage = function() {
+    const textarea = document.getElementById('repossessionMessageText');
     if (textarea) {
         navigator.clipboard.writeText(textarea.value).then(() => {
-            showToast('Eviction message copied!', 'success');
+            showToast('Repossession message copied!', 'success');
         }).catch(() => {
             textarea.select();
             document.execCommand('copy');
-            showToast('Eviction message copied!', 'success');
+            showToast('Repossession message copied!', 'success');
         });
     }
 };
 
 /**
- * Process eviction - same as completeLease but with eviction flag
+ * Process repossession - same as completeLease but with repossession flag
  */
-window.processEviction = async function(propertyId) {
+window.processRepossession = async function(propertyId) {
     const btn = document.getElementById('evictBtn');
     btn.disabled = true;
     btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Processing...';
     
     try {
         const p = properties.find(prop => prop.id === propertyId);
-        const renterName = PropertyDataService.getValue(propertyId, 'renterName', '');
+        const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', '');
         const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', '');
         
         // Calculate tenure summary before clearing renter
-        const tenure = await calculateTenureSummary(propertyId, renterName);
+        const tenure = await calculateTenureSummary(propertyId, buyerName);
         
-        // Record eviction in tenure history (NOT payment history)
+        // Record repossession in tenure history (NOT payment history)
         try {
             const historyDoc = await db.collection('paymentHistory').doc(String(propertyId)).get();
             let tenureHistory = [];
@@ -3947,10 +3947,10 @@ window.processEviction = async function(propertyId) {
             }
             
             tenureHistory.push({
-                renterName: renterName,
+                buyerName: buyerName,
                 startDate: tenure.firstPayment ? tenure.firstPayment.toISOString().split('T')[0] : null,
                 endDate: new Date().toISOString().split('T')[0],
-                endReason: 'eviction',
+                endReason: 'repossession',
                 totalCollected: tenure.totalCollected,
                 paymentCount: tenure.paymentCount,
                 tenureDays: tenure.tenureDays,
@@ -3962,13 +3962,13 @@ window.processEviction = async function(propertyId) {
                 tenureHistory: tenureHistory
             }, { merge: true });
         } catch (e) {
-            console.warn('[Eviction] Could not record tenure history:', e);
+            console.warn('[Repossession] Could not record tenure history:', e);
         }
         
         // Clear renter info (same as completeLease)
-        await PropertyDataService.write(propertyId, 'renterName', '');
-        await PropertyDataService.write(propertyId, 'renterPhone', '');
-        await PropertyDataService.write(propertyId, 'renterNotes', '');
+        await PropertyDataService.write(propertyId, 'buyerName', '');
+        await PropertyDataService.write(propertyId, 'buyerPhone', '');
+        await PropertyDataService.write(propertyId, 'buyerNotes', '');
         await PropertyDataService.write(propertyId, 'lastPaymentDate', '');
         await PropertyDataService.write(propertyId, 'paymentFrequency', '');
         
@@ -3976,16 +3976,16 @@ window.processEviction = async function(propertyId) {
         state.availability[propertyId] = true;
         await saveAvailability(propertyId, true);
         
-        closeEvictionModal();
-        showToast(`${renterName} has been evicted. Property marked as available.`, 'success');
+        closeRepossessionModal();
+        showToast(`${buyerName} has been repossessed. Property marked as available.`, 'success');
         
         // Refresh the page
         viewPropertyStats(propertyId);
         renderOwnerDashboard();
         
     } catch (error) {
-        console.error('[Eviction] Error:', error);
-        showToast('Error processing eviction. Please try again.', 'error');
+        console.error('[Repossession] Error:', error);
+        showToast('Error processing repossession. Please try again.', 'error');
         btn.disabled = false;
         btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg> Evict Renter';
     }
@@ -3995,16 +3995,16 @@ window.processEviction = async function(propertyId) {
  * Calculate tenure summary from payment history
  * Properly accounts for payment frequency to determine actual tenure duration
  */
-async function calculateTenureSummary(propertyId, renterName) {
+async function calculateTenureSummary(propertyId, buyerName) {
     const payments = await getPaymentHistory(propertyId);
     const p = properties.find(prop => prop.id === propertyId);
     
-    // Get current payment frequency
+    // Get curfinancing payment frequency
     const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
     
     // Filter payments for this renter (case-insensitive match)
     const renterPayments = payments.filter(pay => 
-        pay.renterName && pay.renterName.toLowerCase() === renterName.toLowerCase()
+        pay.buyerName && pay.buyerName.toLowerCase() === buyerName.toLowerCase()
     );
     
     if (renterPayments.length === 0) {
@@ -4076,21 +4076,21 @@ window.completeLease = async function(propertyId) {
         const p = properties.find(prop => prop.id === propertyId);
         if (!p) throw new Error('Property not found');
         
-        const renterName = PropertyDataService.getValue(propertyId, 'renterName', p.renterName || '');
-        const renterPhone = PropertyDataService.getValue(propertyId, 'renterPhone', p.renterPhone || '');
+        const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
+        const buyerPhone = PropertyDataService.getValue(propertyId, 'buyerPhone', p.buyerPhone || '');
         const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p.paymentFrequency || '');
-        const renterNotes = PropertyDataService.getValue(propertyId, 'renterNotes', p.renterNotes || '');
+        const buyerNotes = PropertyDataService.getValue(propertyId, 'buyerNotes', p.buyerNotes || '');
         
         // Get tenure summary
-        const tenureSummary = await calculateTenureSummary(propertyId, renterName);
+        const tenureSummary = await calculateTenureSummary(propertyId, buyerName);
         
         // Create tenure record with all details
         const tenureRecord = {
             id: Date.now().toString(),
-            renterName: renterName,
-            renterPhone: renterPhone,
+            buyerName: buyerName,
+            buyerPhone: buyerPhone,
             paymentFrequency: paymentFrequency,
-            renterNotes: renterNotes,
+            buyerNotes: buyerNotes,
             startDate: tenureSummary.firstPayment,
             endDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             coverageEnd: tenureSummary.coverageEnd,
@@ -4138,15 +4138,15 @@ window.completeLease = async function(propertyId) {
             closeCompleteLeaseModal();
             
             // Show thank you message modal for owner to copy
-            showLeaseCompletionMessage(renterName, p.title, tenureSummary.totalCollected);
+            showLeaseCompletionMessage(buyerName, p.title, tenureSummary.totalCollected);
             
             // Force refresh ALL data - clear local property object
             const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
             const prop = properties.find(p => p.id === numericId);
             if (prop) {
-                prop.renterName = '';
-                prop.renterPhone = '';
-                prop.renterNotes = '';
+                prop.buyerName = '';
+                prop.buyerPhone = '';
+                prop.buyerNotes = '';
                 prop.paymentFrequency = '';
                 prop.lastPaymentDate = '';
             }
@@ -4272,9 +4272,9 @@ window.deleteTenureRecord = async function(propertyId, tenureId) {
  */
 async function clearRenterData(propertyId) {
     const fieldsToClean = [
-        'renterName',
-        'renterPhone', 
-        'renterNotes',
+        'buyerName',
+        'buyerPhone', 
+        'buyerNotes',
         'paymentFrequency',
         'lastPaymentDate'
     ];
@@ -4286,9 +4286,9 @@ async function clearRenterData(propertyId) {
     
     // STEP 1: Clear local property object immediately
     if (prop) {
-        prop.renterName = '';
-        prop.renterPhone = '';
-        prop.renterNotes = '';
+        prop.buyerName = '';
+        prop.buyerPhone = '';
+        prop.buyerNotes = '';
         prop.paymentFrequency = '';
         prop.lastPaymentDate = '';
     }
@@ -4307,7 +4307,7 @@ async function clearRenterData(propertyId) {
         await db.collection('settings').doc('properties').update(updateData);
         
         console.log('[ClearRenterData] Successfully cleared all renter data for property:', numericId);
-        console.log('[ClearRenterData] property object:', prop ? { renterName: prop.renterName, paymentFrequency: prop.paymentFrequency } : 'not found');
+        console.log('[ClearRenterData] property object:', prop ? { buyerName: prop.buyerName, paymentFrequency: prop.paymentFrequency } : 'not found');
         
     } catch (error) {
         console.error('[ClearRenterData] Error clearing data:', error);
@@ -4395,12 +4395,12 @@ window.closeCompleteLeaseModal = function() {
  * Show thank you message modal after lease completion
  * Gives owner a copy-paste message to send to the renter
  */
-window.showLeaseCompletionMessage = function(renterName, propertyTitle, totalCollected) {
+window.showLeaseCompletionMessage = function(buyerName, propertyTitle, totalCollected) {
     // Remove any existing modal
     const existing = document.getElementById('leaseCompletionMessageModal');
     if (existing) existing.remove();
     
-    const thankYouMessage = `Hey ${renterName}, thank you so much for renting ${propertyTitle} with us! It was a pleasure having you as a tenant. Your total payments of $${totalCollected.toLocaleString()} have all been recorded. If you ever need a place again, hit me up anytime - you're always welcome back! 🚗`;
+    const thankYouMessage = `Hey ${buyerName}, congratulations on completing your financing plan for ${propertyTitle}! 🎉 It was a pleasure working with you. Your total payments of $${totalCollected.toLocaleString()} have all been recorded. The vehicle is now fully yours! If you're ever looking to buy or sell another vehicle, hit me up anytime! 🚗`;
     
     const modalHTML = `
         <div id="leaseCompletionMessageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeLeaseCompletionMessageModal()">
@@ -4422,7 +4422,7 @@ window.showLeaseCompletionMessage = function(renterName, propertyTitle, totalCol
                                 🎉
                             </div>
                             <div>
-                                <div class="text-white font-bold">${renterName}'s lease complete</div>
+                                <div class="text-white font-bold">${buyerName}'s lease complete</div>
                                 <div class="text-green-400 text-sm">Total collected: $${totalCollected.toLocaleString()}</div>
                             </div>
                         </div>
@@ -4507,7 +4507,7 @@ window.rtoWizardState = {
 };
 
 /**
- * Show the Rent-to-Own Wizard
+ * Show the Financing Plan Wizard
  */
 window.showRentToOwnWizard = async function(propertyId) {
     const p = properties.find(prop => prop.id === propertyId);
@@ -4542,7 +4542,7 @@ window.showRentToOwnWizard = async function(propertyId) {
     }
     
     // Get renter name
-    const renterName = PropertyDataService.getValue(propertyId, 'renterName', p.renterName || '');
+    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p.buyerName || '');
     
     // Get property description - stored in 'location' field in the database
     // Try multiple sources to find the description
@@ -4593,10 +4593,10 @@ window.showRentToOwnWizard = async function(propertyId) {
         propertyId: propertyId,
         step: 1,
         property: { ...p, description: propertyDescription },
-        existingRenter: renterName,
+        existingRenter: buyerName,
         existingSeller: sellerName,
         buyer: {
-            name: renterName,
+            name: buyerName,
             useExisting: true
         },
         seller: sellerName,
@@ -4614,7 +4614,7 @@ window.showRentToOwnWizard = async function(propertyId) {
     
     console.log('[RTO] Wizard initialized:', {
         seller: sellerName,
-        renter: renterName,
+        renter: buyerName,
         buyPrice: buyPrice,
         finalPayment: finalPaymentBase,
         category: minPriceInfo.category
@@ -4641,7 +4641,7 @@ function showRTOUpgradeRequired() {
                 </div>
                 <div class="p-6 text-center">
                     <div class="text-6xl mb-4">👑</div>
-                    <h4 class="text-2xl font-bold text-white mb-2">Rent-to-Own Contracts</h4>
+                    <h4 class="text-2xl font-bold text-white mb-2">Financing Plan Contracts</h4>
                     <p class="text-gray-400 mb-6">
                         This premium feature is exclusively available to <span class="text-purple-400 font-bold">Elite</span> subscription members.
                     </p>
@@ -4649,7 +4649,7 @@ function showRTOUpgradeRequired() {
                         <div class="text-purple-300 font-bold mb-2">Elite Benefits Include:</div>
                         <ul class="text-gray-300 text-sm space-y-1 text-left">
                             <li>✓ Unlimited property listings</li>
-                            <li>✓ Rent-to-Own contract generator</li>
+                            <li>✓ Financing Plan contract generator</li>
                             <li>✓ Priority support</li>
                             <li>✓ Advanced analytics</li>
                         </ul>
@@ -5088,7 +5088,7 @@ function renderRTOWizardStep(step) {
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 flex items-center gap-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Rent-to-Own Contract
+                            Financing Plan Contract
                         </h3>
                         <p class="text-gray-900/70 text-sm mt-1">${state.property.title}</p>
                     </div>
@@ -5433,7 +5433,7 @@ window.updateRTOCalculations = function() {
 };
 
 /**
- * Calculate RTO terms for contract generation
+ * Calculate Financing terms for contract generation
  * Uses PMA Government minimum for final payment + 10% PMA Realtor Fee
  */
 function calculateRTOTerms() {
@@ -5485,7 +5485,7 @@ window.generateAndShowContract = function() {
 };
 
 /**
- * Generate the full RTO contract
+ * Generate the full Financing contract
  */
 function generateRTOContract() {
     const state = window.rtoWizardState;
@@ -5551,7 +5551,7 @@ PROPERTY INFORMATION
 ────────────────────────────────────────────────────────────────
 Address: ${state.property.title}
 Property Description: ${propertyDesc}
-Listing Type: Rent-to-Own
+Listing Type: Financing Plan
 Property Category: ${calc.propertyCategory}
 
 PARTIES INVOLVED
@@ -5719,7 +5719,7 @@ window.saveRTOContract = async function() {
         const depositPaidDate = isZeroDeposit ? state.startDate : null;
         
         // Save contract to Firestore
-        await db.collection('rentToOwnContracts').doc(contract.documentId).set({
+        await db.collection('financingContracts').doc(contract.documentId).set({
             documentId: contract.documentId,
             propertyId: state.propertyId,
             propertyTitle: state.property.title,
@@ -5748,7 +5748,7 @@ window.saveRTOContract = async function() {
             contractText: contract.preview
         });
         
-        // Update property with RTO info and clear daily/biweekly, set monthly to contract payment
+        // Update property with Financing info and clear daily/biweekly, set monthly to contract payment
         const propertyUpdates = {
             // Clear daily and biweekly
             dailyPrice: 0,
@@ -5756,17 +5756,17 @@ window.saveRTOContract = async function() {
             weeklyPrice: 0,
             // Set monthly to the contract's monthly payment
             monthlyPrice: calc.monthlyPayment,
-            // Mark RTO active
-            hasActiveRTO: true,
-            rtoContractId: contract.documentId,
-            rtoCurrentPayment: 0,
-            rtoTotalPayments: calc.termMonths,
+            // Mark Financing active
+            hasActiveFinancing: true,
+            financingContractId: contract.documentId,
+            financingCurrentPayment: 0,
+            financingTotalPayments: calc.termMonths,
             rtoBuyer: state.buyer.name,
             rtoStartDate: state.startDate,
             // Deposit tracking - auto-mark $0 deposit as paid
-            rtoDepositAmount: calc.downPayment,
-            rtoDepositPaid: depositPaidStatus,
-            rtoDepositPaidDate: depositPaidDate,
+            financingDownPayment: calc.downPayment,
+            financingDownPaymentPaid: depositPaidStatus,
+            financingDownPaymentPaidDate: depositPaidDate,
             // Balance tracking for dynamic recalculation
             rtoRemainingBalance: initialRemainingBalance,
             rtoExpectedMonthly: initialExpectedMonthly,
@@ -5779,9 +5779,9 @@ window.saveRTOContract = async function() {
         await PropertyDataService.writeMultiple(state.propertyId, propertyUpdates);
         
         const depositMsg = isZeroDeposit ? ' ($0 deposit auto-marked as waived)' : '';
-        showToast(`✅ Contract saved!${depositMsg} Property updated to RTO monthly payments.`, 'success');
+        showToast(`✅ Contract saved!${depositMsg} Property updated to Financing monthly payments.`, 'success');
         
-        // Award XP for creating RTO contract
+        // Award XP for creating Financing contract
         if (typeof GamificationService !== 'undefined' && GamificationService.awardXP) {
             const userId = auth.currentUser?.uid;
             if (userId) {
@@ -5901,7 +5901,7 @@ window.downloadRTOContractImage = async function() {
     ctx.fillText(line, margin, y);
     y += 16;
     
-    drawText('Listing Type: Rent-to-Own', margin, 12, '#ffffff');
+    drawText('Listing Type: Financing Plan', margin, 12, '#ffffff');
     drawText(`Property Category: ${calc.propertyCategory}`, margin, 11, '#fbbf24');
     y += 6;
     
@@ -6033,7 +6033,7 @@ window.downloadRTOContractImage = async function() {
 };
 
 /**
- * Close the RTO wizard
+ * Close the Financing wizard
  */
 window.closeRTOWizard = function() {
     const modal = document.getElementById('rtoWizardModal');
@@ -6043,7 +6043,7 @@ window.closeRTOWizard = function() {
 };
 
 /**
- * View an existing RTO contract
+ * View an existing Financing contract
  */
 window.viewRTOContract = async function(contractId) {
     if (!contractId) {
@@ -6054,7 +6054,7 @@ window.viewRTOContract = async function(contractId) {
     try {
         showToast('📄 Loading contract...', 'info');
         
-        const doc = await db.collection('rentToOwnContracts').doc(contractId).get();
+        const doc = await db.collection('financingContracts').doc(contractId).get();
         if (!doc.exists) {
             showToast('Contract not found', 'error');
             return;
@@ -6069,7 +6069,7 @@ window.viewRTOContract = async function(contractId) {
                     <div class="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
                         <h3 class="text-xl font-bold text-white flex items-center gap-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Rent-to-Own Contract
+                            Financing Plan Contract
                         </h3>
                         <p class="text-cyan-100 text-sm mt-1">${contract.propertyTitle}</p>
                     </div>
@@ -6131,7 +6131,7 @@ window.viewRTOContract = async function(contractId) {
 };
 
 /**
- * Show confirmation modal before deleting RTO contract
+ * Show confirmation modal before deleting Financing contract
  */
 window.confirmDeleteRTOContract = function(propertyId, contractId) {
     if (!contractId) {
@@ -6145,12 +6145,12 @@ window.confirmDeleteRTOContract = function(propertyId, contractId) {
                 <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Delete RTO Contract?
+                        Delete Financing Contract?
                     </h3>
                 </div>
                 
                 <div class="p-6">
-                    <p class="text-gray-300 mb-4">Are you sure you want to delete this Rent-to-Own contract? This will:</p>
+                    <p class="text-gray-300 mb-4">Are you sure you want to delete this Financing Plan contract? This will:</p>
                     <ul class="text-gray-400 text-sm space-y-2 mb-6">
                         <li class="flex items-start gap-2">
                             <span class="text-red-400">✗</span>
@@ -6158,7 +6158,7 @@ window.confirmDeleteRTOContract = function(propertyId, contractId) {
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="text-red-400">✗</span>
-                            <span>Clear all RTO status from the property</span>
+                            <span>Clear all Financing status from the property</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="text-red-400">✗</span>
@@ -6188,7 +6188,7 @@ window.confirmDeleteRTOContract = function(propertyId, contractId) {
 };
 
 /**
- * Delete RTO contract and clear all related property data
+ * Delete Financing contract and clear all related property data
  */
 window.deleteRTOContract = async function(propertyId, contractId) {
     try {
@@ -6200,7 +6200,7 @@ window.deleteRTOContract = async function(propertyId, contractId) {
         
         // 1. Delete the contract document from Firestore
         if (contractId) {
-            await db.collection('rentToOwnContracts').doc(contractId).delete();
+            await db.collection('financingContracts').doc(contractId).delete();
             console.log(`[RTO] Deleted contract document: ${contractId}`);
         }
         
@@ -6211,7 +6211,7 @@ window.deleteRTOContract = async function(propertyId, contractId) {
                 let payments = historyDoc.data().payments || [];
                 const originalCount = payments.length;
                 
-                // Filter out any payments that were RTO payments (deposit or monthly)
+                // Filter out any payments that were Financing payments (deposit or monthly)
                 payments = payments.filter(p => !p.isRTOPayment && !p.isRTODeposit);
                 
                 const removedCount = originalCount - payments.length;
@@ -6221,7 +6221,7 @@ window.deleteRTOContract = async function(propertyId, contractId) {
                         payments: payments,
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    console.log(`[RTO] Removed ${removedCount} RTO payment(s) from history`);
+                    console.log(`[RTO] Removed ${removedCount} Financing payment(s) from history`);
                 }
             }
         } catch (e) {
@@ -6230,25 +6230,25 @@ window.deleteRTOContract = async function(propertyId, contractId) {
         
         // 3. Clear all RTO-related fields from the property (including monthlyPrice)
         const rtoFieldsToClear = {
-            hasActiveRTO: false,
-            rtoContractId: '',
-            rtoCurrentPayment: 0,
-            rtoTotalPayments: 0,
+            hasActiveFinancing: false,
+            financingContractId: '',
+            financingCurrentPayment: 0,
+            financingTotalPayments: 0,
             rtoBuyer: '',
             rtoStartDate: '',
-            rtoDepositAmount: 0,
-            rtoDepositPaid: false,
-            rtoDepositPaidDate: '',
+            financingDownPayment: 0,
+            financingDownPaymentPaid: false,
+            financingDownPaymentPaidDate: '',
             // Clear balance tracking fields
             rtoRemainingBalance: 0,
             rtoExpectedMonthly: 0,
             rtoFinalPaymentBase: 0,
-            // Reset monthly price since RTO set it
+            // Reset monthly price since Financing set it
             monthlyPrice: 0
         };
         
         await PropertyDataService.writeMultiple(propertyId, rtoFieldsToClear);
-        console.log(`[RTO] Cleared RTO fields and monthlyPrice from property ${propertyId}`);
+        console.log(`[RTO] Cleared Financing fields and monthlyPrice from property ${propertyId}`);
         
         // 4. Update local properties array
         const prop = properties.find(p => p.id === propertyId);
@@ -6264,28 +6264,28 @@ window.deleteRTOContract = async function(propertyId, contractId) {
         }
         
     } catch (error) {
-        console.error('Error deleting RTO contract:', error);
+        console.error('Error deleting Financing contract:', error);
         showToast('Failed to delete contract: ' + error.message, 'error');
     }
 };
 
-// ==================== RTO PAYMENT MODAL ====================
+// ==================== Financing PAYMENT MODAL ====================
 
 /**
- * Show the RTO Payment Modal for logging payments with custom amounts
+ * Show the Financing Payment Modal for logging payments with custom amounts
  */
-window.showRTOPaymentModal = function(propertyId) {
+window.showFinancingPaymentModal = function(propertyId) {
     const p = properties.find(prop => prop.id === propertyId);
     if (!p) {
         showToast('Property not found', 'error');
         return;
     }
     
-    const renterName = PropertyDataService.getValue(propertyId, 'renterName', p?.renterName || 'Unknown');
-    const rtoDepositPaid = PropertyDataService.getValue(propertyId, 'rtoDepositPaid', p?.rtoDepositPaid || false);
-    const rtoDepositAmount = PropertyDataService.getValue(propertyId, 'rtoDepositAmount', p?.rtoDepositAmount || 0);
-    const rtoCurrentPayment = PropertyDataService.getValue(propertyId, 'rtoCurrentPayment', p?.rtoCurrentPayment || 0);
-    const rtoTotalPayments = PropertyDataService.getValue(propertyId, 'rtoTotalPayments', p?.rtoTotalPayments || 24);
+    const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
+    const financingDownPaymentPaid = PropertyDataService.getValue(propertyId, 'financingDownPaymentPaid', p?.financingDownPaymentPaid || false);
+    const financingDownPayment = PropertyDataService.getValue(propertyId, 'financingDownPayment', p?.financingDownPayment || 0);
+    const financingCurrentPayment = PropertyDataService.getValue(propertyId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
+    const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 24);
     const rtoRemainingBalance = PropertyDataService.getValue(propertyId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
     const rtoExpectedMonthly = PropertyDataService.getValue(propertyId, 'rtoExpectedMonthly', p?.rtoExpectedMonthly || 0);
     const rtoFinalPaymentBase = PropertyDataService.getValue(propertyId, 'rtoFinalPaymentBase', p?.rtoFinalPaymentBase || 1650000);
@@ -6293,16 +6293,16 @@ window.showRTOPaymentModal = function(propertyId) {
     // Determine what type of payment this is
     let paymentType, paymentNumber, expectedAmount, maxPayment;
     
-    if (!rtoDepositPaid && rtoDepositAmount > 0) {
+    if (!financingDownPaymentPaid && financingDownPayment > 0) {
         // Deposit not yet paid
         paymentType = 'deposit';
         paymentNumber = 0;
-        expectedAmount = rtoDepositAmount;
-        maxPayment = rtoDepositAmount * 10; // Allow overpayment on deposit
+        expectedAmount = financingDownPayment;
+        maxPayment = financingDownPayment * 10; // Allow overpayment on deposit
     } else {
         // Monthly payment
         paymentType = 'monthly';
-        paymentNumber = rtoCurrentPayment + 1;
+        paymentNumber = financingCurrentPayment + 1;
         expectedAmount = rtoExpectedMonthly;
         // Max payment = remaining balance minus final payment (to prevent negative recalculation)
         const amountForMonthly = rtoRemainingBalance - rtoFinalPaymentBase;
@@ -6311,8 +6311,8 @@ window.showRTOPaymentModal = function(propertyId) {
     
     const today = new Date().toISOString().split('T')[0];
     const titleText = paymentType === 'deposit' 
-        ? 'Log RTO Deposit Payment' 
-        : `Log RTO Payment - Month ${paymentNumber} of ${rtoTotalPayments - 1}`;
+        ? 'Log Financing Deposit Payment' 
+        : `Log Financing Payment - Month ${paymentNumber} of ${financingTotalPayments - 1}`;
     
     const modalHTML = `
         <div id="rtoPaymentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -6327,7 +6327,7 @@ window.showRTOPaymentModal = function(propertyId) {
                         <span>💰</span>
                         ${titleText}
                     </h3>
-                    <p class="text-amber-100 text-sm mt-1">Renter: ${renterName}</p>
+                    <p class="text-amber-100 text-sm mt-1">Renter: ${buyerName}</p>
                 </div>
                 
                 <div class="p-6 space-y-4">
@@ -6424,7 +6424,7 @@ window.closeRTOPaymentModal = function() {
 };
 
 /**
- * Submit RTO Payment - handles both deposit and monthly payments
+ * Submit Financing Payment - handles both deposit and monthly payments
  */
 window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount, maxPayment) {
     const amountInput = document.getElementById('rtoPaymentAmount');
@@ -6460,22 +6460,22 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
         closeRTOPaymentModal();
         
         const p = properties.find(prop => prop.id === propertyId);
-        const renterName = PropertyDataService.getValue(propertyId, 'renterName', p?.renterName || 'Unknown');
-        const rtoContractId = PropertyDataService.getValue(propertyId, 'rtoContractId', p?.rtoContractId || '');
-        const rtoTotalPayments = PropertyDataService.getValue(propertyId, 'rtoTotalPayments', p?.rtoTotalPayments || 24);
+        const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
+        const financingContractId = PropertyDataService.getValue(propertyId, 'financingContractId', p?.financingContractId || '');
+        const financingTotalPayments = PropertyDataService.getValue(propertyId, 'financingTotalPayments', p?.financingTotalPayments || 24);
         const rtoFinalPaymentBase = PropertyDataService.getValue(propertyId, 'rtoFinalPaymentBase', p?.rtoFinalPaymentBase || 1650000);
         
         if (paymentType === 'deposit') {
             // Record deposit payment
             await PropertyDataService.writeMultiple(propertyId, {
-                rtoDepositPaid: true,
-                rtoDepositPaidDate: paymentDate,
+                financingDownPaymentPaid: true,
+                financingDownPaymentPaidDate: paymentDate,
                 lastPaymentDate: paymentDate
             });
             
             // Update contract
-            if (rtoContractId) {
-                await db.collection('rentToOwnContracts').doc(rtoContractId).update({
+            if (financingContractId) {
+                await db.collection('financingContracts').doc(financingContractId).update({
                     depositPaid: true,
                     depositPaidDate: paymentDate,
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -6486,7 +6486,7 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             await logPayment(propertyId, {
                 paymentDate: paymentDate,
                 recordedAt: new Date().toISOString(),
-                renterName: renterName,
+                buyerName: buyerName,
                 frequency: 'deposit',
                 amount: actualAmount,
                 expectedAmount: expectedAmount,
@@ -6505,7 +6505,7 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             const rtoRemainingBalance = PropertyDataService.getValue(propertyId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
             
             // Show confirmation
-            showRTOPaymentConfirmation(renterName, actualAmount, expectedAmount, {
+            showRTOPaymentConfirmation(buyerName, actualAmount, expectedAmount, {
                 type: 'deposit',
                 nextDueDate: nextDueDateStr,
                 nextExpectedAmount: rtoExpectedMonthly,
@@ -6514,20 +6514,20 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             
         } else {
             // Record monthly payment with recalculation
-            const rtoCurrentPayment = PropertyDataService.getValue(propertyId, 'rtoCurrentPayment', p?.rtoCurrentPayment || 0);
+            const financingCurrentPayment = PropertyDataService.getValue(propertyId, 'financingCurrentPayment', p?.financingCurrentPayment || 0);
             const rtoRemainingBalance = PropertyDataService.getValue(propertyId, 'rtoRemainingBalance', p?.rtoRemainingBalance || 0);
             
-            const newPaymentNumber = rtoCurrentPayment + 1;
+            const newPaymentNumber = financingCurrentPayment + 1;
             const newRemainingBalance = rtoRemainingBalance - actualAmount;
             
             // Calculate new expected monthly (only recalculate for next payment, not historical)
-            const remainingMonths = (rtoTotalPayments - 1) - newPaymentNumber; // -1 for final payment month
+            const remainingMonths = (financingTotalPayments - 1) - newPaymentNumber; // -1 for final payment month
             const amountForMonthly = newRemainingBalance - rtoFinalPaymentBase;
             const newExpectedMonthly = remainingMonths > 0 ? Math.round(amountForMonthly / remainingMonths) : 0;
             
             // Update property
             await PropertyDataService.writeMultiple(propertyId, {
-                rtoCurrentPayment: newPaymentNumber,
+                financingCurrentPayment: newPaymentNumber,
                 rtoRemainingBalance: newRemainingBalance,
                 rtoExpectedMonthly: newExpectedMonthly,
                 monthlyPrice: newExpectedMonthly, // Update displayed monthly price
@@ -6535,9 +6535,9 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             });
             
             // Update contract
-            if (rtoContractId) {
+            if (financingContractId) {
                 // Get existing payment history from contract
-                const contractDoc = await db.collection('rentToOwnContracts').doc(rtoContractId).get();
+                const contractDoc = await db.collection('financingContracts').doc(financingContractId).get();
                 let rtoPaymentHistory = [];
                 if (contractDoc.exists) {
                     rtoPaymentHistory = contractDoc.data().rtoPaymentHistory || [];
@@ -6554,7 +6554,7 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
                     recordedAt: new Date().toISOString()
                 });
                 
-                await db.collection('rentToOwnContracts').doc(rtoContractId).update({
+                await db.collection('financingContracts').doc(financingContractId).update({
                     currentPaymentNumber: newPaymentNumber,
                     remainingBalance: newRemainingBalance,
                     expectedMonthlyPayment: newExpectedMonthly,
@@ -6568,7 +6568,7 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             await logPayment(propertyId, {
                 paymentDate: paymentDate,
                 recordedAt: new Date().toISOString(),
-                renterName: renterName,
+                buyerName: buyerName,
                 frequency: 'monthly',
                 amount: actualAmount,
                 expectedAmount: expectedAmount,
@@ -6584,20 +6584,20 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
             const nextDueDateStr = nextDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
             
             // Show confirmation
-            showRTOPaymentConfirmation(renterName, actualAmount, expectedAmount, {
+            showRTOPaymentConfirmation(buyerName, actualAmount, expectedAmount, {
                 type: 'monthly',
                 paymentNumber: newPaymentNumber,
-                totalPayments: rtoTotalPayments - 1, // -1 for final payment
+                totalPayments: financingTotalPayments - 1, // -1 for final payment
                 nextDueDate: nextDueDateStr,
                 nextExpectedAmount: newExpectedMonthly,
                 remainingBalance: newRemainingBalance
             });
             
-            // Check if RTO is complete (remaining balance is 0 or less)
+            // Check if Financing is complete (remaining balance is 0 or less)
             if (newRemainingBalance <= 0) {
                 // Delay to let confirmation modal show first, then prompt for sale
                 setTimeout(() => {
-                    showRTOCompletionPrompt(propertyId, rtoContractId, renterName, p?.title);
+                    showRTOCompletionPrompt(propertyId, financingContractId, buyerName, p?.title);
                 }, 2000);
             }
         }
@@ -6610,17 +6610,17 @@ window.submitRTOPayment = async function(propertyId, paymentType, expectedAmount
         }, 500);
         
     } catch (error) {
-        console.error('Error recording RTO payment:', error);
+        console.error('Error recording Financing payment:', error);
         showToast('Failed to record payment: ' + error.message, 'error');
     }
 };
 
 /**
- * Show RTO payment confirmation modal with detailed message
+ * Show Financing payment confirmation modal with detailed message
  */
-window.showRTOPaymentConfirmation = function(renterName, actualAmount, expectedAmount, info) {
+window.showRTOPaymentConfirmation = function(buyerName, actualAmount, expectedAmount, info) {
     // Get display name - handle titles like Dr., Mr., Mrs., Ms.
-    const nameParts = renterName.trim().split(' ');
+    const nameParts = buyerName.trim().split(' ');
     const titles = ['dr.', 'dr', 'mr.', 'mr', 'mrs.', 'mrs', 'ms.', 'ms', 'miss', 'prof.', 'prof'];
     let displayName;
     
@@ -6638,12 +6638,12 @@ window.showRTOPaymentConfirmation = function(renterName, actualAmount, expectedA
     
     if (info.type === 'deposit') {
         headerText = 'Deposit Received!';
-        badgeText = '💰 RTO Deposit';
-        thankYouMessage = `Thanks ${displayName}! 🙏 Your deposit of $${actualAmount.toLocaleString()} for your Rent-to-Own agreement has been received. Your remaining balance is $${info.remainingBalance.toLocaleString()}. Your first monthly payment of $${info.nextExpectedAmount.toLocaleString()} is due on ${info.nextDueDate}. Let me know if you have any questions!`;
+        badgeText = '💰 Financing Deposit';
+        thankYouMessage = `Thanks ${displayName}! 🙏 Your deposit of $${actualAmount.toLocaleString()} for your Financing Plan agreement has been received. Your remaining balance is $${info.remainingBalance.toLocaleString()}. Your first monthly payment of $${info.nextExpectedAmount.toLocaleString()} is due on ${info.nextDueDate}. Let me know if you have any questions!`;
     } else {
         headerText = 'Payment Logged!';
         badgeText = `📋 Month ${info.paymentNumber} of ${info.totalPayments}`;
-        thankYouMessage = `Thanks ${displayName}! 🙏 Your payment of $${actualAmount.toLocaleString()} (Month ${info.paymentNumber} of ${info.totalPayments} in your Rent-to-Own agreement) has been received. Your remaining balance is now $${info.remainingBalance.toLocaleString()}. Your next payment of $${info.nextExpectedAmount.toLocaleString()} is due on ${info.nextDueDate}. Let me know if you have any questions!`;
+        thankYouMessage = `Thanks ${displayName}! 🙏 Your payment of $${actualAmount.toLocaleString()} (Month ${info.paymentNumber} of ${info.totalPayments} in your Financing Plan agreement) has been received. Your remaining balance is now $${info.remainingBalance.toLocaleString()}. Your next payment of $${info.nextExpectedAmount.toLocaleString()} is due on ${info.nextDueDate}. Let me know if you have any questions!`;
     }
     
     // Show variance if different from expected
@@ -6664,7 +6664,7 @@ window.showRTOPaymentConfirmation = function(renterName, actualAmount, expectedA
                 <div class="text-center mb-4">
                     <div class="text-5xl mb-3">✅</div>
                     <h3 class="text-2xl font-bold text-green-400">${headerText}</h3>
-                    <p class="text-gray-400 mt-1">$${actualAmount.toLocaleString()} from ${renterName}</p>
+                    <p class="text-gray-400 mt-1">$${actualAmount.toLocaleString()} from ${buyerName}</p>
                     ${varianceHtml}
                     <p class="text-amber-400 text-sm mt-2">${badgeText}</p>
                 </div>
@@ -6701,9 +6701,9 @@ window.showRTOPaymentConfirmation = function(renterName, actualAmount, expectedA
 };
 
 /**
- * Show RTO Completion prompt when contract is fully paid
+ * Show Financing Completion prompt when contract is fully paid
  */
-window.showRTOCompletionPrompt = function(propertyId, rtoContractId, buyerName, propertyTitle) {
+window.showRTOCompletionPrompt = function(propertyId, financingContractId, buyerName, propertyTitle) {
     const modalHTML = `
         <div id="rtoCompletionModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4">
             <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl max-w-lg w-full border-2 border-amber-500 shadow-2xl shadow-amber-500/20 overflow-hidden relative">
@@ -6730,7 +6730,7 @@ window.showRTOCompletionPrompt = function(propertyId, rtoContractId, buyerName, 
                         <div class="text-green-400 font-bold text-lg">✅ All Payments Received!</div>
                         <p class="text-gray-300 text-sm mt-2">
                             Congratulations! <span class="text-white font-bold">${buyerName}</span> has completed all payments 
-                            for this Rent-to-Own agreement.
+                            for this Financing Plan agreement.
                         </p>
                     </div>
                     
@@ -6761,7 +6761,7 @@ window.showRTOCompletionPrompt = function(propertyId, rtoContractId, buyerName, 
                     <button onclick="closeRTOCompletionModal()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                         Later
                     </button>
-                    <button onclick="finalizeRTOSale(${propertyId}, '${rtoContractId}')" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 rounded-xl font-black hover:opacity-90 transition flex items-center justify-center gap-2">
+                    <button onclick="finalizeRTOSale(${propertyId}, '${financingContractId}')" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 rounded-xl font-black hover:opacity-90 transition flex items-center justify-center gap-2">
                         <span>🏆</span> Finalize Sale
                     </button>
                 </div>
@@ -6778,32 +6778,32 @@ window.closeRTOCompletionModal = function() {
 };
 
 /**
- * Finalize RTO as a vehicle sale
+ * Finalize Financing as a vehicle sale
  */
-window.finalizeRTOSale = function(propertyId, rtoContractId) {
+window.finalizeRTOSale = function(propertyId, financingContractId) {
     closeRTOCompletionModal();
-    // Open the log sale modal pre-filled for RTO completion
-    showLogSaleModal(propertyId, rtoContractId);
+    // Open the log sale modal pre-filled for Financing completion
+    showLogSaleModal(propertyId, financingContractId);
 };
 
-// ==================== RTO PAYMENT HISTORY ====================
+// ==================== Financing PAYMENT HISTORY ====================
 
 /**
- * Show RTO Payment History modal with edit/delete capabilities
+ * Show Financing Payment History modal with edit/delete capabilities
  */
 window.showRTOPaymentHistory = async function(propertyId) {
     const p = properties.find(prop => prop.id === propertyId);
-    const rtoContractId = PropertyDataService.getValue(propertyId, 'rtoContractId', p?.rtoContractId || '');
+    const financingContractId = PropertyDataService.getValue(propertyId, 'financingContractId', p?.financingContractId || '');
     
-    if (!rtoContractId) {
-        showToast('No active RTO contract found', 'error');
+    if (!financingContractId) {
+        showToast('No active Financing contract found', 'error');
         return;
     }
     
     try {
         showToast('📜 Loading payment history...', 'info');
         
-        const contractDoc = await db.collection('rentToOwnContracts').doc(rtoContractId).get();
+        const contractDoc = await db.collection('financingContracts').doc(financingContractId).get();
         if (!contractDoc.exists) {
             showToast('Contract not found', 'error');
             return;
@@ -6831,8 +6831,8 @@ window.showRTOPaymentHistory = async function(propertyId) {
                     </td>
                     <td class="py-3 px-4 text-right">
                         ${depositPaid ? `
-                            <button onclick="editRTODeposit(${propertyId}, '${rtoContractId}')" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
-                            <button onclick="deleteRTODeposit(${propertyId}, '${rtoContractId}')" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+                            <button onclick="editRTODeposit(${propertyId}, '${financingContractId}')" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
+                            <button onclick="deleteRTODeposit(${propertyId}, '${financingContractId}')" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
                         ` : ''}
                     </td>
                 </tr>
@@ -6853,8 +6853,8 @@ window.showRTOPaymentHistory = async function(propertyId) {
                     <td class="py-3 px-4 text-gray-400">${payment.date}</td>
                     <td class="py-3 px-4 text-green-400">✓ Paid</td>
                     <td class="py-3 px-4 text-right">
-                        <button onclick="editRTOPaymentEntry(${propertyId}, '${rtoContractId}', ${index})" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
-                        <button onclick="deleteRTOPaymentEntry(${propertyId}, '${rtoContractId}', ${index})" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+                        <button onclick="editRTOPaymentEntry(${propertyId}, '${financingContractId}', ${index})" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
+                        <button onclick="deleteRTOPaymentEntry(${propertyId}, '${financingContractId}', ${index})" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
                     </td>
                 </tr>
             `;
@@ -6875,7 +6875,7 @@ window.showRTOPaymentHistory = async function(propertyId) {
                     <div class="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
                         <h3 class="text-xl font-bold text-white flex items-center gap-3">
                             <span>📜</span>
-                            RTO Payment History
+                            Financing Payment History
                         </h3>
                         <p class="text-cyan-100 text-sm mt-1">${contract.propertyTitle}</p>
                     </div>
@@ -6931,7 +6931,7 @@ window.showRTOPaymentHistory = async function(propertyId) {
  */
 window.editRTOPaymentEntry = async function(propertyId, contractId, paymentIndex) {
     try {
-        const contractDoc = await db.collection('rentToOwnContracts').doc(contractId).get();
+        const contractDoc = await db.collection('financingContracts').doc(contractId).get();
         if (!contractDoc.exists) {
             showToast('Contract not found', 'error');
             return;
@@ -7014,7 +7014,7 @@ window.saveRTOPaymentEdit = async function(propertyId, contractId, paymentIndex)
         showToast('💾 Saving changes...', 'info');
         
         // Get contract
-        const contractDoc = await db.collection('rentToOwnContracts').doc(contractId).get();
+        const contractDoc = await db.collection('financingContracts').doc(contractId).get();
         const contract = contractDoc.data();
         const history = contract.rtoPaymentHistory || [];
         const oldPayment = history[paymentIndex];
@@ -7042,7 +7042,7 @@ window.saveRTOPaymentEdit = async function(propertyId, contractId, paymentIndex)
         history[paymentIndex].remainingBalanceAfter = newRemainingBalance;
         
         // Update contract
-        await db.collection('rentToOwnContracts').doc(contractId).update({
+        await db.collection('financingContracts').doc(contractId).update({
             rtoPaymentHistory: history,
             remainingBalance: newRemainingBalance,
             expectedMonthlyPayment: newExpectedMonthly,
@@ -7088,7 +7088,7 @@ window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentInd
         showToast('🗑️ Deleting payment...', 'info');
         
         // Get contract
-        const contractDoc = await db.collection('rentToOwnContracts').doc(contractId).get();
+        const contractDoc = await db.collection('financingContracts').doc(contractId).get();
         const contract = contractDoc.data();
         const history = contract.rtoPaymentHistory || [];
         const deletedPayment = history[paymentIndex];
@@ -7113,7 +7113,7 @@ window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentInd
         });
         
         // Update contract
-        await db.collection('rentToOwnContracts').doc(contractId).update({
+        await db.collection('financingContracts').doc(contractId).update({
             rtoPaymentHistory: history,
             currentPaymentNumber: newPaymentNumber,
             remainingBalance: newRemainingBalance,
@@ -7123,7 +7123,7 @@ window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentInd
         
         // Update property
         await PropertyDataService.writeMultiple(propertyId, {
-            rtoCurrentPayment: newPaymentNumber,
+            financingCurrentPayment: newPaymentNumber,
             rtoRemainingBalance: newRemainingBalance,
             rtoExpectedMonthly: newExpectedMonthly,
             monthlyPrice: newExpectedMonthly
@@ -7153,7 +7153,7 @@ window.deleteRTOPaymentEntry = async function(propertyId, contractId, paymentInd
  */
 window.editRTODeposit = async function(propertyId, contractId) {
     try {
-        const contractDoc = await db.collection('rentToOwnContracts').doc(contractId).get();
+        const contractDoc = await db.collection('financingContracts').doc(contractId).get();
         if (!contractDoc.exists) {
             showToast('Contract not found', 'error');
             return;
@@ -7225,7 +7225,7 @@ window.saveRTODepositEdit = async function(propertyId, contractId) {
         showToast('💾 Saving deposit changes...', 'info');
         
         // Update contract
-        await db.collection('rentToOwnContracts').doc(contractId).update({
+        await db.collection('financingContracts').doc(contractId).update({
             depositAmount: newAmount,
             depositPaidDate: newDate,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -7233,8 +7233,8 @@ window.saveRTODepositEdit = async function(propertyId, contractId) {
         
         // Update property
         await PropertyDataService.writeMultiple(propertyId, {
-            rtoDepositAmount: newAmount,
-            rtoDepositPaidDate: newDate
+            financingDownPayment: newAmount,
+            financingDownPaymentPaidDate: newDate
         });
         
         // Close modals
@@ -7266,7 +7266,7 @@ window.deleteRTODeposit = async function(propertyId, contractId) {
         showToast('🗑️ Deleting deposit...', 'info');
         
         // Update contract
-        await db.collection('rentToOwnContracts').doc(contractId).update({
+        await db.collection('financingContracts').doc(contractId).update({
             depositPaid: false,
             depositPaidDate: null,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -7274,8 +7274,8 @@ window.deleteRTODeposit = async function(propertyId, contractId) {
         
         // Update property
         await PropertyDataService.writeMultiple(propertyId, {
-            rtoDepositPaid: false,
-            rtoDepositPaidDate: ''
+            financingDownPaymentPaid: false,
+            financingDownPaymentPaidDate: ''
         });
         
         // Close history modal

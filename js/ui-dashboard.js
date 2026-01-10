@@ -189,7 +189,7 @@ async function calculateTotalsAsync() {
         // For backwards compatibility with existing tile system
         activeRenters: { daily: [], weekly: [], biweekly: [], monthly: [] },
         incomeByFrequency: { daily: 0, weekly: 0, biweekly: 0, monthly: 0 },
-        rented: [],
+        sold: [],
         available: [],
         premium: [],
         rtoTotal: 0,
@@ -296,7 +296,7 @@ function calculateTotals() {
     const data = {
         activeRenters: { daily: [], weekly: [], biweekly: [], monthly: [] },
         incomeByFrequency: { daily: 0, weekly: 0, biweekly: 0, monthly: 0 },
-        rented: [],
+        sold: [],
         available: [],
         premium: [],
         rtoTotal: 0,
@@ -409,9 +409,9 @@ function updateDashboardTiles(totals) {
     
     // === ROW 2: Portfolio Stats ===
     
-    // Portfolio Value (using totalRentalIncomeDisplay)
-    const portfolioEl = $('totalRentalIncomeDisplay');
-    const portfolioCountEl = $('totalRentalIncomeCount');
+    // Portfolio Value (using totalSalesIncomeDisplay)
+    const portfolioEl = $('totalSalesIncomeDisplay');
+    const portfolioCountEl = $('totalSalesIncomeCount');
     if (portfolioEl) portfolioEl.textContent = formatPrice(portfolioValue);
     if (portfolioCountEl) portfolioCountEl.textContent = `Total listing value`;
     
@@ -491,7 +491,7 @@ function renderAllPropertiesListNew(vehicles) {
     `).join('') + (vehicles.length > 10 ? `<div class="text-center opacity-70 text-xs mt-2">+${vehicles.length - 10} more</div>` : '');
 }
 
-// Render RTO breakdown - stub for backwards compat (not used in vehicle sales)
+// Render Financing breakdown - stub for backwards compat (not used in vehicle sales)
 function renderRTOBreakdown(contracts) {
     return `<div class="opacity-70 italic">Premium listings info</div>`;
 }
@@ -793,7 +793,7 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
         // LOG PAYMENT when lastPaymentDate is updated (same as property detail page)
         if (field === 'lastPaymentDate' && newValue && typeof logPayment === 'function') {
             const p = properties.find(prop => prop.id === propertyId);
-            const renterName = PropertyDataService.getValue(propertyId, 'renterName', p?.renterName || 'Unknown');
+            const buyerName = PropertyDataService.getValue(propertyId, 'buyerName', p?.buyerName || 'Unknown');
             const paymentFrequency = PropertyDataService.getValue(propertyId, 'paymentFrequency', p?.paymentFrequency || 'weekly');
             const dailyPrice = PropertyDataService.getValue(propertyId, 'dailyPrice', p?.dailyPrice || 0);
             const weeklyPrice = PropertyDataService.getValue(propertyId, 'weeklyPrice', p?.weeklyPrice || 0);
@@ -814,7 +814,7 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
             const logSuccess = await logPayment(propertyId, {
                 paymentDate: newValue,
                 recordedAt: new Date().toISOString(),
-                renterName: renterName,
+                buyerName: buyerName,
                 frequency: paymentFrequency,
                 amount: paymentAmount,
                 recordedBy: auth.currentUser?.email || 'owner'
@@ -835,29 +835,29 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
             
             // Show thank you message popup with copy functionality
             if (logSuccess && typeof showPaymentConfirmationModal === 'function') {
-                showPaymentConfirmationModal(renterName, nextDueDateStr, paymentAmount);
+                showPaymentConfirmationModal(buyerName, nextDueDateStr, paymentAmount);
             }
         }
         
-        // Auto-flip to "rented" when setting renter name, phone, or payment date
-        if ((field === 'renterName' || field === 'renterPhone' || field === 'lastPaymentDate') && newValue) {
+        // Auto-flip to "sold" when setting renter name, phone, or payment date
+        if ((field === 'buyerName' || field === 'buyerPhone' || field === 'lastPaymentDate') && newValue) {
             if (state.availability[propertyId] !== false) {
-                // Property is currently available, flip to rented - this is a NEW rental!
+                // Property is currently available, flip to sold - this is a NEW sale!
                 state.availability[propertyId] = false;
                 await saveAvailability(propertyId, false);
                 
                 // Award XP for new rental (gamification)
-                if (typeof GamificationService !== 'undefined' && field === 'renterName') {
+                if (typeof GamificationService !== 'undefined' && field === 'buyerName') {
                     const user = auth.currentUser;
                     if (user) {
                         // Get current rental count
                         const userData = window.currentUserData || {};
-                        const totalRentals = userData.gamification?.stats?.totalRentals || 0;
+                        const totalSales = userData.gamification?.stats?.totalSales || 0;
                         
-                        if (totalRentals === 0) {
+                        if (totalSales === 0) {
                             // First rental ever - award 1000 XP and create celebration
                             GamificationService.awardAchievement(user.uid, 'first_rental', 1000, {
-                                statUpdate: { totalRentals: 1 }
+                                statUpdate: { totalSales: 1 }
                             }).then(async (result) => {
                                 if (result && !result.alreadyEarned) {
                                     console.log('[Gamification] Awarded 1000 XP for first rental');
@@ -880,7 +880,7 @@ window.saveCellEdit = async function(input, propertyId, field, type) {
                                 console.log('[Gamification] Awarded 500 XP for additional rental');
                                 // Update stats
                                 await db.collection('users').doc(user.uid).update({
-                                    'gamification.stats.totalRentals': firebase.firestore.FieldValue.increment(1)
+                                    'gamification.stats.totalSales': firebase.firestore.FieldValue.increment(1)
                                 }).catch(e => console.warn('[Gamification] Could not update stats:', e));
                                 
                                 // Create celebration

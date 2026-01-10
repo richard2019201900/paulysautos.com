@@ -173,7 +173,7 @@ async function generateReportDataAsync(properties) {
     const now = new Date();
     const data = {
         totalProperties: properties.length,
-        rentedProperties: 0,
+        soldProperties: 0,
         availableProperties: 0,
         totalWeeklyRevenue: 0,
         totalMonthlyRevenue: 0,
@@ -217,7 +217,7 @@ async function generateReportDataAsync(properties) {
     
     properties.forEach(p => {
         const isAvailable = state.availability[p.id] !== false;
-        const renterName = PropertyDataService.getValue(p.id, 'renterName', p.renterName || '');
+        const buyerName = PropertyDataService.getValue(p.id, 'buyerName', p.buyerName || '');
         const paymentFrequency = PropertyDataService.getValue(p.id, 'paymentFrequency', p.paymentFrequency || '');
         const lastPaymentDate = PropertyDataService.getValue(p.id, 'lastPaymentDate', p.lastPaymentDate || '');
         const dailyPrice = PropertyDataService.getValue(p.id, 'dailyPrice', p.dailyPrice || 0);
@@ -235,7 +235,7 @@ async function generateReportDataAsync(properties) {
         
         // Track payments by renter for "Renter Earnings" report
         payments.forEach(pay => {
-            const rName = pay.renterName || 'Unknown';
+            const rName = pay.buyerName || 'Unknown';
             if (!data.renterEarnings[rName]) {
                 data.renterEarnings[rName] = {
                     name: rName,
@@ -264,26 +264,26 @@ async function generateReportDataAsync(properties) {
         });
         
         // Determine rent amount based on frequency (for projections, not actual)
-        let rentAmount = 0;
+        let paymentAmount = 0;
         let monthlyEquivalent = 0;
-        if (!isAvailable && renterName) {
+        if (!isAvailable && buyerName) {
             if (paymentFrequency === 'daily') {
-                rentAmount = dailyPrice;
+                paymentAmount = dailyPrice;
                 monthlyEquivalent = dailyPrice * 30;
                 data.frequencyCount.daily++;
                 data.revenueByFrequency.daily += monthlyEquivalent;
             } else if (paymentFrequency === 'weekly') {
-                rentAmount = weeklyPrice;
+                paymentAmount = weeklyPrice;
                 monthlyEquivalent = weeklyPrice * 4;
                 data.frequencyCount.weekly++;
                 data.revenueByFrequency.weekly += monthlyEquivalent;
             } else if (paymentFrequency === 'biweekly') {
-                rentAmount = biweeklyPrice;
+                paymentAmount = biweeklyPrice;
                 monthlyEquivalent = biweeklyPrice * 2;
                 data.frequencyCount.biweekly++;
                 data.revenueByFrequency.biweekly += monthlyEquivalent;
             } else if (paymentFrequency === 'monthly') {
-                rentAmount = monthlyPrice;
+                paymentAmount = monthlyPrice;
                 monthlyEquivalent = monthlyPrice;
                 data.frequencyCount.monthly++;
                 data.revenueByFrequency.monthly += monthlyEquivalent;
@@ -293,8 +293,8 @@ async function generateReportDataAsync(properties) {
         if (isAvailable) {
             data.availableProperties++;
         } else {
-            data.rentedProperties++;
-            data.totalWeeklyRevenue += (paymentFrequency === 'weekly' ? rentAmount : 0);
+            data.soldProperties++;
+            data.totalWeeklyRevenue += (paymentFrequency === 'weekly' ? paymentAmount : 0);
             data.totalMonthlyRevenue += monthlyEquivalent;
         }
         
@@ -313,12 +313,12 @@ async function generateReportDataAsync(properties) {
         // Revenue by property type
         const propType = p.type || 'Other';
         if (!data.revenueByType[propType]) {
-            data.revenueByType[propType] = { count: 0, rented: 0, revenue: 0, collected: 0 };
+            data.revenueByType[propType] = { count: 0, sold: 0, revenue: 0, collected: 0 };
         }
         data.revenueByType[propType].count++;
         data.revenueByType[propType].collected += totalReceived;
         if (!isAvailable) {
-            data.revenueByType[propType].rented++;
+            data.revenueByType[propType].sold++;
             data.revenueByType[propType].revenue += monthlyEquivalent;
         }
         
@@ -329,9 +329,9 @@ async function generateReportDataAsync(properties) {
             title: p.title || `Property #${p.id}`,
             type: propType,
             isRented: !isAvailable,
-            renterName: renterName,
+            buyerName: buyerName,
             frequency: paymentFrequency,
-            rentAmount: rentAmount,
+            paymentAmount: paymentAmount,
             monthlyEquivalent: monthlyEquivalent,
             paymentsReceived: payments.length,
             totalReceived: totalReceived,  // ACTUAL collected
@@ -355,7 +355,7 @@ async function generateReportDataAsync(properties) {
     
     // Calculate occupancy rate
     data.occupancyRate = data.totalProperties > 0 
-        ? Math.round((data.rentedProperties / data.totalProperties) * 100) 
+        ? Math.round((data.soldProperties / data.totalProperties) * 100) 
         : 0;
     
     return data;
@@ -366,7 +366,7 @@ function renderOverviewReport(data) {
                            data.occupancyRate >= 50 ? 'text-yellow-400' : 'text-red-400';
     
     // Calculate vacancy loss (potential revenue from empty units)
-    const avgRentPerUnit = data.rentedProperties > 0 ? data.totalMonthlyRevenue / data.rentedProperties : 0;
+    const avgRentPerUnit = data.soldProperties > 0 ? data.totalMonthlyRevenue / data.soldProperties : 0;
     const weeklyVacancyLoss = Math.round((avgRentPerUnit / 4) * data.availableProperties);
     const monthlyVacancyLoss = Math.round(avgRentPerUnit * data.availableProperties);
     
@@ -439,7 +439,7 @@ function renderOverviewReport(data) {
                             ${overdueProps.slice(0, 5).map(p => `
                                 <div class="flex justify-between items-center text-sm bg-red-900/20 rounded-lg px-3 py-2">
                                     <span class="text-white truncate max-w-[60%]">${p.name}</span>
-                                    <span class="text-red-400 font-medium">${p.renterName || 'Tenant'}</span>
+                                    <span class="text-red-400 font-medium">${p.buyerName || 'Tenant'}</span>
                                 </div>
                             `).join('')}
                             ${overdueProps.length > 5 ? `<p class="text-red-400/60 text-xs text-center">+${overdueProps.length - 5} more</p>` : ''}
@@ -455,7 +455,7 @@ function renderOverviewReport(data) {
                             ${upcomingProps.slice(0, 5).map(p => `
                                 <div class="flex justify-between items-center text-sm bg-amber-900/20 rounded-lg px-3 py-2">
                                     <span class="text-white truncate max-w-[60%]">${p.name}</span>
-                                    <span class="text-amber-400 font-medium">${p.renterName || 'Tenant'}</span>
+                                    <span class="text-amber-400 font-medium">${p.buyerName || 'Tenant'}</span>
                                 </div>
                             `).join('')}
                             ${upcomingProps.length > 5 ? `<p class="text-amber-400/60 text-xs text-center">+${upcomingProps.length - 5} more</p>` : ''}
@@ -485,7 +485,7 @@ function renderOverviewReport(data) {
                 <div class="flex justify-center gap-6 mt-4 text-sm">
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span class="text-gray-300">Rented: ${data.rentedProperties}</span>
+                        <span class="text-gray-300">Rented: ${data.soldProperties}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 bg-gray-600 rounded-full"></div>
@@ -668,7 +668,7 @@ function renderRevenueReport(data) {
                                     }">${p.frequency}</span>
                                     ` : '<span class="text-gray-500">-</span>'}
                                 </td>
-                                <td class="py-2 px-3 text-right text-white">${p.rentAmount > 0 ? formatPrice(p.rentAmount) : '-'}</td>
+                                <td class="py-2 px-3 text-right text-white">${p.paymentAmount > 0 ? formatPrice(p.paymentAmount) : '-'}</td>
                                 <td class="py-2 px-3 text-right ${p.totalReceived > 0 ? 'text-green-400 font-bold' : 'text-gray-500'}">${p.totalReceived > 0 ? formatPrice(p.totalReceived) : '$0'}</td>
                             </tr>
                         `).join('')}
@@ -687,7 +687,7 @@ function renderOccupancyReport(data) {
         <div class="grid grid-cols-2 gap-4 mb-6">
             <div class="bg-gradient-to-br from-green-600/20 to-emerald-700/20 rounded-xl p-6 border border-green-500/30 text-center">
                 <p class="text-green-300 text-sm mb-2">Rented Units</p>
-                <p class="text-5xl font-black text-green-400">${data.rentedProperties}</p>
+                <p class="text-5xl font-black text-green-400">${data.soldProperties}</p>
                 <p class="text-green-300 text-xs mt-2">${data.occupancyRate}% of portfolio</p>
             </div>
             <div class="bg-gradient-to-br from-gray-600/20 to-gray-700/20 rounded-xl p-6 border border-gray-500/30 text-center">
@@ -709,9 +709,9 @@ function renderOccupancyReport(data) {
                         <div class="bg-gray-800 rounded-lg px-3 py-2 flex justify-between items-center">
                             <div>
                                 <p class="text-white text-sm font-medium">${p.name}</p>
-                                <p class="text-gray-400 text-xs">Renter: ${p.renterName || 'Unknown'}</p>
+                                <p class="text-gray-400 text-xs">Renter: ${p.buyerName || 'Unknown'}</p>
                             </div>
-                            <p class="text-green-400 text-sm font-medium">${formatPrice(p.rentAmount)}/${p.frequency.charAt(0)}</p>
+                            <p class="text-green-400 text-sm font-medium">${formatPrice(p.paymentAmount)}/${p.frequency.charAt(0)}</p>
                         </div>
                     `).join('')}
                 </div>
@@ -846,7 +846,7 @@ function renderRenterEarningsReport(data) {
                     <tbody>
                         ${data.tenureHistory.slice(0, 10).map(t => `
                             <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-                                <td class="py-2 px-3 text-white">${t.renterName || 'Unknown'}</td>
+                                <td class="py-2 px-3 text-white">${t.buyerName || 'Unknown'}</td>
                                 <td class="py-2 px-3 text-gray-400">${t.propertyName || 'Unknown'}</td>
                                 <td class="py-2 px-3 text-center text-gray-400">${t.tenureDays || 0} days</td>
                                 <td class="py-2 px-3 text-right text-green-400 font-bold">${formatPrice(t.totalCollected || 0)}</td>
@@ -930,7 +930,7 @@ function renderPerformanceReport(data) {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div class="bg-gray-900/50 rounded-lg p-3">
                     <p class="text-gray-400 mb-1">Avg Rent per Unit</p>
-                    <p class="text-white font-bold">${data.rentedProperties > 0 ? formatPrice(data.totalMonthlyRevenue / data.rentedProperties) : '$0'}/mo</p>
+                    <p class="text-white font-bold">${data.soldProperties > 0 ? formatPrice(data.totalMonthlyRevenue / data.soldProperties) : '$0'}/mo</p>
                 </div>
                 <div class="bg-gray-900/50 rounded-lg p-3">
                     <p class="text-gray-400 mb-1">Portfolio Value</p>
@@ -1125,7 +1125,7 @@ function generateTopPerformersPreview(ownerProps) {
             ${top3.map((p, idx) => {
                 const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
                 const isOccupied = state.availability[p.id] === false;
-                const renterName = PropertyDataService.getValue(p.id, 'renterName', '');
+                const buyerName = PropertyDataService.getValue(p.id, 'buyerName', '');
                 const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
                 
                 return `
@@ -1135,7 +1135,7 @@ function generateTopPerformersPreview(ownerProps) {
                             <div>
                                 <div class="font-bold text-white">${p.title}</div>
                                 <div class="text-xs text-gray-400">
-                                    ${isOccupied ? `<span class="text-green-400">● Rented to ${renterName || 'Unknown'}</span>` : '<span class="text-yellow-400">○ Available</span>'}
+                                    ${isOccupied ? `<span class="text-green-400">● Rented to ${buyerName || 'Unknown'}</span>` : '<span class="text-yellow-400">○ Available</span>'}
                                 </div>
                             </div>
                         </div>
@@ -1292,9 +1292,9 @@ async function generateOccupancyReport() {
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     ${ownerProps.map(p => {
                         const isOccupied = state.availability[p.id] === false;
-                        const renterName = PropertyDataService.getValue(p.id, 'renterName', '');
+                        const buyerName = PropertyDataService.getValue(p.id, 'buyerName', '');
                         return `
-                            <div class="relative group cursor-pointer" title="${p.title}${isOccupied ? ' - ' + renterName : ''}">
+                            <div class="relative group cursor-pointer" title="${p.title}${isOccupied ? ' - ' + buyerName : ''}">
                                 <div class="aspect-square rounded-xl ${isOccupied ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-gray-600 to-gray-700'} flex items-center justify-center text-2xl shadow-lg">
                                     ${isOccupied ? '🏠' : '🔑'}
                                 </div>
@@ -1459,7 +1459,7 @@ async function generatePaymentsReport() {
                                         <tr class="border-b border-gray-700/50">
                                             <td class="py-3">${date.toLocaleDateString()}</td>
                                             <td class="py-3 truncate max-w-[150px]">${payment.propertyTitle}</td>
-                                            <td class="py-3">${payment.renterName || 'Unknown'}</td>
+                                            <td class="py-3">${payment.buyerName || 'Unknown'}</td>
                                             <td class="py-3 text-right text-green-400 font-bold">$${(payment.amount || 0).toLocaleString()}</td>
                                         </tr>
                                     `;
@@ -1493,11 +1493,11 @@ window.exportReportData = async function() {
         const weeklyPrice = PropertyDataService.getValue(p.id, 'weeklyPrice', p.weeklyPrice || 0);
         const monthlyPrice = PropertyDataService.getValue(p.id, 'monthlyPrice', p.monthlyPrice || weeklyPrice * 4);
         const isOccupied = state.availability[p.id] === false;
-        const renterName = PropertyDataService.getValue(p.id, 'renterName', '') || '';
+        const buyerName = PropertyDataService.getValue(p.id, 'buyerName', '') || '';
         const payments = allPayments[idx] || [];
         const totalCollected = payments.reduce((sum, pay) => sum + (pay.amount || 0), 0);
         
-        csv += `"${p.title}","${p.type}",${weeklyPrice},${monthlyPrice},"${isOccupied ? 'Occupied' : 'Available'}","${renterName}",${payments.length},${totalCollected}\n`;
+        csv += `"${p.title}","${p.type}",${weeklyPrice},${monthlyPrice},"${isOccupied ? 'Occupied' : 'Available'}","${buyerName}",${payments.length},${totalCollected}\n`;
     });
     
     // Create download

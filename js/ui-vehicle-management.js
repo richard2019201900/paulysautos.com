@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             paymentDate: new Date().toISOString().split('T')[0],
                             amount: 10000,
                             frequency: 'premium',
-                            renterName: '👑 Premium Listing Fee',
+                            buyerName: '👑 Premium Listing Fee',
                             type: 'premium_fee',
                             notes: 'Premium listing activation - weekly fee',
                             recordedAt: new Date().toISOString()

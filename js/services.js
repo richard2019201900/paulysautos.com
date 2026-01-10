@@ -644,7 +644,7 @@ window.viewFirestoreState = async function() {
             const data = availDoc.data();
             console.log(`   Entries: ${Object.keys(data).length}`);
             Object.keys(data).sort((a,b) => parseInt(a) - parseInt(b)).forEach(id => {
-                console.log(`   ${id}: ${data[id] ? 'Available' : 'Rented'}`);
+                console.log(`   ${id}: ${data[id] ? 'Available' : 'Sold'}`);
             });
         } else {
             console.log('   (does not exist)');
@@ -692,7 +692,7 @@ window.showPropertyData = async function(propertyId) {
     }
     
     // Availability
-    console.log('\n📊 Availability:', state.availability[numericId] !== false ? 'Available' : 'Rented');
+    console.log('\n📊 Availability:', state.availability[numericId] !== false ? 'Available' : 'Sold');
 };
 
 // ==================== FIRESTORE SYNC (UNIFIED ARCHITECTURE) ====================
@@ -793,18 +793,18 @@ window.saveAvailability = async function(id, isAvailable) {
 }
 
 window.toggleAvailability = async function(id) {
-    const currentlyRented = state.availability[id] === false;
+    const currentlySold = state.availability[id] === false;
     
     // If trying to mark as Available, check if renter info or payment date exists
-    if (currentlyRented) {
-        const renterName = PropertyDataService.getValue(id, 'renterName', '');
-        const renterPhone = PropertyDataService.getValue(id, 'renterPhone', '');
+    if (currentlySold) {
+        const buyerName = PropertyDataService.getValue(id, 'buyerName', '');
+        const buyerPhone = PropertyDataService.getValue(id, 'buyerPhone', '');
         const lastPaymentDate = PropertyDataService.getValue(id, 'lastPaymentDate', '');
         
-        if (renterName || renterPhone || lastPaymentDate) {
+        if (buyerName || buyerPhone || lastPaymentDate) {
             let message = '⚠️ Cannot mark as Available\n\nThis property has renter/payment information set:\n';
-            if (renterName) message += `• Renter Name: ${renterName}\n`;
-            if (renterPhone) message += `• Renter Phone: ${renterPhone}\n`;
+            if (buyerName) message += `• Renter Name: ${buyerName}\n`;
+            if (buyerPhone) message += `• Renter Phone: ${buyerPhone}\n`;
             if (lastPaymentDate) message += `• Last Payment Date: ${lastPaymentDate}\n`;
             message += '\nTo mark this property as Available, first clear these fields by clicking on them and deleting the values.';
             

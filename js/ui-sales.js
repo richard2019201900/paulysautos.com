@@ -102,7 +102,7 @@ window.createSaleCelebration = async function(sellerDisplayName, propertyTitle, 
 /**
  * Show the Log Vehicle Sale modal
  */
-window.showLogSaleModal = function(propertyId, rtoContractId = null) {
+window.showLogSaleModal = function(propertyId, financingContractId = null) {
     // Ensure numeric ID for comparison
     const numericId = typeof propertyId === 'string' ? parseInt(propertyId) : propertyId;
     const p = properties.find(prop => prop.id === numericId);
@@ -112,13 +112,13 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
     }
     
     const buyPrice = PropertyDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
-    const buyerName = PropertyDataService.getValue(numericId, 'renterName', p.renterName || '');
+    const buyerName = PropertyDataService.getValue(numericId, 'buyerName', p.buyerName || '');
     const today = new Date().toISOString().split('T')[0];
     const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     
-    // Determine if this is from RTO completion
-    const isRTOCompletion = !!rtoContractId;
-    const saleType = isRTOCompletion ? 'rto_completion' : 'direct_sale';
+    // Determine if this is from Financing completion
+    const isRTOCompletion = !!financingContractId;
+    const saleType = isRTOCompletion ? 'financing_completion' : 'direct_sale';
     
     // Get current vehicle owner info
     const vehicleOwnerEmail = PropertyDataService.getValue(numericId, 'owner', p.owner || '');
@@ -158,8 +158,8 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
                 <div class="p-6 space-y-4">
                     ${isRTOCompletion ? `
                     <div class="bg-indigo-900/50 border border-indigo-500/50 rounded-xl p-3">
-                        <div class="text-indigo-300 font-bold text-sm">📋 RTO Completion</div>
-                        <p class="text-indigo-200 text-xs mt-1">This sale is being logged from a completed Rent-to-Own contract.</p>
+                        <div class="text-indigo-300 font-bold text-sm">📋 Financing Completion</div>
+                        <p class="text-indigo-200 text-xs mt-1">This sale is being logged from a completed Financing Plan contract.</p>
                     </div>
                     ` : ''}
                     
@@ -215,7 +215,7 @@ window.showLogSaleModal = function(propertyId, rtoContractId = null) {
                     <button onclick="closeLogSaleModal()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                         Cancel
                     </button>
-                    <button onclick="submitVehicleSale(${numericId}, '${saleType}', '${rtoContractId || ''}')" class="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                    <button onclick="submitVehicleSale(${numericId}, '${saleType}', '${financingContractId || ''}')" class="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
                         🏆 Complete Sale
                     </button>
                 </div>
@@ -288,7 +288,7 @@ async function populateSellerDropdown(propertyId, defaultOwnerEmail) {
 /**
  * Submit vehicle sale to Firestore
  */
-window.submitVehicleSale = async function(vehicleId, saleType, rtoContractId) {
+window.submitVehicleSale = async function(vehicleId, saleType, financingContractId) {
     const priceInput = document.getElementById('salePriceInput');
     const buyerInput = document.getElementById('saleBuyerInput');
     const dateInput = document.getElementById('saleDateInput');
@@ -357,7 +357,7 @@ window.submitVehicleSale = async function(vehicleId, saleType, rtoContractId) {
             sellerEmail: sellerEmail,              // Email for internal reference only
             sellerUid: sellerUid,                  // UID for XP awards
             saleType: saleType,
-            rtoContractId: rtoContractId || null,
+            financingContractId: financingContractId || null,
             salesFee: salesFee,
             salesFeePercent: 10,
             netProceeds: netProceeds,
@@ -383,16 +383,16 @@ window.submitVehicleSale = async function(vehicleId, saleType, rtoContractId) {
             saleId: saleRef.id
         });
         
-        // If RTO completion, update the contract status (legacy support)
-        if (rtoContractId) {
+        // If Financing completion, update the contract status (legacy support)
+        if (financingContractId) {
             try {
-                await db.collection('rentToOwnContracts').doc(rtoContractId).update({
+                await db.collection('financingContracts').doc(financingContractId).update({
                     status: 'completed',
                     completedDate: saleDate,
                     saleId: saleRef.id
                 });
             } catch (e) {
-                console.log('[VehicleSale] No RTO contract to update');
+                console.log('[VehicleSale] No Financing contract to update');
             }
         }
         
@@ -754,26 +754,26 @@ window.confirmDeleteSale = async function(saleId) {
             saleId: null
         };
         
-        // If this was an RTO completion, also clear renter/payment info
-        if (sale.saleType === 'rto_completion' || sale.rtoContractId) {
-            propertyUpdates.renterName = null;
-            propertyUpdates.renterPhone = null;
-            propertyUpdates.renterNotes = null;
+        // If this was an Financing completion, also clear renter/payment info
+        if (sale.saleType === 'financing_completion' || sale.financingContractId) {
+            propertyUpdates.buyerName = null;
+            propertyUpdates.buyerPhone = null;
+            propertyUpdates.buyerNotes = null;
             propertyUpdates.paymentFrequency = null;
             propertyUpdates.lastPaymentDate = null;
-            propertyUpdates.hasActiveRTO = false;
-            propertyUpdates.rtoContractId = null;
+            propertyUpdates.hasActiveFinancing = false;
+            propertyUpdates.financingContractId = null;
         }
         
         await PropertyDataService.writeMultiple(propertyId, propertyUpdates);
         
-        // 5. If there was an RTO contract, fully delete it (not just revert)
-        if (sale.rtoContractId) {
+        // 5. If there was an Financing contract, fully delete it (not just revert)
+        if (sale.financingContractId) {
             try {
-                await db.collection('rentToOwnContracts').doc(sale.rtoContractId).delete();
-                console.log('[DeleteSale] Deleted RTO contract:', sale.rtoContractId);
+                await db.collection('financingContracts').doc(sale.financingContractId).delete();
+                console.log('[DeleteSale] Deleted Financing contract:', sale.financingContractId);
             } catch (rtoErr) {
-                console.warn('[DeleteSale] Could not delete RTO contract:', rtoErr);
+                console.warn('[DeleteSale] Could not delete Financing contract:', rtoErr);
             }
         }
         

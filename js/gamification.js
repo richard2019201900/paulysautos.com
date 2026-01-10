@@ -93,7 +93,7 @@ const GamificationService = {
                     level: 1,
                     title: 'Newcomer',
                     achievements: {},
-                    stats: { totalRentals: 0, propertiesPosted: 0 },
+                    stats: { totalSales: 0, propertiesPosted: 0 },
                     rewards: {}
                 };
                 
@@ -483,7 +483,7 @@ const GamificationService = {
                     signup: now
                 },
                 stats: {
-                    totalRentals: 0,
+                    totalSales: 0,
                     propertiesPosted: 0
                 },
                 rewards: {},

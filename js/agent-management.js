@@ -30,14 +30,14 @@ function canManageAgentRole() {
 }
 
 /**
- * Check if current user can assign agents to a property
+ * Check if current user can assign agents to a vehicle
  * Master Admin or Property Owner
  */
 function canAssignAgents(propertyId) {
     if (!auth.currentUser) return false;
     if (TierService.isMasterAdmin(auth.currentUser.email)) return true;
     
-    // Check if user owns this property
+    // Check if user owns this vehicle
     var ownerEmail = PropertyDataService.getValue(propertyId, 'ownerEmail', null);
     if (!ownerEmail) {
         ownerEmail = propertyOwnerEmail[propertyId];
@@ -232,11 +232,11 @@ window.demoteFromAgent = async function(odId, email) {
 };
 
 /**
- * Assign agent to property
+ * Assign agent to vehicle
  */
 window.assignAgentToProperty = async function(propertyId, agentEmail) {
     if (!canAssignAgents(propertyId)) {
-        showToast('You do not have permission to assign agents to this property', 'error');
+        showToast('You do not have permission to assign agents to this vehicle', 'error');
         return false;
     }
     
@@ -257,7 +257,7 @@ window.assignAgentToProperty = async function(propertyId, agentEmail) {
         });
         
         if (alreadyAssigned) {
-            showToast('Agent is already assigned to this property', 'info');
+            showToast('Agent is already assigned to this vehicle', 'info');
             return false;
         }
         
@@ -309,7 +309,7 @@ window.assignAgentToProperty = async function(propertyId, agentEmail) {
             logActivity('agent_assign', 'Assigned ' + agentEmail + ' to ' + (prop.title || 'Property ' + propertyId));
         }
         
-        showToast('✅ Agent assigned to property', 'success');
+        showToast('✅ Agent assigned to vehicle', 'success');
         return true;
     } catch (error) {
         console.error('[Agents] Error assigning agent:', error);
@@ -319,7 +319,7 @@ window.assignAgentToProperty = async function(propertyId, agentEmail) {
 };
 
 /**
- * Remove agent from property
+ * Remove agent from vehicle
  * @param {boolean} selfRemoval - True if agent is removing themselves
  * @param {string} reason - Required reason when owner removes agent
  */
@@ -329,7 +329,7 @@ window.removeAgentFromProperty = async function(propertyId, agentEmail, selfRemo
     
     // Permission check
     if (!isMasterAdmin && !isSelf && !canAssignAgents(propertyId)) {
-        showToast('You do not have permission to remove agents from this property', 'error');
+        showToast('You do not have permission to remove agents from this vehicle', 'error');
         return false;
     }
     
@@ -347,7 +347,7 @@ window.removeAgentFromProperty = async function(propertyId, agentEmail, selfRemo
         var propKey = String(propertyId);
         
         if (!properties[propKey] || !properties[propKey].agents) {
-            showToast('No agents assigned to this property', 'info');
+            showToast('No agents assigned to this vehicle', 'info');
             return false;
         }
         
@@ -367,7 +367,7 @@ window.removeAgentFromProperty = async function(propertyId, agentEmail, selfRemo
             logActivity(action, msg);
         }
         
-        showToast(isSelf ? 'You have been removed from this property' : 'Agent removed from property', 'success');
+        showToast(isSelf ? 'You have been removed from this vehicle' : 'Agent removed from vehicle', 'success');
         return true;
     } catch (error) {
         console.error('[Agents] Error removing agent:', error);
@@ -377,7 +377,7 @@ window.removeAgentFromProperty = async function(propertyId, agentEmail, selfRemo
 };
 
 /**
- * Get agents assigned to a property
+ * Get agents assigned to a vehicle
  */
 window.getPropertyAgents = function(propertyId) {
     var agents = PropertyDataService.getValue(propertyId, 'agents', []);
@@ -396,12 +396,12 @@ window.getAgentContactsForProperty = async function(propertyId) {
     
     var contacts = [];
     
-    // First, try to get from property data via PropertyDataService (works for anonymous users)
+    // First, try to get from vehicle data via PropertyDataService (works for anonymous users)
     var agentDisplayNames = PropertyDataService.getValue(propertyId, 'agentDisplayNames', null);
     var agentPhones = PropertyDataService.getValue(propertyId, 'agentPhones', null);
     
     if (agentDisplayNames && agentPhones) {
-        // Use stored agent data from property (no auth required)
+        // Use stored agent data from vehicle (no auth required)
         agentEmails.forEach(function(email) {
             var emailLower = email.toLowerCase();
             var displayName = agentDisplayNames[emailLower];
@@ -460,7 +460,7 @@ window.getAgentContactsForProperty = async function(propertyId) {
 };
 
 /**
- * Calculate potential commission for an agent on a property
+ * Calculate potential commission for an agent on a vehicle
  * Commission = 10% of sale price, split evenly among agents
  */
 window.calculateAgentCommission = function(propertyId) {
@@ -780,7 +780,7 @@ window.addAgentToPropertyFromDropdown = async function(propertyId) {
     
     var success = await assignAgentToProperty(propertyId, select.value);
     if (success) {
-        // Refresh the property stats view
+        // Refresh the vehicle stats view
         if (typeof renderPropertyStatsContent === 'function') {
             renderPropertyStatsContent(propertyId);
         }
@@ -794,7 +794,7 @@ window.promptRemoveAgentFromProperty = function(propertyId, agentEmail, isSelf) 
     var isMasterAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     
     if (isSelf) {
-        if (confirm('Are you sure you want to remove yourself from this property?\n\nYou will no longer receive offer inquiries for this property.')) {
+        if (confirm('Are you sure you want to remove yourself from this vehicle?\n\nYou will no longer receive offer inquiries for this vehicle.')) {
             removeAgentFromProperty(propertyId, agentEmail, true, null).then(function(success) {
                 if (success && typeof renderPropertyStatsContent === 'function') {
                     renderPropertyStatsContent(propertyId);
@@ -805,7 +805,7 @@ window.promptRemoveAgentFromProperty = function(propertyId, agentEmail, isSelf) 
     }
     
     if (isMasterAdmin) {
-        if (confirm('Remove ' + agentEmail + ' from this property?')) {
+        if (confirm('Remove ' + agentEmail + ' from this vehicle?')) {
             removeAgentFromProperty(propertyId, agentEmail, false, 'Admin removal').then(function(success) {
                 if (success && typeof renderPropertyStatsContent === 'function') {
                     renderPropertyStatsContent(propertyId);
@@ -817,7 +817,7 @@ window.promptRemoveAgentFromProperty = function(propertyId, agentEmail, isSelf) 
     
     // Owner removing agent - require reason with warning
     var reason = prompt(
-        'IMPORTANT: You are removing an agent from your property.\n\n' +
+        'IMPORTANT: You are removing an agent from your vehicle.\n\n' +
         '⚠️ WARNING: Any malicious or unjustified removal of agents may result in a PERMANENT BAN from the site.\n\n' +
         'Please provide a reason for removing this agent:'
     );

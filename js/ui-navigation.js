@@ -304,9 +304,9 @@ window.renderBlogPage = function() {
                     <li>More phone-friendly improvements coming in 2026</li>
                 </ul>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">🏠 Rent-to-Own System <span class="text-amber-400">(Elite Members)</span>:</h4>
+                <h4 class="font-bold text-white mb-2 mt-6">🏠 Financing Plan System <span class="text-amber-400">(Elite Members)</span>:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Create RTO contracts on any property with custom terms</li>
+                    <li>Create Financing contracts on any property with custom terms</li>
                     <li>Flexible deposit amounts and payment schedules</li>
                     <li>Track every payment with automatic balance calculations</li>
                     <li>Listing ownership transfers on the site when contract completes</li>
@@ -324,8 +324,8 @@ window.renderBlogPage = function() {
                 <h4 class="font-bold text-white mb-2 mt-6">📊 Redesigned Dashboard:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
                     <li>8 new tiles showing exactly what you're earning</li>
-                    <li>Income broken down by Daily, Weekly, Biweekly, and Monthly renters</li>
-                    <li>Dedicated RTO Income and Vehicle Sales tracking</li>
+                    <li>Income broken down by Daily, Weekly, Biweekly, and Monthly financing plans</li>
+                    <li>Dedicated Financing Income and Vehicle Sales tracking</li>
                     <li>Click any tile for a detailed breakdown</li>
                 </ul>
                 
@@ -348,7 +348,7 @@ window.renderBlogPage = function() {
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
                     <li>XP now updates in real-time as you complete actions</li>
                     <li>Earn XP for logging payments, completing leases, and making sales</li>
-                    <li>Privacy protections keep your renters' info private</li>
+                    <li>Privacy protections keep your buyers' info private</li>
                 </ul>
                 
                 <h4 class="font-bold text-white mb-2 mt-6">⚡ Under the Hood:</h4>

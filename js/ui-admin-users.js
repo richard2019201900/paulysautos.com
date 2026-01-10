@@ -114,12 +114,12 @@ window.saveSubscriptionDate = async function(userId, email, date) {
 };
 
 // Edit subscription amount for a user
-window.editSubscriptionAmount = async function(userId, email, currentAmount) {
+window.editSubscriptionAmount = async function(userId, email, curpaymentAmount) {
     const newAmount = prompt(
         `Edit subscription amount for ${email}\n\n` +
-        `Current amount: $${(currentAmount/1000).toFixed(0)}k/month\n\n` +
+        `Current amount: $${(curpaymentAmount/1000).toFixed(0)}k/month\n\n` +
         `Enter new amount in dollars (e.g., 25000 for $25k):`,
-        currentAmount
+        curpaymentAmount
     );
     
     if (newAmount === null) return;
@@ -143,7 +143,7 @@ window.editSubscriptionAmount = async function(userId, email, currentAmount) {
         // Log to activity
         logAdminActivity('payment_adjustment', {
             email: email,
-            previousAmount: currentAmount,
+            previousAmount: curpaymentAmount,
             newAmount: amount,
             adjustedBy: auth.currentUser?.email
         });

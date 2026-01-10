@@ -10,7 +10,7 @@
  * - listing: New property listings
  * - photo: Photo service requests
  * - premium: Premium listing requests
- * - rent: Rent payment alerts (computed, not stored)
+ * - rent: Financing payment alerts (computed, not stored)
  * 
  * ARCHITECTURE:
  * - State: Single state object with all notification data
@@ -200,7 +200,7 @@
                     : isToday 
                         ? '⏰ Due Today'
                         : '📅 Due Tomorrow';
-                notification.subtitle = `${rawData.title || rawData.propertyId} - ${rawData.renterName || 'Unknown'}`;
+                notification.subtitle = `${rawData.title || rawData.propertyId} - ${rawData.buyerName || 'Unknown'}`;
                 notification.urgency = isOverdue ? CONFIG.URGENCY.CRITICAL : isToday ? CONFIG.URGENCY.WARNING : CONFIG.URGENCY.INFO;
                 notification.action = {
                     type: 'scrollToRent',
@@ -730,8 +730,8 @@
         };
         
         const propertyId = rent.propId || rent.propertyId || rent.id;
-        const rentAmount = rent.rentAmount || rent.weeklyPrice || 0;
-        const renterName = rent.renterName || 'Unknown';
+        const paymentAmount = rent.paymentAmount || rent.weeklyPrice || 0;
+        const buyerName = rent.buyerName || 'Unknown';
         const propertyTitle = rent.title || `Property ${propertyId}`;
         const dueDisplay = rent.dueDate ? new Date(rent.dueDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Unknown';
         
@@ -739,12 +739,12 @@
             <div id="rent-item-${propertyId}" class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
                 <div class="flex-1 min-w-0 cursor-pointer" onclick="viewPropertyStats(${propertyId})" style="outline: none;">
                     <div class="text-white font-medium truncate">${propertyTitle}</div>
-                    <div class="text-gray-400 text-sm">Renter: ${renterName}</div>
+                    <div class="text-gray-400 text-sm">Buyer: ${buyerName}</div>
                     <div class="${statusColors[status]} text-xs">Due: ${dueDisplay}</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-white font-bold">$${rentAmount.toLocaleString()}</div>
-                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyRentReminder('${propertyId}', '${renterName.replace(/'/g, "\\'")}', '${propertyTitle.replace(/'/g, "\\'")}', ${rentAmount})" 
+                    <div class="text-white font-bold">$${paymentAmount.toLocaleString()}</div>
+                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyRentReminder('${propertyId}', '${buyerName.replace(/'/g, "\\'")}', '${propertyTitle.replace(/'/g, "\\'")}', ${paymentAmount})" 
                             class="text-cyan-400 hover:text-cyan-300 text-xs mt-1 flex items-center gap-1"
                             style="outline: none;">
                         📋 Copy Reminder
@@ -764,7 +764,7 @@
         }
     }
     
-    function copyRentReminder(propertyId, renterName, propertyTitle, amount) {
+    function copyRentReminder(propertyId, buyerName, propertyTitle, amount) {
         // Find the rent data to get full details (frequency, due date, days overdue)
         const allRents = [...state.rentAlerts.overdue, ...state.rentAlerts.today, ...state.rentAlerts.tomorrow];
         const rentData = allRents.find(r => String(r.propId) === String(propertyId) || String(r.id) === String(propertyId));
@@ -776,7 +776,7 @@
             const frequency = rentData.paymentFrequency || 'weekly';
             const dueDate = rentData.dueDate;
             const daysOverdue = rentData.daysOverdue || 0;
-            const rentAmount = rentData.rentAmount || amount;
+            const paymentAmount = rentData.paymentAmount || amount;
             
             // Format due date nicely
             const dueDateFormatted = dueDate ? new Date(dueDate + 'T12:00:00').toLocaleDateString('en-US', { 
@@ -784,21 +784,21 @@
             }) : 'soon';
             
             if (daysOverdue >= 2) {
-                // 2+ days overdue - eviction warning
-                message = `Hey ${renterName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for eviction in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
+                // 2+ days overdue - repossession warning
+                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for repossession in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
             } else if (daysOverdue > 0) {
                 // Overdue but less than 2 days
-                message = `Hey ${renterName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
+                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
             } else if (rentData.isToday) {
                 // Due today
-                message = `Hey ${renterName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🚗`;
+                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🚗`;
             } else {
                 // Due tomorrow
-                message = `Hey ${renterName}, just a heads up - your ${frequency} rent payment of $${rentAmount.toLocaleString()} is due tomorrow (${dueDateFormatted}). Thanks! 🚗`;
+                message = `Hey ${buyerName}, just a heads up - your ${frequency} financing payment of $${paymentAmount.toLocaleString()} is due tomorrow (${dueDateFormatted}). Thanks! 🚗`;
             }
         } else {
             // Fallback if rent data not found
-            message = `Hey ${renterName}! 👋 Just a friendly reminder that rent for ${propertyTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🚗`;
+            message = `Hey ${buyerName}! 👋 Just a friendly reminder that rent for ${propertyTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🚗`;
         }
         
         navigator.clipboard.writeText(message).then(() => {
@@ -865,7 +865,7 @@
                     }
                 }
                 
-                // Rent checks removed - PaulysAutos is a vehicle sales marketplace, not rentals
+                // Rent checks removed - PaulysAutos is a vehicle sales marketplace, not financing
                 // await checkRentDue();
                 // state.listeners.rentInterval = setInterval(checkRentDue, CONFIG.RENT_CHECK_INTERVAL);
                 
@@ -1018,8 +1018,8 @@
             Object.entries(properties).forEach(([propId, prop]) => {
                 if (!prop) return;
                 
-                // Must have renterName, lastPaymentDate, and paymentFrequency to calculate due date
-                if (!prop.renterName || !prop.lastPaymentDate || !prop.paymentFrequency) {
+                // Must have buyerName, lastPaymentDate, and paymentFrequency to calculate due date
+                if (!prop.buyerName || !prop.lastPaymentDate || !prop.paymentFrequency) {
                     return;
                 }
                 
@@ -1053,19 +1053,19 @@
                 const daysUntilDue = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
                 
                 // Get rent amount based on frequency
-                let rentAmount = prop.weeklyPrice || 0;
+                let paymentAmount = prop.weeklyPrice || 0;
                 if (prop.paymentFrequency === 'daily' && prop.dailyPrice) {
-                    rentAmount = prop.dailyPrice;
+                    paymentAmount = prop.dailyPrice;
                 } else if (prop.paymentFrequency === 'biweekly' && prop.biweeklyPrice) {
-                    rentAmount = prop.biweeklyPrice;
+                    paymentAmount = prop.biweeklyPrice;
                 } else if (prop.paymentFrequency === 'monthly' && prop.monthlyPrice) {
-                    rentAmount = prop.monthlyPrice;
+                    paymentAmount = prop.monthlyPrice;
                 } else if (prop.paymentFrequency === 'daily') {
-                    rentAmount = Math.round((prop.weeklyPrice || 0) / 7);
+                    paymentAmount = Math.round((prop.weeklyPrice || 0) / 7);
                 } else if (prop.paymentFrequency === 'biweekly') {
-                    rentAmount = (prop.weeklyPrice || 0) * 2;
+                    paymentAmount = (prop.weeklyPrice || 0) * 2;
                 } else if (prop.paymentFrequency === 'monthly') {
-                    rentAmount = (prop.weeklyPrice || 0) * 4;
+                    paymentAmount = (prop.weeklyPrice || 0) * 4;
                 }
                 
                 const rentData = {
@@ -1075,7 +1075,7 @@
                     ...prop,
                     dueDate,
                     nextRentDue: dueDate,
-                    rentAmount,
+                    paymentAmount,
                     daysUntilDue
                 };
                 
