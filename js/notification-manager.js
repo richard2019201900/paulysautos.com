@@ -219,11 +219,16 @@
     // =========================================================================
     
     function addNotification(notification) {
-        if (state.dismissed.has(notification.id)) return;
+        // Check if already dismissed - log for debugging
+        if (state.dismissed.has(notification.id)) {
+            console.log('[NotificationManager] Skipping dismissed notification:', notification.id);
+            return;
+        }
         
         const exists = state.notifications.find(n => n.id === notification.id);
         if (exists) return;
         
+        console.log('[NotificationManager] Adding notification:', notification.id, notification.title);
         state.notifications.unshift(notification);
         
         // Trim if over max
@@ -237,12 +242,14 @@
     }
     
     function dismissNotification(id) {
+        console.log('[NotificationManager] Dismissing notification:', id);
         state.dismissed.add(id);
         state.notifications = state.notifications.filter(n => n.id !== id);
         
         // Save to Firestore via UserPreferencesService
         if (window.UserPreferencesService) {
             UserPreferencesService.dismissNotification(id);
+            console.log('[NotificationManager] Saved dismissal to Firestore');
         }
         
         // Remove the notification card from DOM
@@ -846,9 +853,11 @@
                     // Load dismissed notifications into local Set for fast lookups
                     const dismissedList = UserPreferencesService.getAll().dismissedNotifications || [];
                     state.dismissed = new Set(dismissedList);
+                    console.log('[NotificationManager] Loaded', dismissedList.length, 'dismissed notifications:', dismissedList);
                     
                     // Load last admin visit time
                     state.lastAdminVisit = UserPreferencesService.getAdminLastVisit();
+                    console.log('[NotificationManager] Last admin visit:', state.lastAdminVisit);
                 }
                 
                 state.sessionStart = new Date();
@@ -912,9 +921,13 @@
                         // Initial load - check for missed notifications
                         state.knownUserIds.add(userId);
                         
+                        // Check if user was created after last admin visit
                         if (createdAt && state.lastAdminVisit && createdAt > state.lastAdminVisit) {
+                            const notificationId = `user-${userId}`;
+                            console.log('[NotificationManager] User', userId, 'created after last visit, checking if dismissed:', notificationId);
+                            
                             const notification = createNotification('user', user, {
-                                id: `user-${userId}`,
+                                id: notificationId,
                                 timestamp: createdAt.toISOString(),
                                 isMissed: true
                             });

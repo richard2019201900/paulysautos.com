@@ -961,7 +961,7 @@ window.vehicleSyncUnsubscribe = null;
 // Flag to prevent duplicate loads
 window._publicVehiclesLoaded = false;
 
-window.loadPublicProperties = async function(forceReload = false) {
+window.loadPublicVehicles = async function(forceReload = false) {
     // Prevent duplicate loads (unless forced or array is empty)
     if (!forceReload && window._publicVehiclesLoaded && vehicles.length > 0) {
         console.log('[Public] Vehicles already loaded, skipping');
@@ -977,55 +977,79 @@ window.loadPublicProperties = async function(forceReload = false) {
             return;
         }
         
-        const propsData = doc.data();
+        const rawData = doc.data();
         let loadedCount = 0;
         
         // Clear array for fresh load
         vehicles.length = 0;
         
-        Object.keys(propsData).forEach(key => {
-            const propId = parseInt(key);
-            if (isNaN(propId)) return;
+        // Reconstruct nested objects from flat keys (e.g., "1.title" -> { "1": { title: "..." } })
+        const vehiclesData = {};
+        Object.keys(rawData).forEach(key => {
+            if (key.includes('.')) {
+                // Flat key like "1.title" or "1.updatedBy"
+                const parts = key.split('.');
+                const vehicleId = parts[0];
+                const field = parts.slice(1).join('.'); // Handle nested fields
+                
+                if (!vehiclesData[vehicleId]) {
+                    vehiclesData[vehicleId] = {};
+                }
+                vehiclesData[vehicleId][field] = rawData[key];
+            } else {
+                // Nested object like "1": { title: "...", ... }
+                if (typeof rawData[key] === 'object' && rawData[key] !== null) {
+                    vehiclesData[key] = rawData[key];
+                }
+            }
+        });
+        
+        console.log('[Public] Reconstructed', Object.keys(vehiclesData).length, 'vehicles from Firestore');
+        
+        Object.keys(vehiclesData).forEach(key => {
+            const vehicleId = parseInt(key);
+            if (isNaN(vehicleId)) return;
             
-            const prop = propsData[key];
+            const vehicle = vehiclesData[key];
             
             // Only include valid vehicles with a title
-            if (!prop || !prop.title) {
+            if (!vehicle || !vehicle.title) {
+                console.log('[Public] Vehicle', vehicleId, 'has no title, skipping');
                 return;
             }
             
             // Ensure images array exists
-            if (!prop.images || !Array.isArray(prop.images)) {
-                prop.images = [];
+            if (!vehicle.images || !Array.isArray(vehicle.images)) {
+                vehicle.images = [];
             }
             
-            prop.id = propId;
+            vehicle.id = vehicleId;
             
             // Check if already exists
-            const existingIndex = vehicles.findIndex(p => p.id === propId);
+            const existingIndex = vehicles.findIndex(v => v.id === vehicleId);
             if (existingIndex === -1) {
-                vehicles.push(prop);
+                vehicles.push(vehicle);
                 loadedCount++;
             } else {
                 // Update existing
-                vehicles[existingIndex] = { ...vehicles[existingIndex], ...prop };
+                vehicles[existingIndex] = { ...vehicles[existingIndex], ...vehicle };
             }
             
             // Set up owner mappings
-            if (prop.ownerEmail) {
-                const email = prop.ownerEmail.toLowerCase();
+            if (vehicle.ownerEmail) {
+                const email = vehicle.ownerEmail.toLowerCase();
                 if (!ownerVehicleMap[email]) {
                     ownerVehicleMap[email] = [];
                 }
-                if (!ownerVehicleMap[email].includes(propId)) {
-                    ownerVehicleMap[email].push(propId);
+                if (!ownerVehicleMap[email].includes(vehicleId)) {
+                    ownerVehicleMap[email].push(vehicleId);
                 }
-                vehicleOwnerEmail[propId] = email;
+                vehicleOwnerEmail[vehicleId] = email;
             }
             
             // Default availability to true
-            if (state.availability[propId] === undefined) {
-                state.availability[propId] = true;
+            if (state.availability[vehicleId] === undefined) {
+                state.availability[vehicleId] = true;
             }
         });
         
@@ -1051,7 +1075,7 @@ window.startVehicleSyncListener = function() {
     
     // For unauthenticated users, do a one-time load instead of real-time sync
     if (!user) {
-        loadPublicProperties();
+        loadPublicVehicles();
         return;
     }
     
@@ -1070,88 +1094,111 @@ window.startVehicleSyncListener = function() {
                 return;
             }
             
-            const propsData = doc.data();
+            const rawData = doc.data();
             let hasChanges = false;
             let processedCount = 0;
             
             // Store current vehicle count before processing
-            const propCountBefore = vehicles.length;
+            const vehicleCountBefore = vehicles.length;
             
-            Object.keys(propsData).forEach(key => {
-                const propId = parseInt(key);
+            // Reconstruct nested objects from flat keys (e.g., "1.title" -> { "1": { title: "..." } })
+            const vehiclesData = {};
+            Object.keys(rawData).forEach(key => {
+                if (key.includes('.')) {
+                    // Flat key like "1.title" or "1.updatedBy"
+                    const parts = key.split('.');
+                    const vehicleId = parts[0];
+                    const field = parts.slice(1).join('.'); // Handle nested fields like "buyer.name"
+                    
+                    if (!vehiclesData[vehicleId]) {
+                        vehiclesData[vehicleId] = {};
+                    }
+                    vehiclesData[vehicleId][field] = rawData[key];
+                } else {
+                    // Nested object like "1": { title: "...", ... }
+                    if (typeof rawData[key] === 'object' && rawData[key] !== null) {
+                        vehiclesData[key] = rawData[key];
+                    }
+                }
+            });
+            
+            console.log('[VehicleSync] Reconstructed', Object.keys(vehiclesData).length, 'vehicles from Firestore');
+            
+            Object.keys(vehiclesData).forEach(key => {
+                const vehicleId = parseInt(key);
                 
                 // Skip non-numeric keys (like metadata fields)
-                if (isNaN(propId)) {
+                if (isNaN(vehicleId)) {
                     return;
                 }
                 
-                const prop = propsData[key];
+                const vehicle = vehiclesData[key];
                 
                 // Skip if vehicle data is invalid or missing
-                if (!prop || typeof prop !== 'object') {
+                if (!vehicle || typeof vehicle !== 'object') {
                     console.log('[VehicleSync] Skipping invalid vehicle data for key:', key);
                     return;
                 }
                 
                 // Only skip if vehicle is completely invalid (must have at least a title)
-                if (!prop.title) {
-                    console.log('[VehicleSync] Vehicle has no title, skipping');
+                if (!vehicle.title) {
+                    console.log('[VehicleSync] Vehicle', vehicleId, 'has no title, skipping');
                     return;
                 }
                 
                 processedCount++;
                 
                 // Ensure images array exists (even if empty)
-                if (!prop.images || !Array.isArray(prop.images)) {
-                    prop.images = [];
+                if (!vehicle.images || !Array.isArray(vehicle.images)) {
+                    vehicle.images = [];
                 }
                 
-                prop.id = propId;
+                vehicle.id = vehicleId;
                 
-                const existingIndex = vehicles.findIndex(p => p.id === propId);
+                const existingIndex = vehicles.findIndex(v => v.id === vehicleId);
                 
                 if (existingIndex === -1) {
-                    vehicles.push(prop);
+                    vehicles.push(vehicle);
                     hasChanges = true;
                     
-                    if (prop.ownerEmail) {
-                        const email = prop.ownerEmail.toLowerCase();
+                    if (vehicle.ownerEmail) {
+                        const email = vehicle.ownerEmail.toLowerCase();
                         if (!ownerVehicleMap[email]) {
                             ownerVehicleMap[email] = [];
                         }
-                        if (!ownerVehicleMap[email].includes(propId)) {
-                            ownerVehicleMap[email].push(propId);
+                        if (!ownerVehicleMap[email].includes(vehicleId)) {
+                            ownerVehicleMap[email].push(vehicleId);
                         }
-                        vehicleOwnerEmail[propId] = email;
+                        vehicleOwnerEmail[vehicleId] = email;
                     }
                     
-                    if (state.availability[propId] === undefined) {
-                        state.availability[propId] = true;
+                    if (state.availability[vehicleId] === undefined) {
+                        state.availability[vehicleId] = true;
                     }
                 } else {
                     const existing = vehicles[existingIndex];
-                    const hasUpdates = JSON.stringify(existing) !== JSON.stringify({ ...existing, ...prop });
+                    const hasUpdates = JSON.stringify(existing) !== JSON.stringify({ ...existing, ...vehicle });
                     
                     if (hasUpdates) {
-                        if (prop.ownerEmail && prop.ownerEmail.toLowerCase() !== existing.ownerEmail?.toLowerCase()) {
+                        if (vehicle.ownerEmail && vehicle.ownerEmail.toLowerCase() !== existing.ownerEmail?.toLowerCase()) {
                             if (existing.ownerEmail) {
                                 const oldEmail = existing.ownerEmail.toLowerCase();
                                 if (ownerVehicleMap[oldEmail]) {
-                                    ownerVehicleMap[oldEmail] = ownerVehicleMap[oldEmail].filter(id => id !== propId);
+                                    ownerVehicleMap[oldEmail] = ownerVehicleMap[oldEmail].filter(id => id !== vehicleId);
                                 }
                             }
                             
-                            const newEmail = prop.ownerEmail.toLowerCase();
+                            const newEmail = vehicle.ownerEmail.toLowerCase();
                             if (!ownerVehicleMap[newEmail]) {
                                 ownerVehicleMap[newEmail] = [];
                             }
-                            if (!ownerVehicleMap[newEmail].includes(propId)) {
-                                ownerVehicleMap[newEmail].push(propId);
+                            if (!ownerVehicleMap[newEmail].includes(vehicleId)) {
+                                ownerVehicleMap[newEmail].push(vehicleId);
                             }
-                            vehicleOwnerEmail[propId] = newEmail;
+                            vehicleOwnerEmail[vehicleId] = newEmail;
                         }
                         
-                        vehicles[existingIndex] = { ...existing, ...prop };
+                        vehicles[existingIndex] = { ...existing, ...vehicle };
                         hasChanges = true;
                     }
                 }
@@ -1159,25 +1206,25 @@ window.startVehicleSyncListener = function() {
             
             // Check for deleted vehicles (only user-created ones with id >= 1000)
             const firestoreIds = new Set(
-                Object.keys(propsData)
+                Object.keys(vehiclesData)
                     .map(k => parseInt(k))
                     .filter(id => !isNaN(id))
             );
-            const localUserCreatedProps = vehicles.filter(p => p.id >= 1000);
+            const localUserCreatedVehicles = vehicles.filter(v => v.id >= 1000);
             
-            localUserCreatedProps.forEach(prop => {
-                if (!firestoreIds.has(prop.id)) {
-                    const index = vehicles.findIndex(p => p.id === prop.id);
+            localUserCreatedVehicles.forEach(v => {
+                if (!firestoreIds.has(v.id)) {
+                    const index = vehicles.findIndex(x => x.id === v.id);
                     if (index !== -1) {
                         vehicles.splice(index, 1);
                         hasChanges = true;
                         
-                        if (prop.ownerEmail) {
-                            const email = prop.ownerEmail.toLowerCase();
+                        if (v.ownerEmail) {
+                            const email = v.ownerEmail.toLowerCase();
                             if (ownerVehicleMap[email]) {
-                                ownerVehicleMap[email] = ownerVehicleMap[email].filter(id => id !== prop.id);
+                                ownerVehicleMap[email] = ownerVehicleMap[email].filter(id => id !== v.id);
                             }
-                            delete vehicleOwnerEmail[prop.id];
+                            delete vehicleOwnerEmail[v.id];
                         }
                     }
                 }
@@ -1186,7 +1233,7 @@ window.startVehicleSyncListener = function() {
             // Update filtered vehicles
             state.filteredVehicles = [...vehicles];
             
-            console.log('[VehicleSync] Processed', processedCount, 'vehicles, array count:', vehicles.length, '(was', propCountBefore, ')');
+            console.log('[VehicleSync] Processed', processedCount, 'vehicles, array count:', vehicles.length, '(was', vehicleCountBefore, ')');
             
             // Only render on first snapshot or if there are actual changes
             // Skip re-render if user is on Owner Stats page (to avoid interrupting edits)

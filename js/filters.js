@@ -179,7 +179,7 @@ window.toggleHideUnavailable = function() {
     applyAllFilters();
 };
 
-window.toggleMyProperties = function() {
+window.toggleMyVehicles = function() {
     applyAllFilters();
 };
 

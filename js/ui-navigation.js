@@ -856,8 +856,8 @@ window.navigateTo = function(section) {
         console.log('[navigateTo] Vehicles array empty, reloading...');
         if (auth.currentUser && typeof startVehicleSyncListener === 'function') {
             startVehicleSyncListener();
-        } else if (typeof loadPublicProperties === 'function') {
-            loadPublicProperties();
+        } else if (typeof loadPublicVehicles === 'function') {
+            loadPublicVehicles();
         }
     }
     
@@ -884,8 +884,8 @@ window.goBack = function() {
         console.log('[goBack] Vehicles array empty, reloading...');
         if (auth.currentUser && typeof startVehicleSyncListener === 'function') {
             startVehicleSyncListener();
-        } else if (typeof loadPublicProperties === 'function') {
-            loadPublicProperties();
+        } else if (typeof loadPublicVehicles === 'function') {
+            loadPublicVehicles();
         }
     }
     
