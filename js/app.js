@@ -3516,6 +3516,163 @@ window.copyBuyerPhone = function(phoneNumber, btn) {
     });
 };
 
+// ==================== USER DELETION DETECTION ====================
+// Store the unsubscribe function for user tier listener
+window.userTierUnsubscribe = null;
+
+/**
+ * Force logout - used when user document is deleted by admin
+ * Cleans up all listeners and signs out the user
+ */
+window.forceLogout = function() {
+    console.log('[Auth] Force logout triggered - user document deleted');
+    
+    // Clean up all listeners first (prevent further callbacks)
+    if (window.userTierUnsubscribe) {
+        window.userTierUnsubscribe();
+        window.userTierUnsubscribe = null;
+    }
+    if (window.userNotificationUnsubscribe) {
+        window.userNotificationUnsubscribe();
+        window.userNotificationUnsubscribe = null;
+    }
+    if (window.upgradeRequestUnsubscribe) {
+        window.upgradeRequestUnsubscribe();
+        window.upgradeRequestUnsubscribe = null;
+    }
+    if (window.adminPollInterval) {
+        clearInterval(window.adminPollInterval);
+        window.adminPollInterval = null;
+    }
+    
+    // Stop vehicle sync listener
+    if (typeof stopVehicleSyncListener === 'function') {
+        stopVehicleSyncListener();
+    }
+    
+    // Reset state
+    state.currentUser = null;
+    state.userTier = null;
+    
+    // Update UI
+    updateAuthButton(false);
+    
+    // Sign out and go to home page as guest
+    auth.signOut().then(() => {
+        showDeletedAccountToast();
+        goHome();
+    }).catch(() => {
+        showDeletedAccountToast();
+        goHome();
+    });
+};
+
+/**
+ * Show toast message when account is deleted by admin
+ */
+window.showDeletedAccountToast = function() {
+    // Remove any existing deleted account toast first
+    const existingToast = document.getElementById('deletedAccountToast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Don't show if we're in the middle of creating an account
+    if (window.isCreatingAccount) {
+        return;
+    }
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.id = 'deletedAccountToast';
+    toast.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 flex items-center gap-3';
+    toast.innerHTML = `
+        <span class="text-2xl">👋</span>
+        <div>
+            <div class="font-bold">Account Removed</div>
+            <div class="text-sm opacity-90">Your account has been deleted by an administrator.</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        toast.style.transition = 'all 0.3s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+};
+
+/**
+ * Start real-time listener on user's Firestore document
+ * Detects when user document is deleted (by admin) and forces logout
+ * Also handles tier changes and other user document updates
+ */
+window.startUserTierListener = function() {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    // Don't listen for master admin (they manage themselves)
+    if (user.email?.toLowerCase() === 'pauly@pma.network') return;
+    
+    // Unsubscribe from previous listener if exists
+    if (window.userTierUnsubscribe) {
+        window.userTierUnsubscribe();
+        window.userTierUnsubscribe = null;
+    }
+    
+    try {
+        window.userTierUnsubscribe = db.collection('users').doc(user.uid)
+            .onSnapshot((doc) => {
+                if (!doc.exists) {
+                    // Check if we're in the middle of creating an account
+                    if (window.isCreatingAccount) {
+                        return;
+                    }
+                    // User document was deleted - force logout
+                    console.log('[UserTierListener] User document deleted, forcing logout');
+                    forceLogout();
+                    return;
+                }
+                
+                const data = doc.data();
+                const newTier = data.tier || 'starter';
+                
+                // Check if tier changed
+                if (state.userTier && state.userTier !== newTier) {
+                    console.log('[UserTierListener] Tier changed:', state.userTier, '->', newTier);
+                    state.userTier = newTier;
+                    
+                    // Update UI to reflect tier change
+                    if (typeof updateTierBadge === 'function') {
+                        updateTierBadge(newTier, user.email);
+                    }
+                    
+                    // Refresh dashboard if visible
+                    if ($('ownerDashboard') && $('ownerDashboard').style.display !== 'none') {
+                        if (typeof renderOwnerDashboard === 'function') {
+                            renderOwnerDashboard();
+                        }
+                    }
+                    
+                    // Show notification about tier change
+                    if (typeof showToast === 'function') {
+                        const tierName = TierService?.getTierName?.(newTier) || newTier;
+                        showToast(`✨ Your tier has been updated to ${tierName}!`, 'success');
+                    }
+                }
+            }, (error) => {
+                console.error('[UserTierListener] Error:', error);
+                // Don't force logout on errors - could be temporary permission issue
+            });
+        
+        console.log('[UserTierListener] Started listening for user document changes');
+    } catch (error) {
+        console.error('[UserTierListener] Failed to start listener:', error);
+    }
+};
+
 // ==================== INITIALIZE ====================
 async function init() {
     await initFirestore();
@@ -3561,6 +3718,11 @@ async function init() {
             renderOwnerDashboard();
             loadUsername();
             
+            // Start real-time listener for user document deletion (force logout if deleted)
+            if (typeof startUserTierListener === 'function') {
+                startUserTierListener();
+            }
+            
             // Initialize NotificationManager immediately on login for real-time notifications
             // This ensures we start listening for new users/listings right away, not just when dashboard opens
             if (typeof NotificationManager !== 'undefined' && !NotificationManager.state?.initialized) {
@@ -3587,6 +3749,12 @@ async function init() {
             state.currentUser = null;
             state.userTier = null;
             updateAuthButton(false);
+            
+            // Stop user tier listener
+            if (window.userTierUnsubscribe) {
+                window.userTierUnsubscribe();
+                window.userTierUnsubscribe = null;
+            }
             
             // Stop existing vehicle sync listener
             if (typeof stopVehicleSyncListener === 'function') {

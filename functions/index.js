@@ -166,6 +166,64 @@ exports.migrateAllUsersToGamification = functions.https.onCall(async (data, cont
     }
 });
 
+// ==================== USER MANAGEMENT ====================
+/**
+ * Delete an Auth user by email (callable from admin panel)
+ * Called from ui-admin-users.js when admin deletes a user
+ */
+exports.deleteAuthUser = functions.https.onCall(async (data, context) => {
+    // Verify caller is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
+    }
+    
+    // Verify caller is master admin
+    const callerEmail = context.auth.token.email;
+    if (callerEmail !== 'pauly@pma.network') {
+        throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+    
+    const { email } = data;
+    
+    if (!email) {
+        throw new functions.https.HttpsError('invalid-argument', 'Email required');
+    }
+    
+    // Prevent admin from deleting themselves
+    if (email.toLowerCase() === 'pauly@pma.network') {
+        throw new functions.https.HttpsError('permission-denied', 'Cannot delete admin account');
+    }
+    
+    try {
+        // Get user by email
+        const userRecord = await admin.auth().getUserByEmail(email);
+        
+        // Delete the user from Firebase Auth
+        await admin.auth().deleteUser(userRecord.uid);
+        
+        console.log('[deleteAuthUser] Deleted user:', userRecord.uid, email);
+        
+        return {
+            success: true,
+            deletedUid: userRecord.uid,
+            deletedEmail: email
+        };
+    } catch (error) {
+        console.error('[deleteAuthUser] Error:', error);
+        
+        if (error.code === 'auth/user-not-found') {
+            // User doesn't exist in Auth - that's okay, return success
+            return {
+                success: true,
+                deletedEmail: email,
+                note: 'User was not in Firebase Auth'
+            };
+        }
+        
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
 // ==================== USER SYNC ====================
 /**
  * Sync Firebase Auth user to Firestore on creation
