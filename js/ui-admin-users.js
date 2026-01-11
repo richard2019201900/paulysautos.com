@@ -598,7 +598,7 @@ window.adminDeleteUser = async function(userId, email) {
         // Delete from Firebase Auth using Cloud Function
         try {
             const deleteAuthUser = functions.httpsCallable('deleteAuthUser');
-            const result = await deleteAuthUser({ email: email });
+            const result = await deleteAuthUser({ uid: userId });
         } catch (authError) {
             console.warn('[Admin] Could not delete Auth user (Cloud Function may not be deployed):', authError.message);
             // Continue - Firestore deletion was successful
