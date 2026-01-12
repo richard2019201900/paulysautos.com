@@ -158,11 +158,19 @@ window.applyAllFilters = function() {
     var hideUnavailable = $('hideUnavailable');
     if (hideUnavailable && hideUnavailable.checked) {
         filtered = filtered.filter(function(p) {
-            var availability = state.availability[p.id];
-            if (availability !== undefined) {
-                return availability !== false;
+            // Check isSold field directly first (most reliable)
+            var isSold = getVehicleValue(p, 'isSold');
+            if (isSold === true) {
+                return false;
             }
-            return getVehicleValue(p, 'availability') !== false;
+            
+            // Also check availability state
+            var availability = state.availability[p.id];
+            if (availability === false) {
+                return false;
+            }
+            
+            return true;
         });
         console.log('[Filters] After hide sold filter:', filtered.length);
     }

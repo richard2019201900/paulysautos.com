@@ -1219,8 +1219,10 @@ window.loadPublicVehicles = async function(forceReload = false) {
                 vehicleOwnerEmail[vehicleId] = email;
             }
             
-            // Default availability to true
-            if (state.availability[vehicleId] === undefined) {
+            // Set availability based on isSold field - IMPORTANT: isSold takes priority
+            if (vehicle.isSold === true) {
+                state.availability[vehicleId] = false;
+            } else if (state.availability[vehicleId] === undefined) {
                 state.availability[vehicleId] = true;
             }
         });
@@ -1368,7 +1370,10 @@ window.startVehicleSyncListener = function() {
                         vehicleOwnerEmail[vehicleId] = email;
                     }
                     
-                    if (state.availability[vehicleId] === undefined) {
+                    // Set availability based on isSold field - IMPORTANT: isSold takes priority
+                    if (vehicle.isSold === true) {
+                        state.availability[vehicleId] = false;
+                    } else if (state.availability[vehicleId] === undefined) {
                         state.availability[vehicleId] = true;
                     }
                 } else {
@@ -1392,6 +1397,13 @@ window.startVehicleSyncListener = function() {
                                 ownerVehicleMap[newEmail].push(vehicleId);
                             }
                             vehicleOwnerEmail[vehicleId] = newEmail;
+                        }
+                        
+                        // Sync availability with isSold field
+                        if (vehicle.isSold === true) {
+                            state.availability[vehicleId] = false;
+                        } else if (vehicle.isSold === false) {
+                            state.availability[vehicleId] = true;
                         }
                         
                         vehicles[existingIndex] = { ...existing, ...vehicle };
