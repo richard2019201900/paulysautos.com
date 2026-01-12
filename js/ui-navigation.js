@@ -287,147 +287,42 @@ window.renderBlogPage = function() {
     // Blog posts data - add new posts at the top
     const blogPosts = [
         {
-            date: 'December 30, 2024',
-            title: '📱 Now Available On Your In-City Phone + Massive Platform Upgrades',
-            category: 'Major Update',
-            categoryColor: 'bg-purple-500',
-            content: `
-                <p class="mb-4"><strong>PaulysAutos.com now works directly in your phone browser while you're in the city.</strong> No more alt-tabbing to Chrome — browse listings, manage your vehicles, and check your dashboard right from your phone. Just type paulysautos.com and you're in.</p>
-                
-                <p class="mb-4">Over the past two weeks, we've pushed <strong>26 major updates</strong> and completely transformed the platform. Here's what's new:</p>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">📱 In-City Phone Support:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Full site now works in the phone browser — no alt-tab needed</li>
-                    <li>Custom domain: just type <strong>paulysautos.com</strong></li>
-                    <li>Optimized for smooth scrolling and fast loading in-city</li>
-                    <li>More phone-friendly improvements coming in 2026</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">🏠 Financing Plan System <span class="text-amber-400">(Elite Members)</span>:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Create Financing contracts on any vehicle with custom terms</li>
-                    <li>Flexible deposit amounts and payment schedules</li>
-                    <li>Track every payment with automatic balance calculations</li>
-                    <li>Listing ownership transfers on the site when contract completes</li>
-                    <li>Edit or delete payments if mistakes are made</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">🏷️ Vehicle Sales Tracking:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Log vehicle sales and track the financials on your dashboard</li>
-                    <li>Celebration banners when you complete a sale</li>
-                    <li>Earn XP and climb the leaderboard with each sale</li>
-                    <li>Everything still happens in city — the site just keeps you organized</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">📊 Redesigned Dashboard:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>8 new tiles showing exactly what you're earning</li>
-                    <li>Income broken down by Daily, Weekly, Biweekly, and Monthly financing plans</li>
-                    <li>Dedicated Financing Income and Vehicle Sales tracking</li>
-                    <li>Click any tile for a detailed breakdown</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">🔔 Smart Rent Collection Alerts:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Automatic alerts when rent is overdue, due today, or coming up</li>
-                    <li>One-click copy for reminder messages to send to tenants</li>
-                    <li>Dashboard notifications so you never miss a payment</li>
-                    <li>Works for all vehicle owners, not just admin</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">📸 Bulk Image Uploads:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Upload multiple vehicle photos at once</li>
-                    <li>Drag and drop to reorder your gallery</li>
-                    <li>Horizontal layout for easier browsing</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">🏆 Improved Leaderboard:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>XP now updates in real-time as you complete actions</li>
-                    <li>Earn XP for logging payments, completing sales, and making sales</li>
-                    <li>Privacy protections keep your buyers' info private</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">⚡ Under the Hood:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Complete notification system rebuild for reliability</li>
-                    <li>Upgraded server infrastructure for faster performance</li>
-                    <li>Enhanced security across the entire platform</li>
-                    <li>Dozens of bug fixes and quality improvements</li>
-                </ul>
-                
-                <p class="mt-6 text-gray-300">We're going all-in on the phone browser experience. Our goal is to make PaulysAutos.com the smoothest, most useful tool you can access without ever leaving the city.</p>
-                
-                <p class="mt-4 text-gray-400 italic">Questions, ideas, or feedback? <strong class="text-green-400">Text Pauly in city</strong> — everything you tell us shapes what we build next.</p>
-            `
-        },
-        {
-            date: 'December 15, 2024',
-            title: '🚀 Two Weeks In - A Complete Vehicle Management Platform',
-            category: 'Milestone',
+            date: 'January 12, 2025',
+            title: '🚗 Welcome to PaulysAutos.com - Your Premium Vehicle Marketplace',
+            category: 'Launch',
             categoryColor: 'bg-amber-500',
             content: `
-                <p class="mb-4">Two weeks ago, PaulysAutos.com was just an idea. Today, we're a fully operational vehicle marketplace with a growing community of sellers and buyers across Los Santos.</p>
+                <p class="mb-4"><strong>PaulysAutos.com is now live!</strong> The premier vehicle marketplace for Los Santos is here. Whether you're buying or selling cars, trucks, SUVs, boats, motorcycles, or other vehicles - we've got you covered.</p>
                 
-                <p class="mb-4">Here's everything we've built:</p>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">For Sellers:</h4>
+                <h4 class="font-bold text-white mb-2 mt-6">🎯 What's Available Now:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Create and manage vehicle listings with full image galleries</li>
-                    <li>6 vehicle types supported: Cars, Trucks, SUVs, Boats, Motorcycles, and Other</li>
-                    <li>Simple pricing - just set your sale price</li>
+                    <li>Free browsing - no account needed to view listings</li>
+                    <li>Create an account to list your vehicles for sale</li>
                     <li>Premium listings to feature your vehicle at the top</li>
-                    <li>One-click status toggling between Available and Sold</li>
+                    <li>Real-time sync - changes appear instantly across all devices</li>
+                    <li>Works in your in-city phone browser</li>
                 </ul>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">For Buyers:</h4>
+                <h4 class="font-bold text-white mb-2 mt-6">📱 How to Get Started:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Browse vehicles for free - no account required</li>
-                    <li>Filter by type, sort by price or storage</li>
-                    <li>Contact sellers directly through the platform</li>
-                    <li>View detailed vehicle specs and photos</li>
+                    <li>Click "Register / Sign In" in the top right</li>
+                    <li>Create a free Starter account (1 listing included)</li>
+                    <li>Upgrade to Pro ($25k/mo) for 3 listings or Elite ($50k/mo) for unlimited</li>
+                    <li>Start listing your vehicles!</li>
                 </ul>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">Elite Portfolio Reports <span class="text-amber-400">(Elite Members)</span>:</h4>
+                <h4 class="font-bold text-white mb-2 mt-6">🏆 Earn XP & Climb the Leaderboard:</h4>
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>4-tab analytics dashboard: Overview, Revenue, Occupancy, and Top Performers</li>
-                    <li>Vacancy Loss Calculator showing exactly how much empty units cost you weekly and monthly</li>
-                    <li>4-Week Cash Flow Forecast to project your upcoming income</li>
-                    <li>Overdue and upcoming payment alerts at a glance</li>
-                    <li>Top earners ranked by current rent and all-time collections</li>
-                    <li>Occupancy breakdowns by vehicle type</li>
+                    <li>+100 XP just for signing up</li>
+                    <li>+250-500 XP for each listing you create</li>
+                    <li>+200 XP for enabling premium on a listing</li>
+                    <li>+500-1000 XP for completing sales</li>
+                    <li>Reach Level 5 to unlock a free premium week!</li>
                 </ul>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">3-Tier Subscription System:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>🌱 <strong>Starter</strong> (Free) - 1 listing, perfect for getting started</li>
-                    <li>⭐ <strong>Pro</strong> ($25,000/mo) - Up to 3 listings for growing landlords</li>
-                    <li>👑 <strong>Elite</strong> ($50,000/mo) - Unlimited listings plus exclusive Portfolio Reports</li>
-                    <li>Prorated upgrades so you only pay the difference when moving up</li>
-                </ul>
+                <p class="mt-6 text-gray-300">Stay tuned for more updates as we continue to improve the platform. Big things coming soon!</p>
                 
-                <h4 class="font-bold text-white mb-2 mt-6">Photo Services:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Per Photo package: $10,000 for professional HD shots</li>
-                    <li>Premium Bundle: $125,000 for 6-7 photos, video tour, and 4 weeks of premium placement</li>
-                </ul>
-                
-                <h4 class="font-bold text-white mb-2 mt-6">Admin Tools:</h4>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
-                    <li>Real-time dashboard with 8 interactive stat tiles</li>
-                    <li>User management: create accounts, adjust tiers, handle upgrades</li>
-                    <li>4-type notification system for new users, listings, upgrade requests, and premium activations</li>
-                    <li>Vehicle reassignment between owners</li>
-                    <li>CSV export for external reporting</li>
-                    <li>Activity logging and VIP leads tracking</li>
-                </ul>
-                
-                <p class="mt-6 text-gray-300">This is just the beginning. We're releasing updates weekly based on your feedback. Have a feature request or question? <strong class="text-green-400">Text Pauly in city</strong> for the fastest response.</p>
-                
-                <p class="mt-4 text-gray-400 italic">Thank you to everyone who's joined us in these first two weeks. Here's to building something great together.</p>
+                <p class="mt-4 text-gray-400 italic">Questions or feedback? <strong class="text-green-400">Text Pauly in city</strong> - we'd love to hear from you.</p>
             `
         }
     ];
@@ -590,12 +485,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Create the user with Firebase Auth
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
-                // Create user document with starter tier and display name
+                // Create user document with starter tier, display name, and gamification
                 await db.collection('users').doc(user.uid).set({
                     email: user.email.toLowerCase(),
                     username: displayName,
                     tier: 'starter',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    gamification: {
+                        xp: 100,
+                        level: 1,
+                        activityLog: [{
+                            type: 'signup',
+                            xp: 100,
+                            reason: 'Welcome to PaulysAutos!',
+                            timestamp: new Date().toISOString()
+                        }],
+                        achievements: ['signup'],
+                        migrated: true
+                    }
                 });
                 // CREATE ADMIN NOTIFICATION for new user signup (wrapped in try-catch to not break flow)
                 try {

@@ -598,7 +598,7 @@ window.adminDeleteUser = async function(userId, email) {
         // Delete from Firebase Auth using Cloud Function
         try {
             const deleteAuthUser = functions.httpsCallable('deleteAuthUser');
-            const result = await deleteAuthUser({ uid: userId });
+            const result = await deleteAuthUser({ email: email });
         } catch (authError) {
             console.warn('[Admin] Could not delete Auth user (Cloud Function may not be deployed):', authError.message);
             // Continue - Firestore deletion was successful
@@ -2004,6 +2004,52 @@ window.batchSyncOwnerProfiles = async function() {
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<span>🔄</span> Sync All Users';
+    }
+};
+
+// ==================== ADMIN EDIT DISPLAY NAME ====================
+/**
+ * Allow admin to edit a user's display name
+ * Opens inline edit or prompt for new name
+ */
+window.adminEditDisplayName = async function(userId, email, currentName) {
+    const newName = prompt(`Edit display name for ${email}:`, currentName);
+    
+    if (newName === null) return; // Cancelled
+    
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+        alert('Display name cannot be empty.');
+        return;
+    }
+    
+    if (trimmedName === currentName) {
+        return; // No change
+    }
+    
+    try {
+        // Update user document
+        await updateAdminUserField(userId, email, 'username', trimmedName);
+        
+        // Update the display in the admin panel
+        const displayNameEl = document.getElementById(`displayName_${userId}`);
+        if (displayNameEl) {
+            displayNameEl.textContent = trimmedName;
+        }
+        
+        // Sync to all vehicles owned by this user
+        await syncOwnerProfileToProperties(email, trimmedName, null);
+        
+        // Refresh the admin users list to ensure everything is synced
+        if (typeof loadAllUsers === 'function') {
+            loadAllUsers();
+        }
+        
+        alert(`✅ Display name updated to "${trimmedName}" and synced across all vehicles!`);
+        
+    } catch (error) {
+        console.error('[AdminEditDisplayName] Error:', error);
+        alert('Error updating display name: ' + error.message);
     }
 };
 

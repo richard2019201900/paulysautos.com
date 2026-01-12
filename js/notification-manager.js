@@ -521,6 +521,17 @@
         const mobileAdminTotal = counts.user + counts.listing + counts.photo + counts.premium;
         updateBadge('mobileAdminBadge', 'mobileAdminCount', mobileAdminTotal);
         updateBadge('mobileRentBadge', 'mobileRentCount', counts.rent);
+        
+        // Navbar notification dot (shows when any admin notification exists)
+        const navDot = document.getElementById('navNotificationDot');
+        if (navDot) {
+            const totalAdminNotifs = counts.user + counts.listing + counts.photo + counts.premium;
+            if (totalAdminNotifs > 0) {
+                navDot.classList.remove('hidden');
+            } else {
+                navDot.classList.add('hidden');
+            }
+        }
     }
     
     function updateBadge(badgeId, countId, count) {

@@ -1081,10 +1081,13 @@ window.startAdminUsersListener = function() {
             
             // Show notifications for MISSED users (created while away or pending from last session)
             if (isFirstSnapshot && missedUsers.length > 0) {
-                // Show notification for each missed user (no flash for these)
-                missedUsers.forEach(user => {
-                    showNewUserNotification(user, true); // true = missed (not real-time)
-                });
+                // Skip if NotificationManager is handling notifications (prevents duplicates)
+                if (!window.NotificationManager?.state?.initialized) {
+                    // Show notification for each missed user (no flash for these)
+                    missedUsers.forEach(user => {
+                        showNewUserNotification(user, true); // true = missed (not real-time)
+                    });
+                }
             }
             
             // Show notifications for REAL-TIME new users
@@ -1092,10 +1095,13 @@ window.startAdminUsersListener = function() {
                 // Flash screen for real-time only
                 flashScreen();
                 
-                // Show notification for each new user
-                newUsers.forEach(user => {
-                    showNewUserNotification(user, false); // false = real-time
-                });
+                // Skip if NotificationManager is handling notifications (prevents duplicates)
+                if (!window.NotificationManager?.state?.initialized) {
+                    // Show notification for each new user
+                    newUsers.forEach(user => {
+                        showNewUserNotification(user, false); // false = real-time
+                    });
+                }
                 
                 // Refresh the user list and stats
                 const container = $('allUsersList');
@@ -1279,9 +1285,12 @@ window.startSettingsPropertiesListener = function() {
             
             // Show notifications for MISSED listings (on first load only)
             if (isFirstSnapshot && missedListings.length > 0) {
-                missedListings.forEach(listing => {
-                    showNewListingNotification(listing, true);
-                });
+                // Skip if NotificationManager is handling notifications (prevents duplicates)
+                if (!window.NotificationManager?.state?.initialized) {
+                    missedListings.forEach(listing => {
+                        showNewListingNotification(listing, true);
+                    });
+                }
                 updateNotificationBadge();
             }
             
@@ -1297,11 +1306,14 @@ window.startSettingsPropertiesListener = function() {
                     // Flash screen green!
                     flashScreen('green');
                     
-                    // Show notification for each
-                    otherUsersListings.forEach(listing => {
-                        showNewListingNotification(listing, false);
-                        logAdminActivity('new_listing', listing);
-                    });
+                    // Skip if NotificationManager is handling notifications (prevents duplicates)
+                    if (!window.NotificationManager?.state?.initialized) {
+                        // Show notification for each
+                        otherUsersListings.forEach(listing => {
+                            showNewListingNotification(listing, false);
+                            logAdminActivity('new_listing', listing);
+                        });
+                    }
                     
                     // Refresh admin panel
                     if (window.adminUsersData && window.adminUsersData.length > 0) {
@@ -1937,6 +1949,11 @@ window.showNewPhotoNotifications = function(event) {
 
 // Re-render all pending notifications that might not be showing
 window.reRenderPendingNotifications = function() {
+    // Skip if NotificationManager is handling notifications (prevents duplicates and re-appearing)
+    if (window.NotificationManager?.state?.initialized) {
+        return;
+    }
+    
     const stack = $('adminNotificationsStack');
     if (!stack) return;
     // Go through all pending notifications and re-render any that aren't showing
@@ -2993,7 +3010,9 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                             <span class="text-xl">${tierData.icon}</span>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-white font-bold">${displayName}</span>
+                                    <span id="displayName_${escapedId}" class="text-white font-bold">${displayName}</span>
+                                    <button onclick="event.stopPropagation(); adminEditDisplayName('${escapedId}', '${escapedEmail}', '${displayName.replace(/'/g, "\\\\'")}')" 
+                                            class="text-gray-500 hover:text-cyan-400 text-xs transition" title="Edit display name">✏️</button>
                                     ${pendingBadge}
                                 </div>
                                 <div class="text-gray-500 text-xs truncate">${user.email}</div>
