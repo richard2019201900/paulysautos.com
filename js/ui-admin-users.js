@@ -225,7 +225,7 @@ window.openSubscriptionReminderModal = function(userId, email, displayName, tier
     
     // Create modal HTML with larger text areas
     const modalHTML = `
-        <div id="subscriptionReminderModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="if(event.target === this) closeModal('subscriptionReminderModal')">
+        <div id="subscriptionReminderModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
             <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto border ${reminderBg}">
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-4">
@@ -1183,8 +1183,11 @@ function showUpgradeModal(email, newTier, currentTier, tierData, price) {
     
     // Create modal overlay
     const modalHTML = `
-        <div id="upgradeModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="if(event.target.id === 'upgradeModal') closeUpgradeModal()">
-            <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-700" onclick="event.stopPropagation()">
+        <div id="upgradeModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-700 relative" onclick="event.stopPropagation()">
+                <button onclick="closeUpgradeModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <h3 class="text-xl font-bold text-white mb-4">⬆️ Upgrade User</h3>
                 
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
@@ -1653,8 +1656,11 @@ window.recordPremiumPayment = function(vehicleId, ownerEmail) {
     const vehicleTitle = prop?.title || `Vehicle #${vehicleId}`;
     
     const modalHTML = `
-        <div id="premiumPaymentModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="if(event.target.id === 'premiumPaymentModal') closePremiumPaymentModal()">
-            <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-green-600/50" onclick="event.stopPropagation()">
+        <div id="premiumPaymentModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-green-600/50 relative" onclick="event.stopPropagation()">
+                <button onclick="closePremiumPaymentModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <h3 class="text-xl font-bold text-green-400 mb-4 flex items-center gap-2">💰 Record Premium Payment</h3>
                 
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">

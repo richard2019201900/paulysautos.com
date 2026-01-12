@@ -4,6 +4,28 @@
 // Uses Cloud Functions for secure data access (no email exposure)
 // ============================================================
 
+// Refresh the leaderboard (clears cached data and re-renders)
+window.refreshLeaderboard = async function() {
+    const btn = $('leaderboardRefreshBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refreshing...';
+    }
+    
+    // Clear expanded profiles so they collapse
+    window.expandedLeaderboardProfiles = {};
+    
+    // Re-render
+    await renderLeaderboardPage();
+    
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh';
+    }
+    
+    showToast('✅ Leaderboard refreshed!', 'success');
+};
+
 // Render the leaderboard page using Cloud Function (secure - no emails exposed)
 window.renderLeaderboardPage = async function() {
     const listContainer = $('leaderboardList');
@@ -138,8 +160,8 @@ window.renderLeaderboardPage = async function() {
                                     <div class="space-y-2 text-sm">
                                         ${xpBreakdown.length > 0 ? xpBreakdown.map(cat => `
                                             <div class="flex justify-between">
-                                                <span class="text-gray-400">${cat.name}</span>
-                                                <span class="text-amber-400 font-medium">+${(cat.xp || 0).toLocaleString()} XP</span>
+                                                <span class="text-gray-400">${cat.category}</span>
+                                                <span class="text-amber-400 font-medium">${cat.amount >= 0 ? '+' : ''}${(cat.amount || 0).toLocaleString()} XP</span>
                                             </div>
                                         `).join('') : '<div class="text-gray-500 italic">No activities recorded</div>'}
                                     </div>
@@ -154,7 +176,7 @@ window.renderLeaderboardPage = async function() {
                                 </h4>
                                 <div class="space-y-2 text-sm max-h-64 overflow-y-auto">
                                     ${recentActivities.length > 0 ? recentActivities.map((act, idx) => {
-                                        const actXp = act.xp || 0;
+                                        const actXp = act.amount || act.xp || 0;
                                         const actReason = act.reason || 'Activity';
                                         const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
                                         const deleteBtn = isAdmin ? `<button onclick="event.stopPropagation(); deleteActivityEntry('${odbc}', ${idx})" class="text-red-400 hover:text-red-300 text-xs ml-2" title="Delete this entry">🗑️</button>` : '';
@@ -162,7 +184,7 @@ window.renderLeaderboardPage = async function() {
                                             <div class="flex justify-between items-start py-1 border-b border-gray-700/50">
                                                 <div class="flex-1">
                                                     <span class="text-white">${escapeHtmlSafe(actReason)}</span>
-                                                    <span class="text-amber-400 ml-2">+${actXp.toLocaleString()}</span>
+                                                    <span class="text-amber-400 ml-2">${actXp >= 0 ? '+' : ''}${actXp.toLocaleString()}</span>
                                                     ${deleteBtn}
                                                 </div>
                                                 <span class="text-gray-500 text-xs">${formatActivityTime(act.timestamp)}</span>
@@ -281,7 +303,7 @@ function calculateXPBreakdown(activityLog) {
             category = '💰 Payments';
         } else if (reason.includes('listing') || reason.includes('vehicle') || reason.includes('created')) {
             category = '🏠 Listings';
-        } else if (reason.includes('profile') || reason.includes('username')) {
+        } else if (reason.includes('profile') || reason.includes('username') || reason.includes('phone')) {
             category = '👤 Profile';
         } else if (reason.includes('premium')) {
             category = '👑 Premium';
@@ -289,9 +311,13 @@ function calculateXPBreakdown(activityLog) {
             category = '🤝 Transactions';
         } else if (reason.includes('level')) {
             category = '⭐ Achievements';
+        } else if (reason.includes('welcome') || reason.includes('signup') || reason.includes('account')) {
+            category = '🎉 Welcome';
         }
         
-        categories[category] = (categories[category] || 0) + (act.amount || 0);
+        // Support both act.amount and act.xp for backwards compatibility
+        const xpValue = act.amount ?? act.xp ?? 0;
+        categories[category] = (categories[category] || 0) + xpValue;
     });
     
     // Convert to array and sort by absolute value

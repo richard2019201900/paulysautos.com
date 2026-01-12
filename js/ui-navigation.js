@@ -307,7 +307,7 @@ window.renderBlogPage = function() {
                 <ul class="list-disc list-inside space-y-1 text-gray-300 mb-4">
                     <li>Click "Register / Sign In" in the top right</li>
                     <li>Create a free Starter account (1 listing included)</li>
-                    <li>Upgrade to Pro ($25k/mo) for 3 listings or Elite ($50k/mo) for unlimited</li>
+                    <li>Upgrade to Elite ($50k/mo) for unlimited listings</li>
                     <li>Start listing your vehicles!</li>
                 </ul>
                 
@@ -495,8 +495,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         xp: 100,
                         level: 1,
                         activityLog: [{
-                            type: 'signup',
-                            xp: 100,
+                            type: 'xp_gain',
+                            amount: 100,
                             reason: 'Welcome to PaulysAutos!',
                             timestamp: new Date().toISOString()
                         }],
@@ -709,6 +709,31 @@ window.backToDashboard = function() {
     showElement($('ownerDashboard'));
     window.scrollTo(0, 0);
 };
+
+// Site Switcher Dropdown Toggle
+window.toggleSiteSwitcher = function() {
+    const dropdown = $('siteSwitcherDropdown');
+    const arrow = $('siteSwitcherArrow');
+    
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+        if (arrow) {
+            arrow.classList.toggle('rotate-180');
+        }
+    }
+};
+
+// Close site switcher when clicking outside
+document.addEventListener('click', function(e) {
+    const container = $('siteSwitcherContainer');
+    const dropdown = $('siteSwitcherDropdown');
+    
+    if (container && dropdown && !container.contains(e.target)) {
+        dropdown.classList.add('hidden');
+        const arrow = $('siteSwitcherArrow');
+        if (arrow) arrow.classList.remove('rotate-180');
+    }
+});
 
 window.goHome = function() {
     // Block navigation if profile is incomplete

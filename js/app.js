@@ -1307,6 +1307,7 @@ window.startEditTile = function(field, vehicleId, type) {
         inputHtml = `
             <select id="input-${field}-${vehicleId}" class="stat-input text-lg w-full">
                 <option value="Two" ${currentValue === 'Two' ? 'selected' : ''}>Two</option>
+                <option value="Three" ${currentValue === 'Three' ? 'selected' : ''}>Three</option>
                 <option value="Four" ${currentValue === 'Four' ? 'selected' : ''}>Four</option>
                 <option value="Five" ${currentValue === 'Five' ? 'selected' : ''}>Five</option>
                 <option value="Six" ${currentValue === 'Six' ? 'selected' : ''}>Six</option>
@@ -1869,14 +1870,17 @@ window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
                 <div class="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-4">
                     <div class="flex items-center gap-2 text-red-300">
                         <span class="text-xl">⚠️</span>
-                        <p class="text-sm"><strong>Weekly payment required</strong> - Pauly will contact you in-city to collect $10k payment</p>
+                        <p class="text-sm"><strong>Weekly payment required</strong> - Please contact Pauly ASAP in-city to send the $10k payment</p>
                     </div>
                 </div>
     ` : '';
     
     const modalHTML = `
-        <div id="premiumEnableModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="if(event.target.id === 'premiumEnableModal') closePremiumEnableModal()">
-            <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-amber-700/50" onclick="event.stopPropagation()">
+        <div id="premiumEnableModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-amber-700/50 relative" onclick="event.stopPropagation()">
+                <button onclick="closePremiumEnableModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <h3 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">👑 Enable Premium Listing</h3>
                 
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
@@ -2115,8 +2119,11 @@ window.showPaymentConfirmationModal = function(buyerName, nextDueDate, amount, r
     
     // Create modal HTML
     const modalHTML = `
-        <div id="paymentConfirmModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closePaymentConfirmModal()">
-            <div class="bg-gray-900 rounded-2xl max-w-lg w-full p-6 border border-green-500/30 shadow-2xl" onclick="event.stopPropagation()">
+        <div id="paymentConfirmModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-900 rounded-2xl max-w-lg w-full p-6 border border-green-500/30 shadow-2xl relative" onclick="event.stopPropagation()">
+                <button onclick="closePaymentConfirmModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <div class="text-center mb-4">
                     <div class="text-5xl mb-3">✅</div>
                     <h3 class="text-2xl font-bold text-green-400">${rtoInfo && rtoInfo.isDeposit ? 'Deposit Received!' : 'Payment Logged!'}</h3>
@@ -3560,9 +3567,33 @@ window.forceLogout = function() {
     // Sign out and go to home page as guest
     auth.signOut().then(() => {
         showDeletedAccountToast();
+        // Restart vehicle sync for guest viewing
+        if (typeof startVehicleSyncListener === 'function') {
+            // Reset the loaded flag to force a fresh load
+            window._publicVehiclesLoaded = false;
+            startVehicleSyncListener();
+        }
+        // Apply filters and render vehicles
+        if (typeof applyAllFilters === 'function') {
+            setTimeout(() => applyAllFilters(), 500);
+        } else if (typeof renderVehicles === 'function') {
+            setTimeout(() => renderVehicles(vehicles), 500);
+        }
         goHome();
     }).catch(() => {
         showDeletedAccountToast();
+        // Restart vehicle sync for guest viewing
+        if (typeof startVehicleSyncListener === 'function') {
+            // Reset the loaded flag to force a fresh load
+            window._publicVehiclesLoaded = false;
+            startVehicleSyncListener();
+        }
+        // Apply filters and render vehicles
+        if (typeof applyAllFilters === 'function') {
+            setTimeout(() => applyAllFilters(), 500);
+        } else if (typeof renderVehicles === 'function') {
+            setTimeout(() => renderVehicles(vehicles), 500);
+        }
         goHome();
     });
 };
@@ -3647,6 +3678,11 @@ window.startUserTierListener = function() {
                     // Update UI to reflect tier change
                     if (typeof updateTierBadge === 'function') {
                         updateTierBadge(newTier, user.email);
+                    }
+                    
+                    // Update navbar tier display
+                    if (typeof updateNavUserDisplay === 'function') {
+                        updateNavUserDisplay();
                     }
                     
                     // Refresh dashboard if visible
@@ -3811,8 +3847,11 @@ window.showCompleteSaleModal = async function(vehicleId) {
     const tenureSummary = await calculateTenureSummary(vehicleId, buyerName);
     
     const modalHTML = `
-        <div id="completeSaleModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeCompleteSaleModal()">
-            <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-orange-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+        <div id="completeSaleModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-orange-500/50 shadow-2xl overflow-hidden relative" onclick="event.stopPropagation()">
+                <button onclick="closeCompleteSaleModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition z-10" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
@@ -3986,8 +4025,11 @@ window.showRepossessionModal = async function(vehicleId) {
     const repossessionMessage = `Hey ${buyerName}, thank you for your business. Unfortunately, due to non-payment your vehicle financing agreement has been terminated and the vehicle has been repossessed. If you have any questions or believe this was done in error, please contact me.`;
     
     const modalHTML = `
-        <div id="repossessionModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeRepossessionModal()">
-            <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-red-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+        <div id="repossessionModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-red-500/50 shadow-2xl overflow-hidden relative" onclick="event.stopPropagation()">
+                <button onclick="closeRepossessionModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition z-10" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
@@ -4599,8 +4641,11 @@ window.showSaleCompletionMessage = function(buyerName, vehicleTitle, totalCollec
     const thankYouMessage = `Hey ${buyerName}, congratulations on completing your financing plan for ${vehicleTitle}! 🎉 It was a pleasure working with you. Your total payments of $${totalCollected.toLocaleString()} have all been recorded. The vehicle is now fully yours! If you're ever looking to buy or sell another vehicle, hit me up anytime! 🚗`;
     
     const modalHTML = `
-        <div id="saleCompletionMessageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeSaleCompletionMessageModal()">
-            <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-green-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+        <div id="saleCompletionMessageModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-900 rounded-2xl max-w-lg w-full border border-green-500/50 shadow-2xl overflow-hidden relative" onclick="event.stopPropagation()">
+                <button onclick="closeSaleCompletionMessageModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition z-10" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
@@ -6260,8 +6305,11 @@ window.viewRTOContract = async function(contractId) {
         
         // Show contract in a modal
         const modalHTML = `
-            <div id="viewContractModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) this.remove()">
-                <div class="bg-gray-900 rounded-2xl max-w-3xl w-full border border-cyan-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+            <div id="viewContractModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                <div class="bg-gray-900 rounded-2xl max-w-3xl w-full border border-cyan-500/50 shadow-2xl overflow-hidden relative" onclick="event.stopPropagation()">
+                    <button onclick="document.getElementById('viewContractModal').remove()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition z-10" title="Close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                     <div class="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
                         <h3 class="text-xl font-bold text-white flex items-center gap-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -6336,8 +6384,11 @@ window.confirmDeleteRTOContract = function(vehicleId, contractId) {
     }
     
     const modalHTML = `
-        <div id="deleteRTOConfirmModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) this.remove()">
-            <div class="bg-gray-900 rounded-2xl max-w-md w-full border border-red-500/50 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+        <div id="deleteRTOConfirmModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-900 rounded-2xl max-w-md w-full border border-red-500/50 shadow-2xl overflow-hidden relative" onclick="event.stopPropagation()">
+                <button onclick="document.getElementById('deleteRTOConfirmModal').remove()" class="absolute top-3 right-3 w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition z-10" title="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
                 <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>

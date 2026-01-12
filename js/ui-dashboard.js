@@ -436,6 +436,57 @@ function updateDashboardTiles(totals) {
     if (salesRevCountEl) salesRevCountEl.textContent = soldCount > 0 
         ? `From ${soldCount} completed sale${soldCount > 1 ? 's' : ''}` 
         : 'No sales yet';
+    
+    // === TILE FLIP BREAKDOWNS ===
+    
+    // Total Sales breakdown (dailyBreakdown)
+    const dailyBreakdownEl = $('dailyBreakdown');
+    if (dailyBreakdownEl) {
+        dailyBreakdownEl.innerHTML = renderHouseSalesBreakdown(data.soldVehicles || []);
+    }
+    
+    // Active Listings breakdown (weeklyBreakdown)
+    const weeklyBreakdownEl = $('weeklyBreakdown');
+    if (weeklyBreakdownEl) {
+        weeklyBreakdownEl.innerHTML = renderActiveBuyersBreakdown(data.activeListings || [], 'active');
+    }
+    
+    // Pending Contracts breakdown (biweeklyBreakdown)
+    const biweeklyBreakdownEl = $('biweeklyBreakdown');
+    if (biweeklyBreakdownEl) {
+        biweeklyBreakdownEl.innerHTML = renderActiveBuyersBreakdown(data.pendingContracts || [], 'pending');
+    }
+    
+    // Sold Vehicles breakdown (monthlyBreakdown)
+    const monthlyBreakdownEl = $('monthlyBreakdown');
+    if (monthlyBreakdownEl) {
+        monthlyBreakdownEl.innerHTML = renderHouseSalesBreakdown(data.soldVehicles || []);
+    }
+    
+    // Portfolio breakdown (totalSalesIncomeBreakdown)
+    const totalSalesBreakdownEl = $('totalSalesIncomeBreakdown');
+    if (totalSalesBreakdownEl) {
+        totalSalesBreakdownEl.innerHTML = renderTotalIncomeBreakdown(portfolioValue, 0, data);
+    }
+    
+    // All Vehicles breakdown (totalListingsBreakdown)
+    const totalListingsBreakdownEl = $('totalListingsBreakdown');
+    if (totalListingsBreakdownEl) {
+        const allVehicles = [...(data.activeListings || []), ...(data.soldVehicles || [])];
+        totalListingsBreakdownEl.innerHTML = renderAllPropertiesListNew(allVehicles);
+    }
+    
+    // Premium Listings breakdown (rtoIncomeBreakdown)
+    const rtoBreakdownEl = $('rtoIncomeBreakdown');
+    if (rtoBreakdownEl) {
+        rtoBreakdownEl.innerHTML = renderActiveBuyersBreakdown(data.premiumListings || [], 'premium');
+    }
+    
+    // Sales Revenue breakdown (houseSalesBreakdown)
+    const houseSalesBreakdownEl = $('houseSalesBreakdown');
+    if (houseSalesBreakdownEl) {
+        houseSalesBreakdownEl.innerHTML = renderHouseSalesBreakdown(data.soldVehicles || []);
+    }
 }
 
 // Render vehicle sales breakdown for tile flip (backwards compat with old function name)
