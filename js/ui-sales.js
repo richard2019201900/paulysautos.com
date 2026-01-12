@@ -261,9 +261,19 @@ async function populateSellerDropdown(vehicleId, defaultOwnerEmail) {
         usersSnapshot.forEach(doc => {
             const data = doc.data();
             if (data.email) {
+                // Build display name: prefer firstName + lastName, then displayName, then username
+                let displayName;
+                if (data.firstName && data.lastName) {
+                    displayName = data.firstName + ' ' + data.lastName;
+                } else if (data.displayName) {
+                    displayName = data.displayName;
+                } else {
+                    displayName = data.username || data.email.split('@')[0];
+                }
+                
                 owners.push({
                     email: data.email,
-                    displayName: data.displayName || data.username || data.email.split('@')[0],
+                    displayName: displayName,
                     uid: doc.id
                 });
             }
@@ -316,8 +326,26 @@ window.submitVehicleSale = async function(vehicleId, saleType, financingContract
         sellerUid = selectedOption?.dataset?.uid || null;
     } else {
         sellerEmail = auth.currentUser?.email || '';
-        sellerDisplayName = window.currentUserData?.displayName || sellerEmail.split('@')[0];
         sellerUid = auth.currentUser?.uid || null;
+        
+        // Get display name from Firestore (prefer firstName + lastName)
+        try {
+            const userDoc = await db.collection('users').doc(sellerUid).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                if (userData.firstName && userData.lastName) {
+                    sellerDisplayName = userData.firstName + ' ' + userData.lastName;
+                } else if (userData.displayName) {
+                    sellerDisplayName = userData.displayName;
+                } else {
+                    sellerDisplayName = userData.username || sellerEmail.split('@')[0];
+                }
+            } else {
+                sellerDisplayName = sellerEmail.split('@')[0];
+            }
+        } catch (e) {
+            sellerDisplayName = window.currentUserData?.displayName || sellerEmail.split('@')[0];
+        }
     }
     
     if (salePrice <= 0) {

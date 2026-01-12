@@ -781,6 +781,13 @@ window.navigateTo = function(section) {
         return;
     }
     
+    // Handle home - scroll to absolute top of page
+    if (section === 'home') {
+        showElement($('browseSection'));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+    
     showElement($('browseSection'));
     
     // If vehicles array is empty, try to reload

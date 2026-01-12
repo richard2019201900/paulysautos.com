@@ -1040,9 +1040,9 @@ async function renderVehicles(list) {
                     <h4 class="text-xl md:text-2xl font-bold ${isPremium ? 'text-amber-300' : 'text-white'} min-h-[1.75rem] line-clamp-1">${sanitize(p.title)}</h4>
                     <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shrink-0 shadow-lg border border-amber-400/50">${VehicleDataService.getValue(p.id, 'type', p.type) || 'OTHER'}</span>
                 </div>
-                <div class="flex items-center gap-3 text-sm mb-3">
-                    <span class="text-gray-400">🔖</span>
-                    <span class="text-white font-semibold">${VehicleDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span>
+                <div class="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                    <span>🚗</span>
+                    <span class="text-gray-300">${VehicleDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span>
                 </div>
                 <p id="owner-${p.id}" class="text-xs text-blue-400 mb-3 font-semibold">👤 Owner: Loading...</p>
                 
