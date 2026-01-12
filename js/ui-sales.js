@@ -187,11 +187,11 @@ window.showLogSaleModal = function(vehicleId, financingContractId = null) {
                     </div>
                     
                     <div>
-                        <label class="block text-gray-400 text-sm mb-2">PMA Sales Fee (10%):</label>
+                        <label class="block text-gray-400 text-sm mb-2">City Sales Fee:</label>
                         <div id="salesFeeDisplay" class="bg-gray-800 rounded-xl py-3 px-4 text-amber-400 font-bold">
-                            $${Math.round(buyPrice * 0.10).toLocaleString()}
+                            $25,000
                         </div>
-                        <p class="text-gray-500 text-xs mt-1">Auto-calculated from sale price</p>
+                        <p class="text-gray-500 text-xs mt-1">Flat city tax paid at LUX</p>
                     </div>
                     
                     <div>
@@ -842,18 +842,36 @@ window.showStartSaleModal = function(vehicleId) {
     }
     
     const buyPrice = VehicleDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
-    const breakdown = calculateSaleBreakdown(buyPrice);
     
     // Set form values
     document.getElementById('saleVehicleId').value = numericId;
     document.getElementById('saleBuyerName').value = '';
     document.getElementById('saleBuyerPhone').value = '';
+    document.getElementById('salePriceEdit').value = buyPrice;
     document.getElementById('saleAgreementDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('saleNotes').value = '';
     document.getElementById('saleAcknowledge').checked = false;
     
-    // Populate payment breakdown
+    // Update breakdown with initial price
+    updateSaleBreakdown();
+    
+    openModal('startSaleModal');
+};
+
+/**
+ * Update the payment breakdown when sale price changes
+ */
+window.updateSaleBreakdown = function() {
+    const priceInput = document.getElementById('salePriceEdit');
+    const vehicleId = document.getElementById('saleVehicleId').value;
+    const price = parseInt(priceInput?.value) || 0;
+    
+    const breakdown = calculateSaleBreakdown(price);
+    
+    // Update the breakdown display
     const breakdownEl = document.getElementById('salePaymentBreakdown');
+    if (!breakdownEl) return;
+    
     if (breakdown.needsDownPayment) {
         breakdownEl.innerHTML = `
             <h4 class="text-white font-bold mb-3 flex items-center gap-2">
@@ -899,7 +917,16 @@ window.showStartSaleModal = function(vehicleId) {
         `;
     }
     
-    openModal('startSaleModal');
+    // Also update the vehicle's buy price in the background if changed significantly
+    if (vehicleId && price > 0) {
+        const numericId = parseInt(vehicleId);
+        const p = vehicles.find(v => v.id === numericId);
+        if (p) {
+            const originalPrice = VehicleDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
+            // Store the negotiated price for contract generation
+            window._negotiatedSalePrice = price;
+        }
+    }
 };
 
 /**
@@ -1022,6 +1049,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const vehicleId = parseInt(document.getElementById('saleVehicleId').value);
             const buyerName = document.getElementById('saleBuyerName').value.trim();
             const buyerPhone = document.getElementById('saleBuyerPhone').value.trim();
+            const salePrice = parseInt(document.getElementById('salePriceEdit').value) || 0;
             const agreementDate = document.getElementById('saleAgreementDate').value;
             const notes = document.getElementById('saleNotes').value.trim();
             const acknowledged = document.getElementById('saleAcknowledge').checked;
@@ -1031,14 +1059,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            if (!salePrice || salePrice <= 0) {
+                showToast('Please enter a valid sale price', 'error');
+                return;
+            }
+            
             const p = vehicles.find(prop => prop.id === vehicleId);
             if (!p) {
                 showToast('Vehicle not found', 'error');
                 return;
             }
             
-            const buyPrice = VehicleDataService.getValue(vehicleId, 'buyPrice', p.buyPrice || 0);
-            const breakdown = calculateSaleBreakdown(buyPrice);
+            // Use the negotiated sale price from the form
+            const breakdown = calculateSaleBreakdown(salePrice);
             const contractId = generateContractId();
             
             // Get seller info
@@ -1055,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('[Sale] Could not fetch seller name');
             }
             
-            // Create contract data
+            // Create contract data with negotiated price
             const contractData = {
                 contractId,
                 vehicleId,
@@ -1066,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sellerEmail: p.ownerEmail,
                 buyerName,
                 buyerPhone,
-                vehiclePrice: buyPrice,
+                vehiclePrice: salePrice,
                 downPayment: breakdown.downPayment,
                 luxTransaction: breakdown.luxTransaction,
                 cityFee: breakdown.cityFee,
@@ -1093,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await db.collection('saleContracts').doc(contractId).set(contractData);
                 
                 // Update vehicle with pending sale
-                await VehicleDataService.setValue(vehicleId, 'pendingSale', pendingSaleData);
+                await VehicleDataService.write(vehicleId, 'pendingSale', pendingSaleData);
                 
                 showToast('✅ Sale contract generated!', 'success');
                 closeModal('startSaleModal');
@@ -1212,7 +1245,7 @@ window.confirmDownPaymentReceived = async function(vehicleId) {
         pendingSale.downPaymentReceived = true;
         pendingSale.downPaymentReceivedAt = new Date().toISOString();
         
-        await VehicleDataService.setValue(vehicleId, 'pendingSale', pendingSale);
+        await VehicleDataService.write(vehicleId, 'pendingSale', pendingSale);
         
         // Update contract in Firestore
         if (pendingSale.contractId) {
@@ -1264,7 +1297,7 @@ window.cancelPendingSale = async function(vehicleId) {
         }
         
         // Remove pending sale from vehicle
-        await VehicleDataService.setValue(vehicleId, 'pendingSale', null);
+        await VehicleDataService.write(vehicleId, 'pendingSale', null);
         
         showToast('✅ Sale cancelled', 'success');
         

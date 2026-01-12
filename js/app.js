@@ -945,7 +945,7 @@ function renderVehicleStatsContent(id) {
                                 </h4>
                                 <p class="text-gray-400 text-sm mt-1">Generate contract & track down payment</p>
                             </div>
-                            <button onclick="showStartSaleModal(${id})" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg">
+                            <button onclick="showStartSaleModal(${id})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold text-sm transition flex items-center gap-2 whitespace-nowrap shadow-lg border-2 border-emerald-400">
                                 <span>📄</span>
                                 Start Sale
                             </button>
