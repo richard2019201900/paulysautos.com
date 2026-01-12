@@ -954,8 +954,8 @@
                                 <circle cx="78" cy="80" r="4" fill="url(#logoGradientNav)"/>
                             </svg>
                         </div>
-                        <div class="hidden xl:flex items-center gap-2">
-                            <h1 class="text-lg font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent tracking-tight whitespace-nowrap">PaulysAutos.com</h1>
+                        <div class="hidden sm:flex items-center gap-2">
+                            <h1 class="text-base md:text-lg font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent tracking-tight whitespace-nowrap">PaulysAutos.com</h1>
                             <svg class="w-4 h-4 text-amber-400 transition-transform" id="siteSwitcherArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </button>
@@ -967,7 +967,15 @@
                             
                             <!-- Current Site (PaulysAutos) -->
                             <div class="flex items-center gap-3 px-3 py-2 bg-amber-500/20 rounded-lg border border-amber-500/30 mb-1">
-                                <span class="text-xl">🚗</span>
+                                <div class="w-8 h-8 flex-shrink-0">
+                                    <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a" stroke="#D4AF37" stroke-width="3"/>
+                                        <path d="M30 70 L35 55 L45 45 L75 45 L85 55 L90 70 L90 80 L30 80 Z" fill="#D4AF37" />
+                                        <path d="M42 55 L50 47 L70 47 L78 55 Z" fill="#1a1a1a" />
+                                        <circle cx="42" cy="80" r="10" fill="#333" stroke="#D4AF37" stroke-width="2"/>
+                                        <circle cx="78" cy="80" r="10" fill="#333" stroke="#D4AF37" stroke-width="2"/>
+                                    </svg>
+                                </div>
                                 <div>
                                     <div class="text-amber-400 font-bold text-sm">PaulysAutos.com</div>
                                     <div class="text-gray-500 text-xs">Vehicle Marketplace</div>
@@ -975,14 +983,22 @@
                                 <span class="ml-auto text-amber-400 text-xs">✓ Current</span>
                             </div>
                             
-                            <!-- Link to PaulysProperties -->
-                            <a href="https://paulysproperties.com" target="_blank" class="flex items-center gap-3 px-3 py-2 hover:bg-gray-700/50 rounded-lg transition cursor-pointer group">
-                                <span class="text-xl">🏠</span>
+                            <!-- Link to PaulysProperties (same window) -->
+                            <a href="https://paulysproperties.com" class="flex items-center gap-3 px-3 py-2 hover:bg-gray-700/50 rounded-lg transition cursor-pointer group">
+                                <div class="w-8 h-8 flex-shrink-0">
+                                    <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a" stroke="#8B5CF6" stroke-width="3"/>
+                                        <path d="M60 25 L95 55 L95 95 L25 95 L25 55 Z" fill="#8B5CF6" />
+                                        <rect x="45" y="60" width="30" height="35" fill="#1a1a1a" />
+                                        <rect x="35" y="40" width="15" height="12" fill="#1a1a1a" />
+                                        <rect x="70" y="40" width="15" height="12" fill="#1a1a1a" />
+                                    </svg>
+                                </div>
                                 <div>
                                     <div class="text-white font-bold text-sm group-hover:text-purple-400 transition">PaulysProperties.com</div>
                                     <div class="text-gray-500 text-xs">Property Rentals</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 ml-auto group-hover:text-purple-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                <svg class="w-4 h-4 text-gray-500 ml-auto group-hover:text-purple-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                             </a>
                         </div>
                     </div>

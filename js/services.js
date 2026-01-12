@@ -800,6 +800,19 @@ window.toggleAvailability = async function(id) {
         const buyerName = VehicleDataService.getValue(id, 'buyerName', '');
         const buyerPhone = VehicleDataService.getValue(id, 'buyerPhone', '');
         const lastPaymentDate = VehicleDataService.getValue(id, 'lastPaymentDate', '');
+        const isSold = VehicleDataService.getValue(id, 'isSold', false);
+        
+        // If vehicle has a sale record (isSold flag), offer to reverse the sale
+        if (isSold) {
+            const confirmReverse = confirm('⚠️ This vehicle has a recorded sale.\n\nWould you like to reverse the sale?\n\nThis will:\n• Clear the SOLD status\n• Remove sale record from database\n• Deduct XP from the seller (if applicable)\n\nClick OK to reverse, or Cancel to keep as sold.');
+            
+            if (confirmReverse) {
+                await reverseSaleFromStats(id);
+                return;
+            } else {
+                return;
+            }
+        }
         
         if (buyerName || buyerPhone || lastPaymentDate) {
             let message = '⚠️ Cannot mark as Available\n\nThis vehicle has buyer/payment information set:\n';
@@ -826,6 +839,141 @@ window.toggleAvailability = async function(id) {
             status.textContent = 'Real-time sync enabled';
             status.className = 'text-green-400 mt-2 font-medium';
         }, 3000);
+    }
+};
+
+/**
+ * Reverse a sale from the Owner Stats page
+ * Works even if there's no sale record in vehicleSales collection
+ */
+window.reverseSaleFromStats = async function(vehicleId) {
+    if (!TierService.isMasterAdmin(auth.currentUser?.email)) {
+        showToast('Only admins can reverse sales', 'error');
+        return;
+    }
+    
+    try {
+        showToast('🗑️ Reversing sale...', 'info');
+        
+        const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+        
+        // Get vehicle data
+        const vehicle = vehicles.find(v => v.id === numericId);
+        const ownerEmail = VehicleDataService.getValue(numericId, 'ownerEmail', vehicle?.ownerEmail);
+        const vehicleTitle = VehicleDataService.getValue(numericId, 'title', vehicle?.title || 'Vehicle');
+        const saleId = VehicleDataService.getValue(numericId, 'saleId', null);
+        const soldTo = VehicleDataService.getValue(numericId, 'soldTo', '');
+        
+        // Try to find the sale record by saleId or by vehicleId
+        let saleDoc = null;
+        let saleData = null;
+        
+        if (saleId) {
+            saleDoc = await db.collection('vehicleSales').doc(saleId).get();
+            if (saleDoc.exists) {
+                saleData = saleDoc.data();
+            }
+        }
+        
+        // If not found by saleId, try to find by vehicleId
+        if (!saleData) {
+            const salesSnapshot = await db.collection('vehicleSales')
+                .where('vehicleId', '==', numericId)
+                .limit(1)
+                .get();
+            
+            if (!salesSnapshot.empty) {
+                saleDoc = salesSnapshot.docs[0];
+                saleData = { id: saleDoc.id, ...saleDoc.data() };
+            }
+        }
+        
+        // If we found a sale record, do the full reversal
+        if (saleData) {
+            const sellerUid = saleData.sellerUid;
+            const sellerDisplayName = saleData.sellerDisplayName || saleData.sellerName;
+            
+            // Deduct XP from seller
+            if (sellerUid && typeof GamificationService !== 'undefined' && GamificationService.deductXP) {
+                await GamificationService.deductXP(sellerUid, 2500, `Sale reversed: ${vehicleTitle}`);
+            }
+            
+            // Remove celebration banner
+            try {
+                const celebDoc = await db.collection('settings').doc('celebrations').get();
+                if (celebDoc.exists) {
+                    let active = celebDoc.data().active || [];
+                    active = active.filter(c => {
+                        if (c.type === 'house_sale' && c.userName === sellerDisplayName && c.message.includes(vehicleTitle)) {
+                            return false;
+                        }
+                        return true;
+                    });
+                    await db.collection('settings').doc('celebrations').set({ active }, { merge: true });
+                }
+            } catch (celebErr) {
+                console.warn('[ReverseSale] Could not update celebrations:', celebErr);
+            }
+            
+            // Delete financing contract if exists
+            if (saleData.financingContractId) {
+                try {
+                    await db.collection('financingContracts').doc(saleData.financingContractId).delete();
+                } catch (rtoErr) {
+                    console.warn('[ReverseSale] Could not delete financing contract:', rtoErr);
+                }
+            }
+            
+            // Delete the sale record
+            await db.collection('vehicleSales').doc(saleDoc.id).delete();
+            
+            // Log the deletion
+            await db.collection('adminLogs').add({
+                action: 'sale_reversed',
+                vehicleId: numericId,
+                vehicleTitle: vehicleTitle,
+                saleData: saleData,
+                reason: 'Reversed from Owner Stats',
+                deletedBy: auth.currentUser?.email,
+                deletedAt: new Date().toISOString()
+            });
+        }
+        
+        // Clear vehicle sold fields
+        const vehicleUpdates = {
+            isSold: false,
+            soldDate: null,
+            soldTo: null,
+            soldPrice: null,
+            saleId: null,
+            buyerName: null,
+            buyerPhone: null,
+            buyerNotes: null,
+            paymentFrequency: null,
+            lastPaymentDate: null,
+            hasActiveFinancing: false,
+            financingContractId: null
+        };
+        
+        await VehicleDataService.writeMultiple(numericId, vehicleUpdates);
+        
+        // Update local state
+        state.availability[numericId] = true;
+        await saveAvailability(numericId, true);
+        
+        showToast('✅ Sale reversed - vehicle is now available', 'success');
+        
+        // Refresh the view
+        if (typeof renderOwnerDashboard === 'function') {
+            renderOwnerDashboard();
+        }
+        if (typeof renderVehicleStatsContent === 'function') {
+            setTimeout(() => renderVehicleStatsContent(numericId), 300);
+        }
+        
+    } catch (error) {
+        console.error('[ReverseSale] Error:', error);
+        showToast('Failed to reverse sale: ' + error.message, 'error');
     }
 };
 

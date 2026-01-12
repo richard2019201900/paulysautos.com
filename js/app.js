@@ -1093,10 +1093,17 @@ function renderVehicleStatsContent(id) {
         <div class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
             <h3 class="text-2xl font-bold text-gray-200 mb-6">⚡ Quick Actions</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                ${isSold ? `
+                <button onclick="reverseSaleFromStats(${id})" class="flex items-center justify-center space-x-3 bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    <span>Reverse Sale</span>
+                </button>
+                ` : `
                 <button onclick="toggleAvailability(${id}); setTimeout(() => renderVehicleStatsContent(${id}), 100);" class="flex items-center justify-center space-x-3 ${isAvailable ? 'bg-gradient-to-r from-red-500 to-pink-600' : 'bg-gradient-to-r from-green-500 to-emerald-600'} text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                     <span>${isAvailable ? 'Mark as Sold' : 'Mark as Available'}</span>
                 </button>
+                `}
                 <button onclick="togglePremiumStatus(${id})" class="flex items-center justify-center space-x-3 ${isPremium ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900' : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-amber-600 hover:to-yellow-600 text-white'} px-6 py-4 rounded-xl font-bold transition shadow-lg">
                     <span class="text-xl">👑</span>
                     <span>${isPremium ? 'Premium Active ($10k)' : 'Enable Premium'}</span>
