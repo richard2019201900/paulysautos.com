@@ -1237,6 +1237,7 @@ window.printSaleContract = function() {
 
 /**
  * Download contract as PNG using canvas (1000x1000 square) - matches PaulysProperties style
+ * Compact layout with cursive signatures and dates
  */
 window.downloadContractAsPNG = async function() {
     const contractId = window.currentSaleContractId;
@@ -1256,262 +1257,293 @@ window.downloadContractAsPNG = async function() {
         const data = doc.data();
         showToast('🖼️ Generating contract image...', 'info');
         
-        // Create canvas - SQUARE format (1000x1000) like PaulysProperties
+        // Load cursive font
+        const cursiveFont = new FontFace('DancingScript', 'url(https://fonts.gstatic.com/s/dancingscript/v25/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7BMSo3Sup6hNX6plRP.woff2)');
+        
+        try {
+            await cursiveFont.load();
+            document.fonts.add(cursiveFont);
+        } catch (fontErr) {
+            console.log('[Contract] Using fallback cursive font');
+        }
+        
+        // Create canvas - SQUARE format (1000x1000)
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const size = 1000;
         canvas.width = size;
         canvas.height = size;
         
-        // Background gradient (matching PaulysProperties dark theme)
+        // Background gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
         gradient.addColorStop(0, '#1a1a2e');
         gradient.addColorStop(1, '#16213e');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        let y = 50;
-        const margin = 60;
+        let y = 35;
+        const margin = 50;
         const contentWidth = canvas.width - (margin * 2);
         const goldColor = '#D4AF37';
         const greenColor = '#4ade80';
         const redColor = '#ef4444';
+        const blueColor = '#60a5fa';
         
-        // Helper functions
-        const drawText = (text, x, fontSize, color, font = 'Arial', align = 'left') => {
-            ctx.font = `${fontSize}px ${font}`;
-            ctx.fillStyle = color;
-            ctx.textAlign = align;
-            ctx.fillText(text, x, y);
-            y += fontSize + 8;
-        };
-        
-        const drawLine = (color = goldColor) => {
+        // Helper: draw horizontal line
+        const drawLine = (color = goldColor, width = 1) => {
             ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = width;
             ctx.beginPath();
             ctx.moveTo(margin, y);
             ctx.lineTo(canvas.width - margin, y);
             ctx.stroke();
-            y += 15;
+            y += 12;
         };
         
         // === HEADER ===
         ctx.textAlign = 'center';
-        ctx.font = 'bold 32px Arial';
+        ctx.font = 'bold 28px Arial';
         ctx.fillStyle = goldColor;
         ctx.fillText('🚗 PAULYSAUTOS.COM', canvas.width / 2, y);
-        y += 40;
-        ctx.font = 'bold 22px Arial';
+        y += 32;
+        ctx.font = 'bold 18px Arial';
         ctx.fillStyle = '#ffffff';
         ctx.fillText('VEHICLE SALE CONTRACT', canvas.width / 2, y);
-        y += 30;
-        ctx.font = '12px Arial';
-        ctx.fillStyle = '#888888';
+        y += 22;
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#666666';
         ctx.fillText(`Contract ID: ${data.contractId}`, canvas.width / 2, y);
-        y += 25;
-        drawLine();
+        y += 18;
+        drawLine(goldColor, 2);
         
-        // === DATE ===
+        // === AGREEMENT DATE ===
         const dateStr = new Date(data.agreementDate).toLocaleDateString('en-US', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
         ctx.textAlign = 'center';
-        ctx.font = '12px Arial';
+        ctx.font = '10px Arial';
         ctx.fillStyle = '#888888';
         ctx.fillText('Agreement Date', canvas.width / 2, y);
-        y += 18;
-        ctx.font = 'bold 16px Arial';
+        y += 16;
+        ctx.font = 'bold 14px Arial';
         ctx.fillStyle = '#ffffff';
         ctx.fillText(dateStr, canvas.width / 2, y);
-        y += 30;
+        y += 22;
         
-        // === PARTIES ===
-        ctx.textAlign = 'left';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillStyle = goldColor;
-        ctx.fillText('PARTIES INVOLVED', margin, y);
-        y += 25;
-        
-        // Party boxes
-        const boxWidth = 400;
-        const boxHeight = 70;
-        const boxGap = 40;
+        // === PARTIES (Side by Side Boxes) ===
+        const boxWidth = 420;
+        const boxHeight = 55;
+        const boxGap = 20;
+        const startX = margin;
         
         // Seller box
         ctx.strokeStyle = goldColor;
         ctx.lineWidth = 2;
-        ctx.strokeRect(margin, y, boxWidth, boxHeight);
+        ctx.strokeRect(startX, y, boxWidth, boxHeight);
         ctx.fillStyle = 'rgba(212, 175, 55, 0.1)';
-        ctx.fillRect(margin, y, boxWidth, boxHeight);
-        
-        ctx.font = '10px Arial';
+        ctx.fillRect(startX, y, boxWidth, boxHeight);
+        ctx.font = '9px Arial';
         ctx.fillStyle = goldColor;
-        ctx.fillText('👤 SELLER', margin + 15, y + 20);
-        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('👤 SELLER', startX + 12, y + 16);
+        ctx.font = 'bold 18px Arial';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(data.sellerName, margin + 15, y + 48);
+        ctx.fillText(data.sellerName, startX + 12, y + 40);
         
         // Buyer box
-        const buyerX = margin + boxWidth + boxGap;
+        const buyerBoxX = startX + boxWidth + boxGap;
         ctx.strokeStyle = greenColor;
-        ctx.strokeRect(buyerX, y, boxWidth, boxHeight);
+        ctx.strokeRect(buyerBoxX, y, boxWidth, boxHeight);
         ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
-        ctx.fillRect(buyerX, y, boxWidth, boxHeight);
-        
-        ctx.font = '10px Arial';
+        ctx.fillRect(buyerBoxX, y, boxWidth, boxHeight);
+        ctx.font = '9px Arial';
         ctx.fillStyle = greenColor;
-        ctx.fillText('🤝 BUYER', buyerX + 15, y + 20);
-        ctx.font = 'bold 20px Arial';
+        ctx.fillText('🤝 BUYER', buyerBoxX + 12, y + 16);
+        ctx.font = 'bold 18px Arial';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(data.buyerName, buyerX + 15, y + 48);
-        ctx.font = '11px Arial';
+        ctx.fillText(data.buyerName, buyerBoxX + 12, y + 40);
+        ctx.font = '10px Arial';
         ctx.fillStyle = '#888888';
-        ctx.fillText('📱 ' + (data.buyerPhone || 'N/A'), buyerX + 15, y + 65);
+        ctx.fillText('📱 ' + (data.buyerPhone || 'N/A'), buyerBoxX + 250, y + 40);
         
-        y += boxHeight + 25;
+        y += boxHeight + 18;
         
         // === VEHICLE INFORMATION ===
-        drawLine();
-        y += 5;
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(margin, y, contentWidth, 65);
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(margin, y, contentWidth, 65);
+        
         ctx.textAlign = 'left';
-        ctx.font = 'bold 16px Arial';
+        ctx.font = 'bold 10px Arial';
         ctx.fillStyle = goldColor;
-        ctx.fillText('VEHICLE INFORMATION', margin, y);
-        y += 25;
+        ctx.fillText('🚙 VEHICLE INFORMATION', margin + 12, y + 16);
         
-        const vehicleItems = [
-            ['Vehicle', data.vehicleTitle, '#ffffff'],
-            ['License Plate', data.vehiclePlate || 'N/A', '#60a5fa'],
-            ['Type', (data.vehicleType || 'N/A').toUpperCase(), goldColor]
-        ];
+        // Vehicle details in a row
+        const vehY = y + 38;
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('Vehicle', margin + 12, vehY);
+        ctx.font = 'bold 13px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(data.vehicleTitle, margin + 12, vehY + 16);
         
-        vehicleItems.forEach(([label, value, color]) => {
-            ctx.font = '12px Arial';
-            ctx.fillStyle = '#888888';
-            ctx.fillText(label + ':', margin, y);
-            ctx.font = 'bold 14px Arial';
-            ctx.fillStyle = color;
-            ctx.fillText(value, margin + 130, y);
-            y += 22;
-        });
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('License Plate', margin + 300, vehY);
+        ctx.font = 'bold 13px Arial';
+        ctx.fillStyle = blueColor;
+        ctx.fillText(data.vehiclePlate || 'N/A', margin + 300, vehY + 16);
         
-        y += 10;
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('Type', margin + 500, vehY);
+        ctx.font = 'bold 13px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText((data.vehicleType || 'N/A').toUpperCase(), margin + 500, vehY + 16);
+        
+        y += 75;
         
         // === PAYMENT TERMS ===
-        drawLine();
-        y += 5;
-        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
+        ctx.fillRect(margin, y, contentWidth, data.downPayment > 0 ? 95 : 85);
+        ctx.strokeStyle = goldColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(margin, y, contentWidth, data.downPayment > 0 ? 95 : 85);
+        
+        ctx.font = 'bold 10px Arial';
         ctx.fillStyle = goldColor;
-        ctx.fillText('PAYMENT TERMS', margin, y);
-        y += 25;
+        ctx.textAlign = 'left';
+        ctx.fillText('💰 PAYMENT TERMS', margin + 12, y + 16);
         
         // Payment boxes
-        const paymentBoxWidth = data.downPayment > 0 ? 270 : 400;
-        const paymentBoxHeight = 80;
-        const paymentGap = 25;
+        const payBoxY = y + 28;
+        const payBoxHeight = 55;
+        const payBoxWidth = data.downPayment > 0 ? 280 : 400;
+        const payBoxGap = 15;
         
         // Vehicle Price box
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.fillRect(margin, y, paymentBoxWidth, paymentBoxHeight);
-        ctx.font = '10px Arial';
-        ctx.fillStyle = '#888888';
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(margin + 10, payBoxY, payBoxWidth, payBoxHeight);
         ctx.textAlign = 'center';
-        ctx.fillText('VEHICLE PRICE', margin + paymentBoxWidth/2, y + 25);
-        ctx.font = 'bold 26px Arial';
+        ctx.font = '9px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('VEHICLE PRICE', margin + 10 + payBoxWidth/2, payBoxY + 18);
+        ctx.font = 'bold 22px Arial';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('$' + data.vehiclePrice.toLocaleString(), margin + paymentBoxWidth/2, y + 55);
+        ctx.fillText('$' + data.vehiclePrice.toLocaleString(), margin + 10 + payBoxWidth/2, payBoxY + 42);
         
         if (data.downPayment > 0) {
             // Down Payment box
-            const dpX = margin + paymentBoxWidth + paymentGap;
+            const dpX = margin + 10 + payBoxWidth + payBoxGap;
             ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
-            ctx.fillRect(dpX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.fillRect(dpX, payBoxY, payBoxWidth, payBoxHeight);
             ctx.strokeStyle = redColor;
             ctx.lineWidth = 1;
-            ctx.strokeRect(dpX, y, paymentBoxWidth, paymentBoxHeight);
-            ctx.font = '10px Arial';
-            ctx.fillStyle = '#f87171';
-            ctx.fillText('⚠️ DOWN PAYMENT', dpX + paymentBoxWidth/2, y + 25);
-            ctx.font = 'bold 26px Arial';
-            ctx.fillStyle = redColor;
-            ctx.fillText('$' + data.downPayment.toLocaleString(), dpX + paymentBoxWidth/2, y + 55);
+            ctx.strokeRect(dpX, payBoxY, payBoxWidth, payBoxHeight);
             ctx.font = '9px Arial';
             ctx.fillStyle = '#f87171';
-            ctx.fillText('Cash Before LUX', dpX + paymentBoxWidth/2, y + 72);
+            ctx.fillText('⚠️ DOWN PAYMENT', dpX + payBoxWidth/2, payBoxY + 18);
+            ctx.font = 'bold 22px Arial';
+            ctx.fillStyle = redColor;
+            ctx.fillText('$' + data.downPayment.toLocaleString(), dpX + payBoxWidth/2, payBoxY + 42);
+            ctx.font = '8px Arial';
+            ctx.fillStyle = '#f87171';
+            ctx.fillText('Cash Before LUX', dpX + payBoxWidth/2, payBoxY + 53);
             
             // LUX Transaction box
-            const luxX = dpX + paymentBoxWidth + paymentGap;
+            const luxX = dpX + payBoxWidth + payBoxGap;
             ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
-            ctx.fillRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.fillRect(luxX, payBoxY, payBoxWidth, payBoxHeight);
             ctx.strokeStyle = greenColor;
-            ctx.strokeRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
-            ctx.font = '10px Arial';
-            ctx.fillStyle = '#4ade80';
-            ctx.fillText('LUX TRANSACTION', luxX + paymentBoxWidth/2, y + 25);
-            ctx.font = 'bold 26px Arial';
-            ctx.fillStyle = greenColor;
-            ctx.fillText('$' + data.luxTransaction.toLocaleString(), luxX + paymentBoxWidth/2, y + 55);
+            ctx.strokeRect(luxX, payBoxY, payBoxWidth, payBoxHeight);
             ctx.font = '9px Arial';
             ctx.fillStyle = '#4ade80';
-            ctx.fillText('After Down Payment', luxX + paymentBoxWidth/2, y + 72);
+            ctx.fillText('LUX TRANSACTION', luxX + payBoxWidth/2, payBoxY + 18);
+            ctx.font = 'bold 22px Arial';
+            ctx.fillStyle = greenColor;
+            ctx.fillText('$' + data.luxTransaction.toLocaleString(), luxX + payBoxWidth/2, payBoxY + 42);
+            ctx.font = '8px Arial';
+            ctx.fillStyle = '#4ade80';
+            ctx.fillText('After Down Payment', luxX + payBoxWidth/2, payBoxY + 53);
         } else {
             // LUX Transaction box (full price)
-            const luxX = margin + paymentBoxWidth + paymentGap;
+            const luxX = margin + 10 + payBoxWidth + payBoxGap;
             ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
-            ctx.fillRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.fillRect(luxX, payBoxY, payBoxWidth, payBoxHeight);
             ctx.strokeStyle = greenColor;
-            ctx.strokeRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
-            ctx.font = '10px Arial';
+            ctx.strokeRect(luxX, payBoxY, payBoxWidth, payBoxHeight);
+            ctx.font = '9px Arial';
             ctx.fillStyle = '#4ade80';
-            ctx.fillText('LUX TRANSACTION', luxX + paymentBoxWidth/2, y + 25);
-            ctx.font = 'bold 26px Arial';
+            ctx.fillText('LUX TRANSACTION', luxX + payBoxWidth/2, payBoxY + 18);
+            ctx.font = 'bold 22px Arial';
             ctx.fillStyle = greenColor;
-            ctx.fillText('$' + data.vehiclePrice.toLocaleString(), luxX + paymentBoxWidth/2, y + 55);
+            ctx.fillText('$' + data.vehiclePrice.toLocaleString(), luxX + payBoxWidth/2, payBoxY + 42);
         }
         
-        y += paymentBoxHeight + 15;
+        y += data.downPayment > 0 ? 105 : 95;
         
-        // City Fee line
+        // City Sales Fee line
         ctx.textAlign = 'center';
-        ctx.font = '12px Arial';
+        ctx.font = '11px Arial';
         ctx.fillStyle = goldColor;
         ctx.fillText('+ City Sales Fee: $' + data.cityFee.toLocaleString() + ' (paid by buyer at LUX)', canvas.width / 2, y);
-        y += 25;
+        y += 18;
         
-        // === DOWN PAYMENT WARNING (if applicable) ===
+        // === DOWN PAYMENT AGREEMENT (if applicable) ===
         if (data.downPayment > 0) {
-            ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
-            ctx.fillRect(margin, y, contentWidth, 55);
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.12)';
+            ctx.fillRect(margin, y, contentWidth, 48);
             ctx.strokeStyle = redColor;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(margin, y, contentWidth, 55);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(margin, y, contentWidth, 48);
             
             ctx.textAlign = 'left';
-            ctx.font = 'bold 11px Arial';
+            ctx.font = 'bold 10px Arial';
             ctx.fillStyle = redColor;
-            ctx.fillText('⚠️ DOWN PAYMENT AGREEMENT', margin + 15, y + 18);
-            ctx.font = '10px Arial';
+            ctx.fillText('⚠️ DOWN PAYMENT AGREEMENT', margin + 12, y + 14);
+            ctx.font = '9px Arial';
             ctx.fillStyle = '#fca5a5';
-            ctx.fillText('• Buyer pays $' + data.downPayment.toLocaleString() + ' cash BEFORE the LUX transfer', margin + 15, y + 33);
-            ctx.fillText('• Seller must complete LUX transfer within 24 hours. Failure = FRAUD.', margin + 15, y + 48);
+            ctx.fillText('The BUYER agrees to pay $' + data.downPayment.toLocaleString() + ' in cash BEFORE the LUX transfer.', margin + 12, y + 28);
+            ctx.fillText('The SELLER must complete the LUX transfer within 24 hours of receiving the down payment.', margin + 12, y + 40);
             
-            y += 70;
+            y += 58;
+        }
+        
+        // === ADDITIONAL NOTES (if any) ===
+        if (data.notes && data.notes.trim()) {
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(margin, y, contentWidth, 45);
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(margin, y, contentWidth, 45);
+            
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 9px Arial';
+            ctx.fillStyle = '#9ca3af';
+            ctx.fillText('📝 ADDITIONAL NOTES', margin + 12, y + 14);
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#d1d5db';
+            // Truncate notes if too long
+            const notesText = data.notes.length > 100 ? data.notes.substring(0, 100) + '...' : data.notes;
+            ctx.fillText(notesText, margin + 12, y + 32);
+            
+            y += 55;
         }
         
         // === SIGNATURES ===
-        drawLine();
         y += 5;
-        ctx.textAlign = 'center';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillStyle = goldColor;
-        ctx.fillText('SIGNATURES', canvas.width / 2, y);
-        y += 25;
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 10px Arial';
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText('SELLER SIGNATURE', margin, y);
+        ctx.fillText('BUYER SIGNATURE', canvas.width / 2 + 20, y);
+        y += 12;
         
         // Signature boxes
-        const sigBoxWidth = 400;
-        const sigBoxHeight = 60;
-        const sigGap = 40;
+        const sigBoxWidth = 410;
+        const sigBoxHeight = 50;
         
         // Seller signature box
         ctx.strokeStyle = '#4b5563';
@@ -1520,46 +1552,55 @@ window.downloadContractAsPNG = async function() {
         ctx.fillStyle = '#1f2937';
         ctx.fillRect(margin + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
         
-        // Cursive seller signature
-        ctx.font = 'italic 24px Georgia, serif';
+        // Cursive seller signature (using loaded font or fallback)
+        ctx.font = '28px DancingScript, "Brush Script MT", cursive';
         ctx.fillStyle = '#3b82f6';
         ctx.textAlign = 'left';
-        ctx.fillText(data.sellerName, margin + 20, y + 38);
-        
-        ctx.font = '10px Arial';
-        ctx.fillStyle = '#9ca3af';
-        ctx.fillText('Seller', margin, y + sigBoxHeight + 15);
-        ctx.fillText(data.sellerName, margin, y + sigBoxHeight + 28);
-        ctx.fillStyle = '#6b7280';
-        ctx.fillText('Date: ' + new Date().toLocaleDateString(), margin + 200, y + sigBoxHeight + 15);
+        ctx.fillText(data.sellerName, margin + 15, y + 35);
         
         // Buyer signature box
-        const buyerSigX = margin + sigBoxWidth + sigGap;
+        const buyerSigX = canvas.width / 2 + 20;
         ctx.strokeStyle = '#4b5563';
         ctx.strokeRect(buyerSigX, y, sigBoxWidth, sigBoxHeight);
         ctx.fillStyle = '#1f2937';
         ctx.fillRect(buyerSigX + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
         
         // Cursive buyer signature
-        ctx.font = 'italic 24px Georgia, serif';
+        ctx.font = '28px DancingScript, "Brush Script MT", cursive';
         ctx.fillStyle = '#3b82f6';
-        ctx.fillText(data.buyerName, buyerSigX + 20, y + 38);
+        ctx.fillText(data.buyerName, buyerSigX + 15, y + 35);
+        
+        y += sigBoxHeight + 8;
+        
+        // Signature labels with DATES
+        const sigDate = new Date(data.agreementDate).toLocaleDateString('en-US', {
+            month: 'numeric', day: 'numeric', year: 'numeric'
+        });
         
         ctx.font = '10px Arial';
         ctx.fillStyle = '#9ca3af';
-        ctx.fillText('Buyer', buyerSigX, y + sigBoxHeight + 15);
-        ctx.fillText(data.buyerName, buyerSigX, y + sigBoxHeight + 28);
+        ctx.textAlign = 'left';
+        ctx.fillText(data.sellerName, margin, y);
         ctx.fillStyle = '#6b7280';
-        ctx.fillText('Date: ' + new Date().toLocaleDateString(), buyerSigX + 200, y + sigBoxHeight + 15);
+        ctx.fillText('Date: ' + sigDate, margin + 250, y);
         
-        y += sigBoxHeight + 50;
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText(data.buyerName, buyerSigX, y);
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('Date: ' + sigDate, buyerSigX + 250, y);
+        
+        y += 25;
         
         // === FOOTER ===
         ctx.textAlign = 'center';
         ctx.font = '9px Arial';
         ctx.fillStyle = '#4b5563';
-        ctx.fillText('This document is a legally binding agreement in the State of San Andreas', canvas.width / 2, y);
-        ctx.fillText('© PaulysAutos.com - All Rights Reserved', canvas.width / 2, y + 14);
+        const genDate = new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+        ctx.fillText('Generated via PaulysAutos.com | ' + genDate, canvas.width / 2, y);
+        y += 12;
+        ctx.font = '8px Arial';
+        ctx.fillStyle = '#374151';
+        ctx.fillText('PaulysAutos.com is NOT responsible for disputes. This document is for city court records only.', canvas.width / 2, y);
         
         // Convert to blob and download
         canvas.toBlob((blob) => {
