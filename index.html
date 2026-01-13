@@ -42,6 +42,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
@@ -321,30 +322,29 @@
 
     <!-- View Sale Contract Modal -->
     <div id="viewSaleContractModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
-        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-cyan-500/50">
-            <div class="flex justify-between items-start mb-6">
+        <div class="glass-effect rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-amber-500/50">
+            <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h2 class="text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">📄 Vehicle Sale Contract</h2>
-                    <p class="text-gray-400 mt-2">Official agreement for city court records</p>
+                    <h2 class="text-2xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent flex items-center gap-2">📄 Vehicle Sale Contract</h2>
+                    <p class="text-gray-400 text-sm mt-1">Official agreement for city court records</p>
                 </div>
                 <button onclick="closeModal('viewSaleContractModal')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
             </div>
             
-            <div id="saleContractContent" class="bg-white text-gray-900 rounded-xl p-6 mb-6 font-mono text-sm">
+            <!-- Contract Content for Display and PNG Generation -->
+            <div id="saleContractContent" class="bg-white text-gray-900 rounded-xl mb-4">
                 <!-- Contract content will be populated by JS -->
             </div>
             
-            <div class="flex gap-3">
-                <button onclick="copySaleContract()" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="downloadContractAsPNG()" class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 px-4 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Download Contract
+                </button>
+                <button onclick="copySaleContract()" class="bg-gray-700 text-white px-4 py-3 rounded-xl font-bold hover:bg-gray-600 transition flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                    Copy Contract
-                </button>
-                <button onclick="printSaleContract()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    Print / Screenshot
-                </button>
-                <button onclick="closeModal('viewSaleContractModal')" class="bg-gray-700 text-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
-                    Close
+                    Copy Text
                 </button>
             </div>
         </div>

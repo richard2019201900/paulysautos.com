@@ -974,92 +974,123 @@ function generateSaleContractHTML(data) {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     
+    // Professional square contract design (800x800 for high-quality PNG)
     return `
-<div style="font-family: 'Courier New', monospace; padding: 20px; max-width: 700px; margin: 0 auto;">
-    <div style="text-align: center; border-bottom: 3px double #333; padding-bottom: 15px; margin-bottom: 20px;">
-        <h1 style="margin: 0; font-size: 24px; letter-spacing: 2px;">VEHICLE SALE CONTRACT</h1>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Contract ID: ${data.contractId}</p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Generated via PaulysAutos.com</p>
+<div id="contractForPNG" style="width: 800px; min-height: 800px; font-family: 'Arial', sans-serif; padding: 40px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; box-sizing: border-box;">
+    <!-- Header with Logo -->
+    <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #D4AF37; padding-bottom: 20px;">
+        <div style="font-size: 36px; font-weight: 900; color: #D4AF37; letter-spacing: 2px; margin-bottom: 5px;">🚗 PAULYSAUTOS.COM</div>
+        <div style="font-size: 22px; font-weight: 700; letter-spacing: 3px; color: white;">VEHICLE SALE CONTRACT</div>
+        <div style="font-size: 12px; color: #888; margin-top: 10px;">Contract ID: ${data.contractId}</div>
     </div>
     
-    <div style="margin-bottom: 20px;">
-        <p style="margin: 0;"><strong>Date:</strong> ${date}</p>
+    <!-- Date -->
+    <div style="text-align: center; margin-bottom: 25px;">
+        <div style="font-size: 14px; color: #ccc;">Agreement Date</div>
+        <div style="font-size: 18px; font-weight: bold; color: white;">${date}</div>
     </div>
     
-    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">PARTIES</h3>
-        <p style="margin: 5px 0;"><strong>SELLER:</strong> ${data.sellerName}</p>
-        <p style="margin: 5px 0;"><strong>BUYER:</strong> ${data.buyerName}</p>
-        <p style="margin: 5px 0;"><strong>BUYER PHONE:</strong> ${data.buyerPhone}</p>
+    <!-- Parties Section -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+        <div style="background: rgba(212, 175, 55, 0.15); border: 2px solid #D4AF37; border-radius: 12px; padding: 15px;">
+            <div style="font-size: 11px; font-weight: bold; color: #D4AF37; margin-bottom: 8px; letter-spacing: 1px;">👤 SELLER</div>
+            <div style="font-size: 20px; font-weight: bold; color: white;">${data.sellerName}</div>
+        </div>
+        <div style="background: rgba(100, 200, 100, 0.15); border: 2px solid #4ade80; border-radius: 12px; padding: 15px;">
+            <div style="font-size: 11px; font-weight: bold; color: #4ade80; margin-bottom: 8px; letter-spacing: 1px;">🤝 BUYER</div>
+            <div style="font-size: 20px; font-weight: bold; color: white;">${data.buyerName}</div>
+            <div style="font-size: 12px; color: #888; margin-top: 4px;">📱 ${data.buyerPhone || 'N/A'}</div>
+        </div>
     </div>
     
-    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">VEHICLE INFORMATION</h3>
-        <p style="margin: 5px 0;"><strong>Vehicle:</strong> ${data.vehicleTitle}</p>
-        <p style="margin: 5px 0;"><strong>License Plate:</strong> ${data.vehiclePlate || 'N/A'}</p>
-        <p style="margin: 5px 0;"><strong>Vehicle Type:</strong> ${data.vehicleType || 'N/A'}</p>
+    <!-- Vehicle Info -->
+    <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2);">
+        <div style="font-size: 11px; font-weight: bold; color: #D4AF37; margin-bottom: 10px; letter-spacing: 1px;">🚙 VEHICLE INFORMATION</div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+            <div>
+                <div style="font-size: 11px; color: #888;">Vehicle</div>
+                <div style="font-size: 18px; font-weight: bold; color: white;">${data.vehicleTitle}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: #888;">License Plate</div>
+                <div style="font-size: 16px; font-weight: bold; color: #60a5fa;">${data.vehiclePlate || 'N/A'}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: #888;">Type</div>
+                <div style="font-size: 16px; font-weight: bold; color: #D4AF37; text-transform: uppercase;">${data.vehicleType || 'N/A'}</div>
+            </div>
+        </div>
     </div>
     
-    <div style="margin-bottom: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107;">
-        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ffc107; padding-bottom: 5px;">💰 PAYMENT TERMS</h3>
-        <p style="margin: 5px 0;"><strong>Vehicle Price:</strong> $${data.vehiclePrice.toLocaleString()}</p>
-        ${data.downPayment > 0 ? `
-        <p style="margin: 5px 0; color: #dc3545;"><strong>⚠️ DOWN PAYMENT (Cash):</strong> $${data.downPayment.toLocaleString()}</p>
-        <p style="margin: 5px 0; color: #28a745;"><strong>LUX Transaction:</strong> $${data.luxTransaction.toLocaleString()}</p>
-        ` : `
-        <p style="margin: 5px 0; color: #28a745;"><strong>LUX Transaction:</strong> $${data.vehiclePrice.toLocaleString()}</p>
-        `}
-        <p style="margin: 5px 0;"><strong>City Sales Fee:</strong> $${data.cityFee.toLocaleString()} (paid by buyer)</p>
+    <!-- Payment Terms -->
+    <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 200, 50, 0.1)); border-radius: 12px; padding: 20px; margin-bottom: 25px; border: 2px solid #D4AF37;">
+        <div style="font-size: 12px; font-weight: bold; color: #D4AF37; margin-bottom: 15px; letter-spacing: 1px;">💰 PAYMENT TERMS</div>
+        <div style="display: grid; grid-template-columns: repeat(${data.downPayment > 0 ? '3' : '2'}, 1fr); gap: 15px; text-align: center;">
+            <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
+                <div style="font-size: 10px; color: #888; margin-bottom: 5px;">VEHICLE PRICE</div>
+                <div style="font-size: 24px; font-weight: 900; color: white;">$${data.vehiclePrice.toLocaleString()}</div>
+            </div>
+            ${data.downPayment > 0 ? `
+            <div style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 12px; border: 1px solid #ef4444;">
+                <div style="font-size: 10px; color: #f87171; margin-bottom: 5px;">⚠️ DOWN PAYMENT</div>
+                <div style="font-size: 24px; font-weight: 900; color: #ef4444;">$${data.downPayment.toLocaleString()}</div>
+                <div style="font-size: 9px; color: #f87171;">Cash Before LUX</div>
+            </div>
+            <div style="background: rgba(34, 197, 94, 0.2); border-radius: 8px; padding: 12px; border: 1px solid #22c55e;">
+                <div style="font-size: 10px; color: #4ade80; margin-bottom: 5px;">LUX TRANSACTION</div>
+                <div style="font-size: 24px; font-weight: 900; color: #22c55e;">$${data.luxTransaction.toLocaleString()}</div>
+                <div style="font-size: 9px; color: #4ade80;">After Down Payment</div>
+            </div>
+            ` : `
+            <div style="background: rgba(34, 197, 94, 0.2); border-radius: 8px; padding: 12px; border: 1px solid #22c55e;">
+                <div style="font-size: 10px; color: #4ade80; margin-bottom: 5px;">LUX TRANSACTION</div>
+                <div style="font-size: 24px; font-weight: 900; color: #22c55e;">$${data.vehiclePrice.toLocaleString()}</div>
+            </div>
+            `}
+        </div>
+        <div style="text-align: center; margin-top: 12px; font-size: 12px; color: #D4AF37;">
+            + City Sales Fee: <strong>$${data.cityFee.toLocaleString()}</strong> (paid by buyer at LUX)
+        </div>
     </div>
     
     ${data.downPayment > 0 ? `
-    <div style="margin-bottom: 20px; padding: 15px; background: #f8d7da; border-radius: 8px; border: 2px solid #dc3545;">
-        <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #dc3545;">⚠️ DOWN PAYMENT AGREEMENT</h3>
-        <p style="margin: 5px 0; font-size: 12px;">The BUYER agrees to pay the SELLER a cash down payment of <strong>$${data.downPayment.toLocaleString()}</strong> before the vehicle transfer occurs via LUX.</p>
-        <p style="margin: 5px 0; font-size: 12px;">The SELLER agrees that upon receipt of the down payment, they will complete the vehicle transfer via the LUX app for the remaining <strong>$${data.luxTransaction.toLocaleString()}</strong>.</p>
-        <p style="margin: 10px 0 5px 0; font-size: 12px;"><strong>Down Payment Status:</strong> ☐ Pending  ☐ Received</p>
+    <!-- Down Payment Warning -->
+    <div style="background: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+        <div style="font-size: 11px; font-weight: bold; color: #ef4444; margin-bottom: 8px;">⚠️ DOWN PAYMENT AGREEMENT</div>
+        <div style="font-size: 11px; color: #fca5a5; line-height: 1.5;">
+            The BUYER agrees to pay <strong>$${data.downPayment.toLocaleString()}</strong> in cash BEFORE the LUX transfer.<br>
+            The SELLER must complete the LUX transfer within 24 hours of receiving the down payment.<br>
+            <strong>Failure to complete transfer after receiving down payment constitutes FRAUD.</strong>
+        </div>
     </div>
     ` : ''}
-    
-    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">TERMS & CONDITIONS</h3>
-        <ol style="margin: 0; padding-left: 20px; font-size: 11px; line-height: 1.6;">
-            <li>This agreement is binding upon both parties once signed.</li>
-            <li>The vehicle is sold "AS-IS" with no warranties unless otherwise stated.</li>
-            <li>The seller certifies they have legal ownership and authority to sell.</li>
-            <li>The buyer acknowledges inspection of the vehicle prior to purchase.</li>
-            <li>Transfer of ownership occurs upon completion of LUX transaction.</li>
-            ${data.downPayment > 0 ? `
-            <li><strong>The seller must complete the LUX transfer within 24 hours of receiving down payment.</strong></li>
-            <li><strong>Failure to complete transfer after receiving down payment constitutes FRAUD.</strong></li>
-            ` : ''}
-        </ol>
-    </div>
     
     ${data.notes ? `
-    <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
-        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ADDITIONAL NOTES</h3>
-        <p style="margin: 0; font-size: 12px;">${data.notes}</p>
+    <!-- Notes -->
+    <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="font-size: 10px; color: #888; margin-bottom: 5px;">📝 ADDITIONAL NOTES</div>
+        <div style="font-size: 12px; color: #ccc;">${data.notes}</div>
     </div>
     ` : ''}
     
-    <div style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div style="border-top: 2px solid #333; padding-top: 10px;">
-            <p style="margin: 0; font-size: 12px;"><strong>SELLER SIGNATURE</strong></p>
-            <p style="margin: 20px 0 5px 0; font-size: 11px;">Name: ${data.sellerName}</p>
-            <p style="margin: 0; font-size: 11px;">Date: _________________</p>
+    <!-- Signatures -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+        <div style="border-top: 2px solid #D4AF37; padding-top: 10px;">
+            <div style="font-size: 10px; color: #888; margin-bottom: 5px;">SELLER SIGNATURE</div>
+            <div style="font-size: 14px; font-weight: bold; color: white;">${data.sellerName}</div>
+            <div style="font-size: 11px; color: #666; margin-top: 15px;">Date: _______________</div>
         </div>
-        <div style="border-top: 2px solid #333; padding-top: 10px;">
-            <p style="margin: 0; font-size: 12px;"><strong>BUYER SIGNATURE</strong></p>
-            <p style="margin: 20px 0 5px 0; font-size: 11px;">Name: ${data.buyerName}</p>
-            <p style="margin: 0; font-size: 11px;">Date: _________________</p>
+        <div style="border-top: 2px solid #4ade80; padding-top: 10px;">
+            <div style="font-size: 10px; color: #888; margin-bottom: 5px;">BUYER SIGNATURE</div>
+            <div style="font-size: 14px; font-weight: bold; color: white;">${data.buyerName}</div>
+            <div style="font-size: 11px; color: #666; margin-top: 15px;">Date: _______________</div>
         </div>
     </div>
     
-    <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 15px;">
-        <p style="margin: 0;">This contract was generated via PaulysAutos.com</p>
-        <p style="margin: 5px 0 0 0;">Contract ID: ${data.contractId} | Generated: ${new Date().toLocaleString()}</p>
-        <p style="margin: 5px 0 0 0; font-weight: bold;">PaulysAutos.com is not liable for disputes. This document is for city court records.</p>
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+        <div style="font-size: 10px; color: #666;">Generated via PaulysAutos.com | ${new Date().toLocaleDateString()}</div>
+        <div style="font-size: 9px; color: #555; margin-top: 5px;">PaulysAutos.com is NOT responsible for disputes. This document is for city court records only.</div>
     </div>
 </div>
     `;
@@ -1245,6 +1276,48 @@ window.printSaleContract = function() {
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => printWindow.print(), 250);
+};
+
+/**
+ * Download contract as PNG image using html2canvas
+ */
+window.downloadContractAsPNG = async function() {
+    const contractEl = document.getElementById('contractForPNG');
+    if (!contractEl) {
+        showToast('Contract element not found', 'error');
+        return;
+    }
+    
+    // Check if html2canvas is loaded
+    if (typeof html2canvas === 'undefined') {
+        showToast('Download library not loaded. Please try again.', 'error');
+        return;
+    }
+    
+    try {
+        showToast('📸 Generating contract image...', 'info');
+        
+        // Generate canvas from contract element
+        const canvas = await html2canvas(contractEl, {
+            scale: 2, // Higher quality
+            backgroundColor: null,
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+        });
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `PaulysAutos-Contract-${window.currentSaleContractId || 'sale'}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        showToast('✅ Contract downloaded!', 'success');
+        
+    } catch (error) {
+        console.error('[Contract] Error generating PNG:', error);
+        showToast('Failed to generate contract image', 'error');
+    }
 };
 
 /**
