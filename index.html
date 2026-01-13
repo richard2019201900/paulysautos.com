@@ -502,7 +502,13 @@
             <h2 class="text-3xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent mb-6 text-center">✨ Create New Listing</h2>
             
             <form id="createListingForm" class="space-y-4" autocomplete="off">
-                <!-- Model (Title) with Benny's tip -->
+                <!-- Description (Main Display Title) -->
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-2">Description *</label>
+                    <input type="text" id="newListingDescription" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. OG Bacalar, Fully Upgraded Luxury Convertible">
+                </div>
+                
+                <!-- Model with Benny's tip -->
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2 flex items-center gap-2">
                         Model *
@@ -582,12 +588,6 @@
                             <option value="Six">Six</option>
                         </select>
                     </div>
-                </div>
-                
-                <!-- Additional Info / Description -->
-                <div>
-                    <label class="block text-gray-300 font-semibold mb-2">Additional Information</label>
-                    <input type="text" id="newListingLocation" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. Custom livery, rare color, clean title (optional)">
                 </div>
                 
                 <!-- Premium Listing Option -->

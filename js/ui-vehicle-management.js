@@ -42,7 +42,7 @@ window.openCreateListingModal = async function() {
     if (form) form.reset();
     
     // Explicitly clear all input values to prevent browser autocomplete
-    const inputs = ['newListingTitle', 'newListingPlate', 'newListingLocation', 
+    const inputs = ['newListingDescription', 'newListingTitle', 'newListingPlate', 
                     'newListingBuyPrice', 'newListingImages'];
     inputs.forEach(id => {
         const el = $(id);
@@ -86,10 +86,10 @@ document.addEventListener('DOMContentLoaded', function() {
             hideElement(successDiv);
             
             // Get form values - Benny's app style
-            const title = $('newListingTitle').value.trim(); // Model name
+            const description = $('newListingDescription')?.value.trim() || ''; // Display title/description
+            const title = $('newListingTitle').value.trim(); // Model name (kept as title for backwards compat)
             const plate = $('newListingPlate')?.value.trim().toUpperCase() || '';
             const type = $('newListingType').value;
-            const location = $('newListingLocation').value.trim(); // Additional info
             const upgrades = $('newListingUpgrades')?.value || '';
             const speed = $('newListingSpeed')?.value || '';
             const storage = $('newListingStorage')?.value || '';
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 : [];
             
             // Validate required fields
-            if (!title || !type || !plate || !upgrades || !speed || !storage || !seats || !buyPrice) {
+            if (!description || !title || !type || !plate || !upgrades || !speed || !storage || !seats || !buyPrice) {
                 errorDiv.textContent = 'Please fill in all required fields.';
                 showElement(errorDiv);
                 return;
@@ -175,10 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Create new vehicle object - Benny's app style
                 const newVehicle = {
                     id: newId,
-                    title: title, // Model name
+                    title: title, // Model name (kept for backwards compat)
+                    description: description, // Main display title
                     plate: plate, // License plate
                     type: type,
-                    location: location, // Additional info
                     upgrades: upgrades,
                     speed: speed,
                     storage: storage,

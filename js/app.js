@@ -225,8 +225,8 @@ window.viewVehicle = function(id, forcePublic = false) {
         <div class="p-5 md:p-8">
             <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                 <div>
-                    <h2 class="text-2xl md:text-4xl font-black text-white mb-2">✨ ${sanitize(p.title)}</h2>
-                    <p class="text-lg md:text-xl text-gray-300 font-semibold">📝 Description: ${sanitize(p.location) || 'No description'}</p>
+                    <h2 class="text-2xl md:text-4xl font-black text-white mb-2">✨ ${sanitize(VehicleDataService.getValue(id, 'description', p.description) || p.title)}</h2>
+                    <p class="text-lg md:text-xl text-gray-400 font-semibold">🚗 ${sanitize(p.title)} <span class="text-gray-600 mx-2">|</span> <span class="text-amber-400">${VehicleDataService.getValue(id, 'plate', p.plate) || 'N/A'}</span></p>
                     <p id="vehicleOwnerDisplay" class="text-blue-400 font-semibold mt-1">👤 Owner: Loading...</p>
                 </div>
                 <span class="bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg border border-amber-400/50">${VehicleDataService.getValue(id, 'type', p.type) || 'OTHER'}</span>
@@ -634,24 +634,31 @@ function renderVehicleStatsContent(id) {
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="text-2xl">✨</span>
-                            <h2 id="editable-title-${id}" 
+                            <h2 id="editable-description-${id}" 
                                 class="text-3xl md:text-4xl font-black ${isPremium ? 'text-amber-300' : 'text-white'} cursor-pointer hover:text-purple-300 transition inline-block"
-                                onclick="startEditField('title', ${id}, this)"
-                                title="Click to edit address">
-                                ${sanitize(p.title)}
+                                onclick="startEditField('description', ${id}, this)"
+                                title="Click to edit description">
+                                ${sanitize(VehicleDataService.getValue(id, 'description', p.description) || p.title)}
                             </h2>
                             <span class="text-purple-400 text-sm">✏️</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span>📝</span>
-                            <span class="text-lg text-gray-300 font-semibold">Description:</span>
-                            <span id="editable-location-${id}" 
-                                  class="text-lg ${p.location ? 'text-gray-300' : 'text-gray-500 italic'} font-semibold cursor-pointer hover:text-purple-300 transition min-w-[150px]"
-                                  onclick="startEditField('location', ${id}, this)"
-                                  title="Click to edit description">
-                                ${p.location ? sanitize(p.location) : 'Click to add description'}
+                            <span>🚗</span>
+                            <span id="editable-title-${id}" 
+                                  class="text-lg text-gray-300 font-semibold cursor-pointer hover:text-purple-300 transition"
+                                  onclick="startEditField('title', ${id}, this)"
+                                  title="Click to edit model">
+                                ${sanitize(p.title)}
                             </span>
-                            <span class="text-purple-400 text-sm">✏️</span>
+                            <span class="text-purple-400 text-xs">✏️</span>
+                            <span class="text-gray-600">|</span>
+                            <span id="editable-plate-${id}" 
+                                  class="text-lg text-amber-400 font-semibold cursor-pointer hover:text-purple-300 transition"
+                                  onclick="startEditField('plate', ${id}, this)"
+                                  title="Click to edit plate">
+                                ${VehicleDataService.getValue(id, 'plate', p.plate) || 'N/A'}
+                            </span>
+                            <span class="text-purple-400 text-xs">✏️</span>
                         </div>
                     </div>
                     <div class="flex flex-col items-end gap-2">
