@@ -183,6 +183,13 @@ window.showLogSaleModal = function(vehicleId, financingContractId = null) {
                         <label class="block text-gray-400 text-sm mb-2">Buyer Name:</label>
                         <input type="text" id="saleBuyerInput" value="${buyerName}" placeholder="Enter buyer's name"
                             class="w-full bg-gray-800 border border-gray-600 rounded-xl py-3 px-4 text-white focus:border-rose-500 focus:outline-none">
+                        <div class="mt-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="luxAnonymousCheckbox" class="w-4 h-4 rounded accent-amber-500" onchange="toggleLuxAnonymous()">
+                                <span class="text-amber-400 text-sm font-medium">🏪 Sold on LUX (anonymous buyer)</span>
+                            </label>
+                            <p class="text-gray-500 text-xs mt-1 ml-6">For vehicles sold through LUX where buyer is unknown</p>
+                        </div>
                     </div>
                     
                     <div>
@@ -242,6 +249,29 @@ window.showLogSaleModal = function(vehicleId, financingContractId = null) {
 window.closeLogSaleModal = function() {
     const modal = document.getElementById('logSaleModal');
     if (modal) modal.remove();
+};
+
+/**
+ * Toggle LUX anonymous buyer checkbox
+ */
+window.toggleLuxAnonymous = function() {
+    const checkbox = document.getElementById('luxAnonymousCheckbox');
+    const buyerInput = document.getElementById('saleBuyerInput');
+    
+    if (!checkbox || !buyerInput) return;
+    
+    if (checkbox.checked) {
+        // Store original value and set to LUX Buyer
+        buyerInput.dataset.originalValue = buyerInput.value;
+        buyerInput.value = 'LUX Buyer';
+        buyerInput.disabled = true;
+        buyerInput.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        // Restore original value
+        buyerInput.value = buyerInput.dataset.originalValue || '';
+        buyerInput.disabled = false;
+        buyerInput.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
 };
 
 /**
