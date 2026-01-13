@@ -65,9 +65,19 @@ window.formatDate = function(dateStr, options = { month: 'short', day: 'numeric'
 }
 
 // ==================== VIEW PROPERTY ====================
-window.viewVehicle = function(id) {
+window.viewVehicle = function(id, forcePublic = false) {
     const p = vehicles.find(prop => prop.id === id);
     if (!p) return;
+    
+    // If logged-in user owns this vehicle, go straight to owner stats page
+    // (unless forcePublic is true - used by "View Public Listing" button)
+    if (!forcePublic && auth.currentUser) {
+        const ownerEmail = VehicleDataService.getValue(id, 'ownerEmail', p.ownerEmail);
+        if (ownerEmail && ownerEmail.toLowerCase() === auth.currentUser.email.toLowerCase()) {
+            viewVehicleStats(id);
+            return;
+        }
+    }
     
     // Save scroll position before navigating away
     window.savedScrollPosition = window.scrollY || window.pageYOffset;
@@ -134,7 +144,7 @@ window.viewVehicle = function(id) {
     // Generate owner tabs if user is owner of this vehicle
     const ownerTabs = (state.currentUser === 'owner' && ownsProperty(id)) ? `
         <div class="flex border-b border-gray-700">
-            <button onclick="viewVehicle(${id})" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 border-b-2 border-purple-400">
+            <button onclick="viewVehicle(${id}, true)" class="flex-1 py-4 px-6 text-center font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 border-b-2 border-purple-400">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                 Vehicle View
             </button>
@@ -593,7 +603,7 @@ function renderVehicleStatsContent(id) {
         ${premiumBanner}
         <!-- View Toggle Tabs - full width, no padding needed -->
         <div class="flex border-b border-gray-700">
-            <button onclick="viewVehicle(${id})" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
+            <button onclick="viewVehicle(${id}, true)" class="flex-1 py-4 px-6 text-center font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition">
                 <svg class="w-5 h-5 inline-block mr-2 -mt-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                 Vehicle View
             </button>
@@ -1112,7 +1122,7 @@ function renderVehicleStatsContent(id) {
                     <span class="text-xl">👑</span>
                     <span>${isPremium ? 'Premium Active ($10k)' : 'Enable Premium'}</span>
                 </button>
-                <button onclick="viewVehicle(${id})" class="flex items-center justify-center space-x-3 gradient-bg text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
+                <button onclick="viewVehicle(${id}, true)" class="flex items-center justify-center space-x-3 gradient-bg text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     <span>View Public Listing</span>
                 </button>
