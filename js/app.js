@@ -92,6 +92,24 @@ window.viewVehicle = function(id, forcePublic = false) {
     // Get premium status early for all styling
     const isPremium = VehicleDataService.getValue(id, 'isPremium', p.isPremium || false);
     
+    // Check if vehicle is sold
+    const isSold = VehicleDataService.getValue(id, 'isSold', p.isSold || false);
+    const soldPrice = VehicleDataService.getValue(id, 'soldPrice', p.soldPrice || 0);
+    const soldTo = VehicleDataService.getValue(id, 'soldTo', p.soldTo || '');
+    const soldDate = VehicleDataService.getValue(id, 'soldDate', p.soldDate || '');
+    
+    // SOLD overlay for images
+    const soldOverlay = isSold 
+        ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center z-30 rounded-xl">
+            <div class="text-center">
+                <div class="bg-green-600 text-white text-4xl md:text-6xl font-black px-8 py-4 rounded-xl shadow-2xl transform -rotate-12">
+                    SOLD
+                </div>
+                ${soldPrice ? `<div class="mt-4 bg-gray-900/90 text-green-400 text-xl md:text-2xl font-bold px-6 py-2 rounded-lg">$${soldPrice.toLocaleString()}</div>` : ''}
+            </div>
+           </div>` 
+        : '';
+    
     // Image placeholder HTML
     const imagePlaceholder = `
         <div class="w-full h-60 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
@@ -165,6 +183,7 @@ window.viewVehicle = function(id, forcePublic = false) {
             ${premiumImageBadge}
             <!-- Main large image -->
             <div class="mb-4 relative">
+                ${soldOverlay}
                 <img src="${p.images[0]}" alt="${sanitize(p.title)} - Main Image" onclick="openLightbox(state.currentImages, 0)" class="img-clickable w-full h-72 md:h-[500px] object-cover rounded-xl shadow-lg border border-gray-600" loading="lazy" onerror="${imgErrorHandler}">
             </div>
             <!-- Horizontal scroll thumbnails -->
@@ -180,7 +199,8 @@ window.viewVehicle = function(id, forcePublic = false) {
            </div>`
         : `<div class="relative p-4 md:p-6 z-10">
             ${premiumImageBadge}
-            <div class="md:col-span-2 w-full h-72 md:h-96 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
+            <div class="relative md:col-span-2 w-full h-72 md:h-96 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center rounded-xl shadow-lg border border-gray-600">
+                ${soldOverlay}
                 <span class="text-8xl mb-4">🚗</span>
                 <span class="text-gray-400 font-semibold text-xl">Photos Coming Soon</span>
                 <span class="text-gray-500 text-sm mt-2">Check back later for vehicle images</span>
@@ -223,6 +243,23 @@ window.viewVehicle = function(id, forcePublic = false) {
         </div>` : ''}
         ${imagesSection}
         <div class="p-5 md:p-8">
+            ${isSold ? `
+            <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 border-2 border-green-500/50 rounded-xl p-4 mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">🏆</span>
+                        <div>
+                            <div class="text-green-400 font-black text-lg">VEHICLE SOLD</div>
+                            <div class="text-gray-300 text-sm">${soldTo ? 'Sold to ' + soldTo : ''} ${soldDate ? 'on ' + new Date(soldDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</div>
+                        </div>
+                    </div>
+                    ${soldPrice ? `<div class="text-right">
+                        <div class="text-gray-400 text-xs uppercase">Sale Price</div>
+                        <div class="text-green-400 text-2xl md:text-3xl font-black">$${soldPrice.toLocaleString()}</div>
+                    </div>` : ''}
+                </div>
+            </div>
+            ` : ''}
             <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl md:text-4xl font-black text-white mb-2">✨ ${sanitize(VehicleDataService.getValue(id, 'description', p.description) || p.title)}</h2>
@@ -597,6 +634,18 @@ function renderVehicleStatsContent(id) {
             </div>
            </div>` 
         : '';
+    
+    // SOLD overlay for stats page image
+    const statsSoldOverlay = isSold 
+        ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center z-30">
+            <div class="text-center">
+                <div class="bg-green-600 text-white text-4xl md:text-5xl font-black px-8 py-4 rounded-xl shadow-2xl transform -rotate-12">
+                    SOLD
+                </div>
+                ${soldPrice ? `<div class="mt-4 bg-gray-900/90 text-green-400 text-xl md:text-2xl font-bold px-6 py-2 rounded-lg">$${soldPrice.toLocaleString()}</div>` : ''}
+            </div>
+           </div>` 
+        : '';
 
     $('vehicleStatsContent').innerHTML = `
         ${soldBanner}
@@ -615,6 +664,7 @@ function renderVehicleStatsContent(id) {
         
         <!-- Vehicle Header -->
         <div class="relative">
+            ${statsSoldOverlay}
             ${p.images && p.images.length > 0 && p.images[0] 
                 ? `<img src="${p.images[0]}" alt="${sanitize(p.title)}" class="w-full h-64 md:h-80 object-cover cursor-pointer hover:opacity-90 transition" onclick="scrollToImagesSection(${id})" title="Click to view all images" onerror="this.onerror=null; this.parentElement.querySelector('.stats-img-container').innerHTML=this.parentElement.querySelector('.stats-img-container').dataset.placeholder;" >
                    <div class="stats-img-container hidden" data-placeholder="<div class='w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-8xl mb-4'>🚗</span><span class='text-gray-400 font-semibold text-xl'>Photos Coming Soon</span><span class='text-gray-500 text-sm mt-2'>Check back later for vehicle images</span></div>"></div>`
@@ -623,9 +673,9 @@ function renderVehicleStatsContent(id) {
                        <span class="text-gray-400 font-semibold text-xl">Photos Coming Soon</span>
                        <span class="text-gray-500 text-sm mt-2">Check back later for vehicle images</span>
                    </div>`}
-            <div class="absolute top-4 right-4 bg-gradient-to-r ${statusClass} text-white px-4 py-2 rounded-xl font-bold shadow-lg z-20">
+            ${!isSold ? `<div class="absolute top-4 right-4 bg-gradient-to-r ${statusClass} text-white px-4 py-2 rounded-xl font-bold shadow-lg z-20">
                 ${statusText}
-            </div>
+            </div>` : ''}
             ${isPremium ? '<div class="absolute top-4 left-4 z-20 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2 pointer-events-none"><span>👑</span> Premium</div>' : ''}
             </div>
             
