@@ -32,15 +32,18 @@ window.browseVehicles = function() {
 window.browseProperties = window.browseVehicles;
 
 /**
- * List vehicle - open create listing modal
+ * List vehicle - open create listing modal (requires login)
  */
 window.listYourVehicle = function() {
-    if (typeof openModal === 'function') {
-        openModal('createListingModal');
-    } else if (typeof openCreateListingModal === 'function') {
+    // Always use openCreateListingModal which has auth check
+    if (typeof openCreateListingModal === 'function') {
         openCreateListingModal();
-    } else if (!auth.currentUser && typeof openAuthModal === 'function') {
-        openAuthModal();
+    } else if (!auth.currentUser) {
+        // Fallback: if no auth, open login modal
+        if (typeof openModal === 'function') {
+            openModal('loginModal');
+        }
+        showToast('Please sign in to list a vehicle', 'info');
     }
 };
 

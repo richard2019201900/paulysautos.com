@@ -974,123 +974,80 @@ function generateSaleContractHTML(data) {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     
-    // Professional square contract design (800x800 for high-quality PNG)
+    // Preview HTML for modal display (responsive, dark theme)
     return `
-<div id="contractForPNG" style="width: 800px; min-height: 800px; font-family: 'Arial', sans-serif; padding: 40px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; box-sizing: border-box;">
-    <!-- Header with Logo -->
-    <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #D4AF37; padding-bottom: 20px;">
-        <div style="font-size: 36px; font-weight: 900; color: #D4AF37; letter-spacing: 2px; margin-bottom: 5px;">🚗 PAULYSAUTOS.COM</div>
-        <div style="font-size: 22px; font-weight: 700; letter-spacing: 3px; color: white;">VEHICLE SALE CONTRACT</div>
-        <div style="font-size: 12px; color: #888; margin-top: 10px;">Contract ID: ${data.contractId}</div>
+<div style="font-family: Arial, sans-serif; padding: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; border-radius: 12px;">
+    <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #D4AF37; padding-bottom: 15px;">
+        <div style="font-size: 20px; font-weight: bold; color: #D4AF37;">🚗 PAULYSAUTOS.COM</div>
+        <div style="font-size: 16px; font-weight: bold; letter-spacing: 2px; margin-top: 5px;">VEHICLE SALE CONTRACT</div>
+        <div style="font-size: 10px; color: #888; margin-top: 8px;">Contract ID: ${data.contractId}</div>
     </div>
     
-    <!-- Date -->
-    <div style="text-align: center; margin-bottom: 25px;">
-        <div style="font-size: 14px; color: #ccc;">Agreement Date</div>
-        <div style="font-size: 18px; font-weight: bold; color: white;">${date}</div>
+    <div style="text-align: center; margin-bottom: 15px;">
+        <div style="font-size: 11px; color: #888;">Agreement Date</div>
+        <div style="font-size: 13px; font-weight: bold;">${date}</div>
     </div>
     
-    <!-- Parties Section -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-        <div style="background: rgba(212, 175, 55, 0.15); border: 2px solid #D4AF37; border-radius: 12px; padding: 15px;">
-            <div style="font-size: 11px; font-weight: bold; color: #D4AF37; margin-bottom: 8px; letter-spacing: 1px;">👤 SELLER</div>
-            <div style="font-size: 20px; font-weight: bold; color: white;">${data.sellerName}</div>
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <div style="flex: 1; background: rgba(212, 175, 55, 0.15); border: 2px solid #D4AF37; border-radius: 8px; padding: 10px;">
+            <div style="font-size: 9px; color: #D4AF37; font-weight: bold;">👤 SELLER</div>
+            <div style="font-size: 14px; font-weight: bold;">${data.sellerName}</div>
         </div>
-        <div style="background: rgba(100, 200, 100, 0.15); border: 2px solid #4ade80; border-radius: 12px; padding: 15px;">
-            <div style="font-size: 11px; font-weight: bold; color: #4ade80; margin-bottom: 8px; letter-spacing: 1px;">🤝 BUYER</div>
-            <div style="font-size: 20px; font-weight: bold; color: white;">${data.buyerName}</div>
-            <div style="font-size: 12px; color: #888; margin-top: 4px;">📱 ${data.buyerPhone || 'N/A'}</div>
+        <div style="flex: 1; background: rgba(74, 222, 128, 0.15); border: 2px solid #4ade80; border-radius: 8px; padding: 10px;">
+            <div style="font-size: 9px; color: #4ade80; font-weight: bold;">🤝 BUYER</div>
+            <div style="font-size: 14px; font-weight: bold;">${data.buyerName}</div>
+            <div style="font-size: 10px; color: #888;">📱 ${data.buyerPhone || 'N/A'}</div>
         </div>
     </div>
     
-    <!-- Vehicle Info -->
-    <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2);">
-        <div style="font-size: 11px; font-weight: bold; color: #D4AF37; margin-bottom: 10px; letter-spacing: 1px;">🚙 VEHICLE INFORMATION</div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
-            <div>
-                <div style="font-size: 11px; color: #888;">Vehicle</div>
-                <div style="font-size: 18px; font-weight: bold; color: white;">${data.vehicleTitle}</div>
-            </div>
-            <div>
-                <div style="font-size: 11px; color: #888;">License Plate</div>
-                <div style="font-size: 16px; font-weight: bold; color: #60a5fa;">${data.vehiclePlate || 'N/A'}</div>
-            </div>
-            <div>
-                <div style="font-size: 11px; color: #888;">Type</div>
-                <div style="font-size: 16px; font-weight: bold; color: #D4AF37; text-transform: uppercase;">${data.vehicleType || 'N/A'}</div>
-            </div>
-        </div>
+    <div style="background: rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+        <div style="font-size: 9px; color: #D4AF37; font-weight: bold; margin-bottom: 8px;">🚙 VEHICLE INFORMATION</div>
+        <div style="font-size: 13px;"><strong>Vehicle:</strong> ${data.vehicleTitle}</div>
+        <div style="font-size: 12px; color: #60a5fa;"><strong>Plate:</strong> ${data.vehiclePlate || 'N/A'}</div>
+        <div style="font-size: 12px; color: #D4AF37;"><strong>Type:</strong> ${(data.vehicleType || 'N/A').toUpperCase()}</div>
     </div>
     
-    <!-- Payment Terms -->
-    <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 200, 50, 0.1)); border-radius: 12px; padding: 20px; margin-bottom: 25px; border: 2px solid #D4AF37;">
-        <div style="font-size: 12px; font-weight: bold; color: #D4AF37; margin-bottom: 15px; letter-spacing: 1px;">💰 PAYMENT TERMS</div>
-        <div style="display: grid; grid-template-columns: repeat(${data.downPayment > 0 ? '3' : '2'}, 1fr); gap: 15px; text-align: center;">
-            <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-                <div style="font-size: 10px; color: #888; margin-bottom: 5px;">VEHICLE PRICE</div>
-                <div style="font-size: 24px; font-weight: 900; color: white;">$${data.vehiclePrice.toLocaleString()}</div>
+    <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 200, 50, 0.1)); border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 2px solid #D4AF37;">
+        <div style="font-size: 10px; color: #D4AF37; font-weight: bold; margin-bottom: 10px;">💰 PAYMENT TERMS</div>
+        <div style="display: flex; gap: 8px; text-align: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 80px; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 8px;">
+                <div style="font-size: 8px; color: #888;">PRICE</div>
+                <div style="font-size: 16px; font-weight: bold;">$${data.vehiclePrice.toLocaleString()}</div>
             </div>
             ${data.downPayment > 0 ? `
-            <div style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 12px; border: 1px solid #ef4444;">
-                <div style="font-size: 10px; color: #f87171; margin-bottom: 5px;">⚠️ DOWN PAYMENT</div>
-                <div style="font-size: 24px; font-weight: 900; color: #ef4444;">$${data.downPayment.toLocaleString()}</div>
-                <div style="font-size: 9px; color: #f87171;">Cash Before LUX</div>
+            <div style="flex: 1; min-width: 80px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; padding: 8px; border: 1px solid #ef4444;">
+                <div style="font-size: 8px; color: #f87171;">⚠️ DOWN</div>
+                <div style="font-size: 16px; font-weight: bold; color: #ef4444;">$${data.downPayment.toLocaleString()}</div>
             </div>
-            <div style="background: rgba(34, 197, 94, 0.2); border-radius: 8px; padding: 12px; border: 1px solid #22c55e;">
-                <div style="font-size: 10px; color: #4ade80; margin-bottom: 5px;">LUX TRANSACTION</div>
-                <div style="font-size: 24px; font-weight: 900; color: #22c55e;">$${data.luxTransaction.toLocaleString()}</div>
-                <div style="font-size: 9px; color: #4ade80;">After Down Payment</div>
+            <div style="flex: 1; min-width: 80px; background: rgba(34, 197, 94, 0.2); border-radius: 6px; padding: 8px; border: 1px solid #22c55e;">
+                <div style="font-size: 8px; color: #4ade80;">LUX</div>
+                <div style="font-size: 16px; font-weight: bold; color: #22c55e;">$${data.luxTransaction.toLocaleString()}</div>
             </div>
             ` : `
-            <div style="background: rgba(34, 197, 94, 0.2); border-radius: 8px; padding: 12px; border: 1px solid #22c55e;">
-                <div style="font-size: 10px; color: #4ade80; margin-bottom: 5px;">LUX TRANSACTION</div>
-                <div style="font-size: 24px; font-weight: 900; color: #22c55e;">$${data.vehiclePrice.toLocaleString()}</div>
+            <div style="flex: 1; min-width: 80px; background: rgba(34, 197, 94, 0.2); border-radius: 6px; padding: 8px; border: 1px solid #22c55e;">
+                <div style="font-size: 8px; color: #4ade80;">LUX</div>
+                <div style="font-size: 16px; font-weight: bold; color: #22c55e;">$${data.vehiclePrice.toLocaleString()}</div>
             </div>
             `}
         </div>
-        <div style="text-align: center; margin-top: 12px; font-size: 12px; color: #D4AF37;">
-            + City Sales Fee: <strong>$${data.cityFee.toLocaleString()}</strong> (paid by buyer at LUX)
+        <div style="text-align: center; margin-top: 8px; font-size: 10px; color: #D4AF37;">
+            + City Fee: $${data.cityFee.toLocaleString()} (buyer pays at LUX)
         </div>
     </div>
     
     ${data.downPayment > 0 ? `
-    <!-- Down Payment Warning -->
-    <div style="background: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-        <div style="font-size: 11px; font-weight: bold; color: #ef4444; margin-bottom: 8px;">⚠️ DOWN PAYMENT AGREEMENT</div>
-        <div style="font-size: 11px; color: #fca5a5; line-height: 1.5;">
-            The BUYER agrees to pay <strong>$${data.downPayment.toLocaleString()}</strong> in cash BEFORE the LUX transfer.<br>
-            The SELLER must complete the LUX transfer within 24 hours of receiving the down payment.<br>
-            <strong>Failure to complete transfer after receiving down payment constitutes FRAUD.</strong>
+    <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+        <div style="font-size: 9px; color: #ef4444; font-weight: bold;">⚠️ DOWN PAYMENT AGREEMENT</div>
+        <div style="font-size: 9px; color: #fca5a5; margin-top: 5px;">
+            Buyer pays $${data.downPayment.toLocaleString()} cash BEFORE LUX transfer.
+            Failure to complete = FRAUD.
         </div>
     </div>
     ` : ''}
     
-    ${data.notes ? `
-    <!-- Notes -->
-    <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
-        <div style="font-size: 10px; color: #888; margin-bottom: 5px;">📝 ADDITIONAL NOTES</div>
-        <div style="font-size: 12px; color: #ccc;">${data.notes}</div>
-    </div>
-    ` : ''}
-    
-    <!-- Signatures -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
-        <div style="border-top: 2px solid #D4AF37; padding-top: 10px;">
-            <div style="font-size: 10px; color: #888; margin-bottom: 5px;">SELLER SIGNATURE</div>
-            <div style="font-size: 14px; font-weight: bold; color: white;">${data.sellerName}</div>
-            <div style="font-size: 11px; color: #666; margin-top: 15px;">Date: _______________</div>
-        </div>
-        <div style="border-top: 2px solid #4ade80; padding-top: 10px;">
-            <div style="font-size: 10px; color: #888; margin-bottom: 5px;">BUYER SIGNATURE</div>
-            <div style="font-size: 14px; font-weight: bold; color: white;">${data.buyerName}</div>
-            <div style="font-size: 11px; color: #666; margin-top: 15px;">Date: _______________</div>
-        </div>
-    </div>
-    
-    <!-- Footer -->
-    <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
-        <div style="font-size: 10px; color: #666;">Generated via PaulysAutos.com | ${new Date().toLocaleDateString()}</div>
-        <div style="font-size: 9px; color: #555; margin-top: 5px;">PaulysAutos.com is NOT responsible for disputes. This document is for city court records only.</div>
+    <div style="text-align: center; font-size: 9px; color: #666; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+        <div>Click "Download Image" for the full contract with signatures</div>
+        <div style="margin-top: 5px; color: #4b5563;">The image includes cursive signatures for both parties.</div>
     </div>
 </div>
     `;
@@ -1279,40 +1236,343 @@ window.printSaleContract = function() {
 };
 
 /**
- * Download contract as PNG image using html2canvas
+ * Download contract as PNG using canvas (1000x1000 square) - matches PaulysProperties style
  */
 window.downloadContractAsPNG = async function() {
-    const contractEl = document.getElementById('contractForPNG');
-    if (!contractEl) {
-        showToast('Contract element not found', 'error');
-        return;
-    }
-    
-    // Check if html2canvas is loaded
-    if (typeof html2canvas === 'undefined') {
-        showToast('Download library not loaded. Please try again.', 'error');
+    const contractId = window.currentSaleContractId;
+    if (!contractId) {
+        showToast('No contract loaded', 'error');
         return;
     }
     
     try {
-        showToast('📸 Generating contract image...', 'info');
+        // Get contract data from Firestore
+        const doc = await db.collection('saleContracts').doc(contractId).get();
+        if (!doc.exists) {
+            showToast('Contract not found', 'error');
+            return;
+        }
         
-        // Generate canvas from contract element
-        const canvas = await html2canvas(contractEl, {
-            scale: 2, // Higher quality
-            backgroundColor: null,
-            logging: false,
-            useCORS: true,
-            allowTaint: true
+        const data = doc.data();
+        showToast('🖼️ Generating contract image...', 'info');
+        
+        // Create canvas - SQUARE format (1000x1000) like PaulysProperties
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const size = 1000;
+        canvas.width = size;
+        canvas.height = size;
+        
+        // Background gradient (matching PaulysProperties dark theme)
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#1a1a2e');
+        gradient.addColorStop(1, '#16213e');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        let y = 50;
+        const margin = 60;
+        const contentWidth = canvas.width - (margin * 2);
+        const goldColor = '#D4AF37';
+        const greenColor = '#4ade80';
+        const redColor = '#ef4444';
+        
+        // Helper functions
+        const drawText = (text, x, fontSize, color, font = 'Arial', align = 'left') => {
+            ctx.font = `${fontSize}px ${font}`;
+            ctx.fillStyle = color;
+            ctx.textAlign = align;
+            ctx.fillText(text, x, y);
+            y += fontSize + 8;
+        };
+        
+        const drawLine = (color = goldColor) => {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(margin, y);
+            ctx.lineTo(canvas.width - margin, y);
+            ctx.stroke();
+            y += 15;
+        };
+        
+        // === HEADER ===
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 32px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText('🚗 PAULYSAUTOS.COM', canvas.width / 2, y);
+        y += 40;
+        ctx.font = 'bold 22px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('VEHICLE SALE CONTRACT', canvas.width / 2, y);
+        y += 30;
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText(`Contract ID: ${data.contractId}`, canvas.width / 2, y);
+        y += 25;
+        drawLine();
+        
+        // === DATE ===
+        const dateStr = new Date(data.agreementDate).toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        ctx.textAlign = 'center';
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('Agreement Date', canvas.width / 2, y);
+        y += 18;
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(dateStr, canvas.width / 2, y);
+        y += 30;
+        
+        // === PARTIES ===
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText('PARTIES INVOLVED', margin, y);
+        y += 25;
+        
+        // Party boxes
+        const boxWidth = 400;
+        const boxHeight = 70;
+        const boxGap = 40;
+        
+        // Seller box
+        ctx.strokeStyle = goldColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(margin, y, boxWidth, boxHeight);
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.1)';
+        ctx.fillRect(margin, y, boxWidth, boxHeight);
+        
+        ctx.font = '10px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText('👤 SELLER', margin + 15, y + 20);
+        ctx.font = 'bold 20px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(data.sellerName, margin + 15, y + 48);
+        
+        // Buyer box
+        const buyerX = margin + boxWidth + boxGap;
+        ctx.strokeStyle = greenColor;
+        ctx.strokeRect(buyerX, y, boxWidth, boxHeight);
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
+        ctx.fillRect(buyerX, y, boxWidth, boxHeight);
+        
+        ctx.font = '10px Arial';
+        ctx.fillStyle = greenColor;
+        ctx.fillText('🤝 BUYER', buyerX + 15, y + 20);
+        ctx.font = 'bold 20px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(data.buyerName, buyerX + 15, y + 48);
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('📱 ' + (data.buyerPhone || 'N/A'), buyerX + 15, y + 65);
+        
+        y += boxHeight + 25;
+        
+        // === VEHICLE INFORMATION ===
+        drawLine();
+        y += 5;
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText('VEHICLE INFORMATION', margin, y);
+        y += 25;
+        
+        const vehicleItems = [
+            ['Vehicle', data.vehicleTitle, '#ffffff'],
+            ['License Plate', data.vehiclePlate || 'N/A', '#60a5fa'],
+            ['Type', (data.vehicleType || 'N/A').toUpperCase(), goldColor]
+        ];
+        
+        vehicleItems.forEach(([label, value, color]) => {
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#888888';
+            ctx.fillText(label + ':', margin, y);
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = color;
+            ctx.fillText(value, margin + 130, y);
+            y += 22;
         });
         
-        // Create download link
-        const link = document.createElement('a');
-        link.download = `PaulysAutos-Contract-${window.currentSaleContractId || 'sale'}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        y += 10;
         
-        showToast('✅ Contract downloaded!', 'success');
+        // === PAYMENT TERMS ===
+        drawLine();
+        y += 5;
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText('PAYMENT TERMS', margin, y);
+        y += 25;
+        
+        // Payment boxes
+        const paymentBoxWidth = data.downPayment > 0 ? 270 : 400;
+        const paymentBoxHeight = 80;
+        const paymentGap = 25;
+        
+        // Vehicle Price box
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fillRect(margin, y, paymentBoxWidth, paymentBoxHeight);
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.textAlign = 'center';
+        ctx.fillText('VEHICLE PRICE', margin + paymentBoxWidth/2, y + 25);
+        ctx.font = 'bold 26px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('$' + data.vehiclePrice.toLocaleString(), margin + paymentBoxWidth/2, y + 55);
+        
+        if (data.downPayment > 0) {
+            // Down Payment box
+            const dpX = margin + paymentBoxWidth + paymentGap;
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+            ctx.fillRect(dpX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.strokeStyle = redColor;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(dpX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#f87171';
+            ctx.fillText('⚠️ DOWN PAYMENT', dpX + paymentBoxWidth/2, y + 25);
+            ctx.font = 'bold 26px Arial';
+            ctx.fillStyle = redColor;
+            ctx.fillText('$' + data.downPayment.toLocaleString(), dpX + paymentBoxWidth/2, y + 55);
+            ctx.font = '9px Arial';
+            ctx.fillStyle = '#f87171';
+            ctx.fillText('Cash Before LUX', dpX + paymentBoxWidth/2, y + 72);
+            
+            // LUX Transaction box
+            const luxX = dpX + paymentBoxWidth + paymentGap;
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
+            ctx.fillRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.strokeStyle = greenColor;
+            ctx.strokeRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#4ade80';
+            ctx.fillText('LUX TRANSACTION', luxX + paymentBoxWidth/2, y + 25);
+            ctx.font = 'bold 26px Arial';
+            ctx.fillStyle = greenColor;
+            ctx.fillText('$' + data.luxTransaction.toLocaleString(), luxX + paymentBoxWidth/2, y + 55);
+            ctx.font = '9px Arial';
+            ctx.fillStyle = '#4ade80';
+            ctx.fillText('After Down Payment', luxX + paymentBoxWidth/2, y + 72);
+        } else {
+            // LUX Transaction box (full price)
+            const luxX = margin + paymentBoxWidth + paymentGap;
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
+            ctx.fillRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.strokeStyle = greenColor;
+            ctx.strokeRect(luxX, y, paymentBoxWidth, paymentBoxHeight);
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#4ade80';
+            ctx.fillText('LUX TRANSACTION', luxX + paymentBoxWidth/2, y + 25);
+            ctx.font = 'bold 26px Arial';
+            ctx.fillStyle = greenColor;
+            ctx.fillText('$' + data.vehiclePrice.toLocaleString(), luxX + paymentBoxWidth/2, y + 55);
+        }
+        
+        y += paymentBoxHeight + 15;
+        
+        // City Fee line
+        ctx.textAlign = 'center';
+        ctx.font = '12px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText('+ City Sales Fee: $' + data.cityFee.toLocaleString() + ' (paid by buyer at LUX)', canvas.width / 2, y);
+        y += 25;
+        
+        // === DOWN PAYMENT WARNING (if applicable) ===
+        if (data.downPayment > 0) {
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+            ctx.fillRect(margin, y, contentWidth, 55);
+            ctx.strokeStyle = redColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(margin, y, contentWidth, 55);
+            
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 11px Arial';
+            ctx.fillStyle = redColor;
+            ctx.fillText('⚠️ DOWN PAYMENT AGREEMENT', margin + 15, y + 18);
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#fca5a5';
+            ctx.fillText('• Buyer pays $' + data.downPayment.toLocaleString() + ' cash BEFORE the LUX transfer', margin + 15, y + 33);
+            ctx.fillText('• Seller must complete LUX transfer within 24 hours. Failure = FRAUD.', margin + 15, y + 48);
+            
+            y += 70;
+        }
+        
+        // === SIGNATURES ===
+        drawLine();
+        y += 5;
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = goldColor;
+        ctx.fillText('SIGNATURES', canvas.width / 2, y);
+        y += 25;
+        
+        // Signature boxes
+        const sigBoxWidth = 400;
+        const sigBoxHeight = 60;
+        const sigGap = 40;
+        
+        // Seller signature box
+        ctx.strokeStyle = '#4b5563';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(margin, y, sigBoxWidth, sigBoxHeight);
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(margin + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
+        
+        // Cursive seller signature
+        ctx.font = 'italic 24px Georgia, serif';
+        ctx.fillStyle = '#3b82f6';
+        ctx.textAlign = 'left';
+        ctx.fillText(data.sellerName, margin + 20, y + 38);
+        
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText('Seller', margin, y + sigBoxHeight + 15);
+        ctx.fillText(data.sellerName, margin, y + sigBoxHeight + 28);
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('Date: ' + new Date().toLocaleDateString(), margin + 200, y + sigBoxHeight + 15);
+        
+        // Buyer signature box
+        const buyerSigX = margin + sigBoxWidth + sigGap;
+        ctx.strokeStyle = '#4b5563';
+        ctx.strokeRect(buyerSigX, y, sigBoxWidth, sigBoxHeight);
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(buyerSigX + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
+        
+        // Cursive buyer signature
+        ctx.font = 'italic 24px Georgia, serif';
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillText(data.buyerName, buyerSigX + 20, y + 38);
+        
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText('Buyer', buyerSigX, y + sigBoxHeight + 15);
+        ctx.fillText(data.buyerName, buyerSigX, y + sigBoxHeight + 28);
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('Date: ' + new Date().toLocaleDateString(), buyerSigX + 200, y + sigBoxHeight + 15);
+        
+        y += sigBoxHeight + 50;
+        
+        // === FOOTER ===
+        ctx.textAlign = 'center';
+        ctx.font = '9px Arial';
+        ctx.fillStyle = '#4b5563';
+        ctx.fillText('This document is a legally binding agreement in the State of San Andreas', canvas.width / 2, y);
+        ctx.fillText('© PaulysAutos.com - All Rights Reserved', canvas.width / 2, y + 14);
+        
+        // Convert to blob and download
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${data.contractId}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('📥 Contract image downloaded!', 'success');
+        }, 'image/png');
         
     } catch (error) {
         console.error('[Contract] Error generating PNG:', error);
