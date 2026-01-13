@@ -331,7 +331,7 @@ window.renderBlogPage = function() {
         <div class="max-w-4xl mx-auto">
             <!-- Header -->
             <div class="text-center mb-10">
-                <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-3">
+                <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500 mb-3">
                     📰 Site Updates
                 </h1>
                 <p class="text-gray-400">Stay informed about new features and improvements</p>
@@ -340,7 +340,7 @@ window.renderBlogPage = function() {
             <!-- Blog Posts -->
             <div class="space-y-8">
                 ${blogPosts.map(post => `
-                    <article class="bg-gray-800/50 rounded-2xl border border-gray-700 overflow-hidden hover:border-purple-500/50 transition">
+                    <article class="bg-gray-800/50 rounded-2xl border border-gray-700 overflow-hidden hover:border-amber-500/50 transition">
                         <div class="p-6">
                             <div class="flex items-center gap-3 mb-4">
                                 <span class="${post.categoryColor} text-white text-xs font-bold px-3 py-1 rounded-full">${post.category}</span>
@@ -360,7 +360,7 @@ window.renderBlogPage = function() {
                 <p class="text-gray-500 text-sm">
                     Updates posted weekly. Text Pauly in city with questions or feedback.
                 </p>
-                <button onclick="navigateTo('home')" class="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-xl font-bold hover:opacity-90 transition">
+                <button onclick="navigateTo('home')" class="mt-4 bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 px-6 py-2 rounded-xl font-bold hover:opacity-90 transition">
                     ← Back to Home
                 </button>
             </div>
