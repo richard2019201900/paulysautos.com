@@ -992,6 +992,7 @@ function generateSaleContractHTML(data) {
         <div style="flex: 1; background: rgba(212, 175, 55, 0.15); border: 2px solid #D4AF37; border-radius: 8px; padding: 10px;">
             <div style="font-size: 9px; color: #D4AF37; font-weight: bold;">👤 SELLER</div>
             <div style="font-size: 14px; font-weight: bold;">${data.sellerName}</div>
+            <div style="font-size: 10px; color: #888;">📱 ${data.sellerPhone || 'N/A'}</div>
         </div>
         <div style="flex: 1; background: rgba(74, 222, 128, 0.15); border: 2px solid #4ade80; border-radius: 8px; padding: 10px;">
             <div style="font-size: 9px; color: #4ade80; font-weight: bold;">🤝 BUYER</div>
@@ -1090,18 +1091,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const breakdown = calculateSaleBreakdown(salePrice);
             const contractId = generateContractId();
             
-            // Get seller info
+            // Get seller info including phone
             let sellerName = 'Unknown Seller';
+            let sellerPhone = '';
             try {
                 const usersSnapshot = await db.collection('users')
                     .where('email', '==', p.ownerEmail)
                     .limit(1)
                     .get();
                 if (!usersSnapshot.empty) {
-                    sellerName = usersSnapshot.docs[0].data().username || p.ownerEmail;
+                    const sellerData = usersSnapshot.docs[0].data();
+                    // Prefer firstName + lastName, then username
+                    if (sellerData.firstName && sellerData.lastName) {
+                        sellerName = sellerData.firstName + ' ' + sellerData.lastName;
+                    } else {
+                        sellerName = sellerData.username || p.ownerEmail;
+                    }
+                    sellerPhone = sellerData.phone || '';
                 }
             } catch (err) {
-                console.log('[Sale] Could not fetch seller name');
+                console.log('[Sale] Could not fetch seller info');
             }
             
             // Create contract data with negotiated price
@@ -1113,6 +1122,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 vehicleType: VehicleDataService.getValue(vehicleId, 'type', p.type || ''),
                 sellerName,
                 sellerEmail: p.ownerEmail,
+                sellerPhone,
                 buyerName,
                 buyerPhone,
                 vehiclePrice: salePrice,
@@ -1175,6 +1185,22 @@ window.viewSaleContract = async function(contractId) {
         }
         
         const data = doc.data();
+        
+        // Fetch seller phone if not in contract data (for old contracts)
+        if (!data.sellerPhone && data.sellerEmail) {
+            try {
+                const sellerSnapshot = await db.collection('users')
+                    .where('email', '==', data.sellerEmail.toLowerCase())
+                    .limit(1)
+                    .get();
+                if (!sellerSnapshot.empty) {
+                    data.sellerPhone = sellerSnapshot.docs[0].data().phone || '';
+                }
+            } catch (e) {
+                console.log('[Contract] Could not fetch seller phone for preview');
+            }
+        }
+        
         const contractHTML = generateSaleContractHTML(data);
         
         document.getElementById('saleContractContent').innerHTML = contractHTML;
@@ -1257,14 +1283,33 @@ window.downloadContractAsPNG = async function() {
         const data = doc.data();
         showToast('🖼️ Generating contract image...', 'info');
         
-        // Load cursive font
-        const cursiveFont = new FontFace('DancingScript', 'url(https://fonts.gstatic.com/s/dancingscript/v25/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7BMSo3Sup6hNX6plRP.woff2)');
+        // Fetch seller phone from their profile if not in contract data
+        let sellerPhone = data.sellerPhone || '';
+        if (!sellerPhone && data.sellerEmail) {
+            try {
+                const sellerSnapshot = await db.collection('users')
+                    .where('email', '==', data.sellerEmail.toLowerCase())
+                    .limit(1)
+                    .get();
+                if (!sellerSnapshot.empty) {
+                    sellerPhone = sellerSnapshot.docs[0].data().phone || '';
+                }
+            } catch (e) {
+                console.log('[Contract] Could not fetch seller phone');
+            }
+        }
         
+        // Load cursive font with proper waiting
+        let fontLoaded = false;
         try {
+            const cursiveFont = new FontFace('DancingScript', 'url(https://fonts.gstatic.com/s/dancingscript/v25/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7BMSo3Sup6hNX6plRP.woff2)');
             await cursiveFont.load();
             document.fonts.add(cursiveFont);
+            await document.fonts.ready; // Wait for fonts to be ready
+            fontLoaded = true;
+            console.log('[Contract] Dancing Script font loaded');
         } catch (fontErr) {
-            console.log('[Contract] Using fallback cursive font');
+            console.log('[Contract] Font load failed, using fallback');
         }
         
         // Create canvas - SQUARE format (1000x1000)
@@ -1332,7 +1377,7 @@ window.downloadContractAsPNG = async function() {
         
         // === PARTIES (Side by Side Boxes) ===
         const boxWidth = 420;
-        const boxHeight = 55;
+        const boxHeight = 60; // Slightly taller for phone numbers
         const boxGap = 20;
         const startX = margin;
         
@@ -1348,7 +1393,10 @@ window.downloadContractAsPNG = async function() {
         ctx.fillText('👤 SELLER', startX + 12, y + 16);
         ctx.font = 'bold 18px Arial';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(data.sellerName, startX + 12, y + 40);
+        ctx.fillText(data.sellerName, startX + 12, y + 38);
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('📱 ' + (sellerPhone || 'N/A'), startX + 12, y + 52);
         
         // Buyer box
         const buyerBoxX = startX + boxWidth + boxGap;
@@ -1361,10 +1409,10 @@ window.downloadContractAsPNG = async function() {
         ctx.fillText('🤝 BUYER', buyerBoxX + 12, y + 16);
         ctx.font = 'bold 18px Arial';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(data.buyerName, buyerBoxX + 12, y + 40);
+        ctx.fillText(data.buyerName, buyerBoxX + 12, y + 38);
         ctx.font = '10px Arial';
         ctx.fillStyle = '#888888';
-        ctx.fillText('📱 ' + (data.buyerPhone || 'N/A'), buyerBoxX + 250, y + 40);
+        ctx.fillText('📱 ' + (data.buyerPhone || 'N/A'), buyerBoxX + 12, y + 52);
         
         y += boxHeight + 18;
         
@@ -1545,6 +1593,9 @@ window.downloadContractAsPNG = async function() {
         const sigBoxWidth = 410;
         const sigBoxHeight = 50;
         
+        // Determine cursive font to use
+        const cursiveFontName = fontLoaded ? 'DancingScript' : 'Brush Script MT, cursive';
+        
         // Seller signature box
         ctx.strokeStyle = '#4b5563';
         ctx.lineWidth = 1;
@@ -1552,11 +1603,11 @@ window.downloadContractAsPNG = async function() {
         ctx.fillStyle = '#1f2937';
         ctx.fillRect(margin + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
         
-        // Cursive seller signature (using loaded font or fallback)
-        ctx.font = '28px DancingScript, "Brush Script MT", cursive';
+        // Cursive seller signature
+        ctx.font = `32px ${cursiveFontName}`;
         ctx.fillStyle = '#3b82f6';
         ctx.textAlign = 'left';
-        ctx.fillText(data.sellerName, margin + 15, y + 35);
+        ctx.fillText(data.sellerName, margin + 15, y + 36);
         
         // Buyer signature box
         const buyerSigX = canvas.width / 2 + 20;
@@ -1566,9 +1617,9 @@ window.downloadContractAsPNG = async function() {
         ctx.fillRect(buyerSigX + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
         
         // Cursive buyer signature
-        ctx.font = '28px DancingScript, "Brush Script MT", cursive';
+        ctx.font = `32px ${cursiveFontName}`;
         ctx.fillStyle = '#3b82f6';
-        ctx.fillText(data.buyerName, buyerSigX + 15, y + 35);
+        ctx.fillText(data.buyerName, buyerSigX + 15, y + 36);
         
         y += sigBoxHeight + 8;
         
