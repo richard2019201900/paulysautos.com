@@ -923,6 +923,10 @@ function renderVehicleStatsContent(id) {
                                     Confirm Down Payment Received
                                 </button>
                                 ` : ''}
+                                <button onclick="completePendingSale(${id})" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-600 hover:opacity-90 text-gray-900 px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Complete Sale
+                                </button>
                                 <button onclick="cancelPendingSale(${id})" class="bg-red-600/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center justify-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     Cancel Sale

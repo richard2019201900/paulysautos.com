@@ -1671,6 +1671,149 @@ window.confirmDownPaymentReceived = async function(vehicleId) {
 };
 
 /**
+ * Complete a pending sale - finalize and mark vehicle as sold
+ */
+window.completePendingSale = async function(vehicleId) {
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+    
+    try {
+        const p = vehicles.find(prop => prop.id === numericId);
+        if (!p) throw new Error('Vehicle not found');
+        
+        const pendingSale = VehicleDataService.getValue(numericId, 'pendingSale', p.pendingSale || null);
+        if (!pendingSale) {
+            showToast('No pending sale found', 'error');
+            return;
+        }
+        
+        // Get contract data for full details
+        let contractData = null;
+        if (pendingSale.contractId) {
+            try {
+                const contractDoc = await db.collection('saleContracts').doc(pendingSale.contractId).get();
+                if (contractDoc.exists) {
+                    contractData = contractDoc.data();
+                }
+            } catch (e) {
+                console.log('[CompleteSale] Could not fetch contract data');
+            }
+        }
+        
+        // Calculate sale price from pending sale or contract
+        const salePrice = contractData?.vehiclePrice || pendingSale.luxAmount + (pendingSale.downPayment || 0);
+        const buyerName = pendingSale.buyerName || contractData?.buyerName || 'Unknown';
+        const saleDate = new Date().toISOString().split('T')[0];
+        
+        // Get seller info
+        const ownerEmail = VehicleDataService.getValue(numericId, 'ownerEmail', p.ownerEmail);
+        let sellerDisplayName = 'Unknown Seller';
+        let sellerUid = null;
+        
+        if (ownerEmail) {
+            try {
+                const usersSnapshot = await db.collection('users')
+                    .where('email', '==', ownerEmail.toLowerCase())
+                    .limit(1)
+                    .get();
+                if (!usersSnapshot.empty) {
+                    const userData = usersSnapshot.docs[0].data();
+                    sellerUid = usersSnapshot.docs[0].id;
+                    if (userData.firstName && userData.lastName) {
+                        sellerDisplayName = userData.firstName + ' ' + userData.lastName;
+                    } else {
+                        sellerDisplayName = userData.username || ownerEmail.split('@')[0];
+                    }
+                }
+            } catch (e) {
+                console.log('[CompleteSale] Could not fetch seller info');
+            }
+        }
+        
+        const confirmed = confirm(
+            '🎉 COMPLETE SALE\n\n' +
+            `Vehicle: ${p.title}\n` +
+            `Buyer: ${buyerName}\n` +
+            `Sale Price: $${salePrice.toLocaleString()}\n\n` +
+            'This will:\n' +
+            '• Mark the vehicle as SOLD\n' +
+            '• Award 2,500 XP to the seller\n' +
+            '• Create a celebration banner\n' +
+            '• Close the pending sale\n\n' +
+            'Confirm sale completion?'
+        );
+        
+        if (!confirmed) return;
+        
+        showToast('🚗 Completing sale...', 'info');
+        
+        // Create sale record
+        const saleDoc = {
+            vehicleId: numericId,
+            vehicleTitle: p.title,
+            salePrice: salePrice,
+            saleDate: saleDate,
+            buyerName: buyerName,
+            sellerDisplayName: sellerDisplayName,
+            sellerEmail: ownerEmail,
+            sellerUid: sellerUid,
+            saleType: 'pending_completed',
+            contractId: pendingSale.contractId || null,
+            salesFee: 25000, // City sales fee
+            netProceeds: salePrice,
+            recordedAt: new Date().toISOString(),
+            recordedBy: auth.currentUser?.email
+        };
+        
+        const saleRef = await db.collection('vehicleSales').add(saleDoc);
+        console.log('[CompleteSale] Created sale record:', saleRef.id);
+        
+        // Mark vehicle as sold
+        await VehicleDataService.writeMultiple(numericId, {
+            isSold: true,
+            soldDate: saleDate,
+            soldTo: buyerName,
+            soldPrice: salePrice,
+            saleId: saleRef.id,
+            pendingSale: null // Clear pending sale
+        });
+        
+        // Update contract status
+        if (pendingSale.contractId) {
+            await db.collection('saleContracts').doc(pendingSale.contractId).update({
+                status: 'completed',
+                completedAt: new Date().toISOString()
+            });
+        }
+        
+        // Award XP to seller
+        if (typeof GamificationService !== 'undefined' && GamificationService.awardXP && sellerUid) {
+            await GamificationService.awardXP(sellerUid, 2500, `Sold ${p.title} for $${salePrice.toLocaleString()}`);
+        }
+        
+        // Create celebration banner
+        if (typeof createSaleCelebration === 'function') {
+            await createSaleCelebration(sellerDisplayName, p.title, salePrice, buyerName);
+        }
+        
+        showToast('🎉 Sale completed! Congratulations!', 'success');
+        
+        // Refresh views
+        setTimeout(() => {
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(numericId);
+            }
+            if (typeof renderOwnerDashboard === 'function') {
+                renderOwnerDashboard();
+            }
+        }, 500);
+        
+    } catch (error) {
+        console.error('[CompleteSale] Error:', error);
+        showToast('Failed to complete sale: ' + error.message, 'error');
+    }
+};
+
+/**
  * Cancel a pending sale
  */
 window.cancelPendingSale = async function(vehicleId) {
