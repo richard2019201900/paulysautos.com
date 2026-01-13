@@ -203,8 +203,12 @@ async function calculateTotalsAsync() {
         const isSold = VehicleDataService.getValue(v.id, 'isSold', v.isSold || false);
         const isPremium = VehicleDataService.getValue(v.id, 'isPremium', v.isPremium || false);
         const isPremiumTrial = VehicleDataService.getValue(v.id, 'isPremiumTrial', v.isPremiumTrial || false);
-        const salePrice = VehicleDataService.getValue(v.id, 'price', v.price || 0);
+        const listingPrice = VehicleDataService.getValue(v.id, 'price', v.price || 0);
+        const soldPrice = VehicleDataService.getValue(v.id, 'soldPrice', v.soldPrice || 0);
         const pendingSale = VehicleDataService.getValue(v.id, 'pendingSale', v.pendingSale || false);
+        
+        // Use soldPrice for sold vehicles, listingPrice for active listings
+        const salePrice = isSold ? (soldPrice || listingPrice) : listingPrice;
         
         const vehicleInfo = {
             id: v.id,
@@ -915,13 +919,16 @@ window.saveCellEdit = async function(input, vehicleId, field, type) {
                                     // Create celebration
                                     const userName = userData.username || user.email.split('@')[0];
                                     const propTitle = p?.title || 'a vehicle';
+                                    const firstChar = (propTitle || '').charAt(0).toLowerCase();
+                                    const vowels = ['a', 'e', 'i', 'o', 'u'];
+                                    const article = vowels.includes(firstChar) ? 'an' : 'a';
                                     await GamificationService.createCelebration({
                                         type: 'sale',
                                         userId: user.uid,
                                         userName: userName,
                                         vehicleTitle: propTitle,
                                         icon: '🤝',
-                                        message: `just sold ${propTitle}!`
+                                        message: `just sold ${article} ${propTitle}!`
                                     });
                                 }
                             }).catch(err => console.error('[Gamification] Error:', err));
@@ -937,13 +944,16 @@ window.saveCellEdit = async function(input, vehicleId, field, type) {
                                 // Create celebration
                                 const userName = userData.username || user.email.split('@')[0];
                                 const propTitle = p?.title || 'a vehicle';
+                                const firstChar = (propTitle || '').charAt(0).toLowerCase();
+                                const vowels = ['a', 'e', 'i', 'o', 'u'];
+                                const article = vowels.includes(firstChar) ? 'an' : 'a';
                                 await GamificationService.createCelebration({
                                     type: 'sale',
                                     userId: user.uid,
                                     userName: userName,
                                     vehicleTitle: propTitle,
                                     icon: '🤝',
-                                    message: `just sold ${propTitle}!`
+                                    message: `just sold ${article} ${propTitle}!`
                                 });
                             }).catch(err => console.error('[Gamification] Error:', err));
                         }

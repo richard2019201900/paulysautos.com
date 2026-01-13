@@ -62,13 +62,18 @@ window.createSaleCelebration = async function(sellerDisplayName, vehicleTitle, s
         const celebrationId = `sale_${Date.now()}`;
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
         
+        // Determine article (a/an) based on first letter of vehicle title
+        const firstChar = (vehicleTitle || '').charAt(0).toLowerCase();
+        const vowels = ['a', 'e', 'i', 'o', 'u'];
+        const article = vowels.includes(firstChar) ? 'an' : 'a';
+        
         // Only show seller name and vehicle - no buyer or price for privacy
         const celebration = {
             id: celebrationId,
             type: 'house_sale',
             icon: '🏆',
             userName: sellerDisplayName,
-            message: `just sold ${vehicleTitle}! 🎉`,
+            message: `just sold ${article} ${vehicleTitle}! 🎉`,
             createdAt: new Date().toISOString(),
             expiresAt: expiresAt
         };
@@ -1966,7 +1971,16 @@ window.submitCompletePendingSale = async function(vehicleId) {
             } catch (e) {}
         }
         
-        const salePrice = contractData?.vehiclePrice || pendingSale.luxAmount + (pendingSale.downPayment || 0);
+        // Calculate sale price with multiple fallbacks
+        const vehiclePrice = VehicleDataService.getValue(numericId, 'price', p.price || 0);
+        let salePrice = contractData?.vehiclePrice || 0;
+        if (!salePrice) {
+            salePrice = (pendingSale.luxAmount || 0) + (pendingSale.downPayment || 0);
+        }
+        if (!salePrice) {
+            salePrice = vehiclePrice;
+        }
+        
         const buyerName = pendingSale.buyerName || contractData?.buyerName || 'Unknown';
         const saleDate = new Date().toISOString().split('T')[0];
         
