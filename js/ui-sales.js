@@ -230,15 +230,8 @@ window.showLogSaleModal = function(vehicleId, financingContractId = null) {
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Update realtor fee on price change
-    const priceInput = document.getElementById('salePriceInput');
-    const feeDisplay = document.getElementById('salesFeeDisplay');
-    if (priceInput && feeDisplay) {
-        priceInput.addEventListener('input', () => {
-            const price = parseInt(priceInput.value) || 0;
-            feeDisplay.textContent = `$${Math.round(price * 0.10).toLocaleString()}`;
-        });
-    }
+    // City sales fee is always flat $25,000 - no need to update on price change
+    // The fee display already shows the correct amount in the HTML
     
     // Populate seller dropdown for admins
     if (isAdmin) {

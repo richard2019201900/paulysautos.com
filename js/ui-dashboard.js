@@ -648,10 +648,11 @@ function renderOwnerDashboard() {
     const tableEl = $('ownerVehiclesTable');
     if (tableEl) {
         tableEl.innerHTML = ownedVehicles.map((v, index) => {
-            const price = VehicleDataService.getValue(v.id, 'price', v.price || 0);
+            const price = VehicleDataService.getValue(v.id, 'price', v.price || v.buyPrice || 0);
             const isSold = VehicleDataService.getValue(v.id, 'isSold', v.isSold || false);
             const isPremium = VehicleDataService.getValue(v.id, 'isPremium', v.isPremium || false);
             const isAvailable = state.availability[v.id] !== false && !isSold;
+            const description = VehicleDataService.getValue(v.id, 'description', v.description) || v.title || 'Vehicle';
             
             // Status display
             let statusBadge = '';
@@ -660,21 +661,22 @@ function renderOwnerDashboard() {
             } else if (isPremium) {
                 statusBadge = '<span class="bg-amber-500 text-black text-xs px-2 py-0.5 rounded-full">PREMIUM</span>';
             } else if (isAvailable) {
-                statusBadge = '<span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">AVAILABLE</span>';
+                statusBadge = '<span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">ACTIVE</span>';
             } else {
                 statusBadge = '<span class="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full">RESERVED</span>';
             }
             
             return `
                 <tr class="border-b border-gray-700 hover:bg-gray-800/50 transition">
-                    <td class="px-4 py-3 font-medium">${index + 1}</td>
+                    <td class="px-3 py-3 text-center text-gray-400">${index + 1}</td>
                     <td class="px-4 py-3">
-                        <div class="font-semibold text-white">${sanitize(v.title || 'Vehicle')}</div>
+                        <div class="font-semibold text-white">${sanitize(description)}</div>
+                        <div class="text-xs text-gray-400">${sanitize(v.title || '')} ${v.plate ? '| ' + v.plate : ''}</div>
                     </td>
                     <td class="px-4 py-3 text-right font-bold text-green-400">${formatPrice(price)}</td>
                     <td class="px-4 py-3 text-center">${statusBadge}</td>
-                    <td class="px-4 py-3 text-center">
-                        <button onclick="viewVehicle(${v.id})" class="text-blue-400 hover:text-blue-300 text-sm">
+                    <td class="px-3 py-3 text-center">
+                        <button onclick="viewVehicleStats(${v.id})" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
                             View
                         </button>
                     </td>
@@ -1015,7 +1017,8 @@ async function renderVehicles(list) {
     $('vehiclesGrid').innerHTML = sortedList.filter(p => p).map(p => {
         // Ensure vehicle ID is numeric for consistent lookup
         const propId = typeof p.id === 'string' ? parseInt(p.id) : p.id;
-        const available = state.availability[propId] !== false;
+        const isSold = VehicleDataService.getValue(propId, 'isSold', p.isSold || false);
+        const available = state.availability[propId] !== false && !isSold;
         const isPremium = VehicleDataService.getValue(propId, 'isPremium', p.isPremium || false);
         const hasImages = p.images && Array.isArray(p.images) && p.images.length > 0 && p.images[0];
         
