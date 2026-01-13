@@ -1671,7 +1671,7 @@ window.confirmDownPaymentReceived = async function(vehicleId) {
 };
 
 /**
- * Complete a pending sale - finalize and mark vehicle as sold
+ * Show modal to complete a pending sale (with seller dropdown for admins)
  */
 window.completePendingSale = async function(vehicleId) {
     const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
@@ -1702,49 +1702,238 @@ window.completePendingSale = async function(vehicleId) {
         // Calculate sale price from pending sale or contract
         const salePrice = contractData?.vehiclePrice || pendingSale.luxAmount + (pendingSale.downPayment || 0);
         const buyerName = pendingSale.buyerName || contractData?.buyerName || 'Unknown';
+        const ownerEmail = VehicleDataService.getValue(numericId, 'ownerEmail', p.ownerEmail);
+        
+        const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
+        
+        // Build seller dropdown HTML for admins
+        let sellerDropdownHTML = '';
+        if (isAdmin) {
+            sellerDropdownHTML = `
+                <div class="mb-4">
+                    <label class="text-gray-400 text-sm block mb-2">🏆 Award XP & Credit Sale To:</label>
+                    <select id="completeSaleSellerSelect" class="w-full bg-gray-800 border border-gray-600 rounded-xl py-3 px-4 text-white focus:border-amber-500 focus:outline-none">
+                        <option value="">Loading sellers...</option>
+                    </select>
+                    <p class="text-gray-500 text-xs mt-1">Select who should receive XP and be credited for this sale</p>
+                </div>
+            `;
+        }
+        
+        // Create modal HTML
+        const modalHTML = `
+            <div id="completePendingSaleModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                <div class="bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full border-2 border-amber-500/50 relative overflow-hidden">
+                    <button onclick="closeCompleteSaleModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition z-10">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    
+                    <div class="bg-gradient-to-r from-amber-600 to-yellow-600 px-6 py-4">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            🎉 Complete Pending Sale
+                        </h3>
+                        <p class="text-amber-900 text-sm">Finalize this sale and award XP</p>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Sale Summary -->
+                        <div class="bg-gray-800/50 rounded-xl p-4 mb-4 border border-gray-700">
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <div class="text-gray-400">Vehicle</div>
+                                    <div class="text-white font-bold">${p.title}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400">Buyer</div>
+                                    <div class="text-green-400 font-bold">${buyerName}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400">Sale Price</div>
+                                    <div class="text-amber-400 font-bold text-lg">$${salePrice.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400">Down Payment</div>
+                                    <div class="text-${pendingSale.downPaymentReceived ? 'green' : 'amber'}-400 font-bold">
+                                        $${(pendingSale.downPayment || 0).toLocaleString()}
+                                        ${pendingSale.downPaymentReceived ? '✓' : '⏳'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${sellerDropdownHTML}
+                        
+                        <!-- What happens -->
+                        <div class="bg-green-900/20 border border-green-500/30 rounded-xl p-4 mb-4">
+                            <div class="text-green-400 font-bold text-sm mb-2">✓ This will:</div>
+                            <ul class="text-green-300 text-sm space-y-1">
+                                <li>• Mark vehicle as <strong>SOLD</strong></li>
+                                <li>• Award <strong>2,500 XP</strong> to seller</li>
+                                <li>• Create celebration banner</li>
+                                <li>• Close pending sale & update contract</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3">
+                            <button onclick="closeCompleteSaleModal()" class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                                Cancel
+                            </button>
+                            <button onclick="submitCompletePendingSale(${numericId})" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Complete Sale
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('completePendingSaleModal');
+        if (existingModal) existingModal.remove();
+        
+        // Add modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Populate seller dropdown for admins
+        if (isAdmin) {
+            await populateCompleteSaleSellerDropdown(ownerEmail);
+        }
+        
+    } catch (error) {
+        console.error('[CompleteSale] Error:', error);
+        showToast('Error: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Populate the seller dropdown in Complete Sale modal
+ */
+async function populateCompleteSaleSellerDropdown(defaultOwnerEmail) {
+    const select = document.getElementById('completeSaleSellerSelect');
+    if (!select) return;
+    
+    try {
+        const usersSnapshot = await db.collection('users').get();
+        const owners = [];
+        
+        usersSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.email) {
+                let displayName;
+                if (data.firstName && data.lastName) {
+                    displayName = data.firstName + ' ' + data.lastName;
+                } else if (data.displayName) {
+                    displayName = data.displayName;
+                } else {
+                    displayName = data.username || data.email.split('@')[0];
+                }
+                
+                owners.push({
+                    email: data.email,
+                    displayName: displayName,
+                    uid: doc.id
+                });
+            }
+        });
+        
+        owners.sort((a, b) => a.displayName.localeCompare(b.displayName));
+        
+        let optionsHTML = '<option value="">-- Select Seller --</option>';
+        owners.forEach(owner => {
+            const selected = owner.email.toLowerCase() === defaultOwnerEmail?.toLowerCase() ? 'selected' : '';
+            optionsHTML += `<option value="${owner.email}" data-displayname="${owner.displayName}" data-uid="${owner.uid}" ${selected}>${owner.displayName} (${owner.email})</option>`;
+        });
+        
+        select.innerHTML = optionsHTML;
+    } catch (e) {
+        console.error('[CompleteSale] Error loading sellers:', e);
+        select.innerHTML = '<option value="">Error loading sellers</option>';
+    }
+}
+
+/**
+ * Close the Complete Sale modal
+ */
+window.closeCompleteSaleModal = function() {
+    const modal = document.getElementById('completePendingSaleModal');
+    if (modal) modal.remove();
+};
+
+/**
+ * Submit the pending sale completion
+ */
+window.submitCompletePendingSale = async function(vehicleId) {
+    const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
+    
+    try {
+        const p = vehicles.find(prop => prop.id === numericId);
+        if (!p) throw new Error('Vehicle not found');
+        
+        const pendingSale = VehicleDataService.getValue(numericId, 'pendingSale', p.pendingSale || null);
+        if (!pendingSale) {
+            showToast('No pending sale found', 'error');
+            return;
+        }
+        
+        // Get contract data
+        let contractData = null;
+        if (pendingSale.contractId) {
+            try {
+                const contractDoc = await db.collection('saleContracts').doc(pendingSale.contractId).get();
+                if (contractDoc.exists) {
+                    contractData = contractDoc.data();
+                }
+            } catch (e) {}
+        }
+        
+        const salePrice = contractData?.vehiclePrice || pendingSale.luxAmount + (pendingSale.downPayment || 0);
+        const buyerName = pendingSale.buyerName || contractData?.buyerName || 'Unknown';
         const saleDate = new Date().toISOString().split('T')[0];
         
-        // Get seller info
-        const ownerEmail = VehicleDataService.getValue(numericId, 'ownerEmail', p.ownerEmail);
-        let sellerDisplayName = 'Unknown Seller';
-        let sellerUid = null;
+        // Get seller info - from dropdown for admins, or vehicle owner
+        let sellerEmail, sellerDisplayName, sellerUid;
+        const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
+        const sellerSelect = document.getElementById('completeSaleSellerSelect');
         
-        if (ownerEmail) {
-            try {
-                const usersSnapshot = await db.collection('users')
-                    .where('email', '==', ownerEmail.toLowerCase())
-                    .limit(1)
-                    .get();
-                if (!usersSnapshot.empty) {
-                    const userData = usersSnapshot.docs[0].data();
-                    sellerUid = usersSnapshot.docs[0].id;
-                    if (userData.firstName && userData.lastName) {
-                        sellerDisplayName = userData.firstName + ' ' + userData.lastName;
-                    } else {
-                        sellerDisplayName = userData.username || ownerEmail.split('@')[0];
+        if (isAdmin && sellerSelect && sellerSelect.value) {
+            sellerEmail = sellerSelect.value;
+            const selectedOption = sellerSelect.options[sellerSelect.selectedIndex];
+            sellerDisplayName = selectedOption?.dataset?.displayname || sellerEmail.split('@')[0];
+            sellerUid = selectedOption?.dataset?.uid || null;
+        } else {
+            // Get from vehicle owner
+            sellerEmail = VehicleDataService.getValue(numericId, 'ownerEmail', p.ownerEmail);
+            
+            if (sellerEmail) {
+                try {
+                    const usersSnapshot = await db.collection('users')
+                        .where('email', '==', sellerEmail.toLowerCase())
+                        .limit(1)
+                        .get();
+                    if (!usersSnapshot.empty) {
+                        const userData = usersSnapshot.docs[0].data();
+                        sellerUid = usersSnapshot.docs[0].id;
+                        if (userData.firstName && userData.lastName) {
+                            sellerDisplayName = userData.firstName + ' ' + userData.lastName;
+                        } else {
+                            sellerDisplayName = userData.username || sellerEmail.split('@')[0];
+                        }
                     }
+                } catch (e) {
+                    sellerDisplayName = sellerEmail?.split('@')[0] || 'Unknown';
                 }
-            } catch (e) {
-                console.log('[CompleteSale] Could not fetch seller info');
             }
         }
         
-        const confirmed = confirm(
-            '🎉 COMPLETE SALE\n\n' +
-            `Vehicle: ${p.title}\n` +
-            `Buyer: ${buyerName}\n` +
-            `Sale Price: $${salePrice.toLocaleString()}\n\n` +
-            'This will:\n' +
-            '• Mark the vehicle as SOLD\n' +
-            '• Award 2,500 XP to the seller\n' +
-            '• Create a celebration banner\n' +
-            '• Close the pending sale\n\n' +
-            'Confirm sale completion?'
-        );
-        
-        if (!confirmed) return;
+        if (isAdmin && !sellerEmail) {
+            showToast('Please select who should be credited for this sale', 'error');
+            return;
+        }
         
         showToast('🚗 Completing sale...', 'info');
+        closeCompleteSaleModal();
         
         // Create sale record
         const saleDoc = {
@@ -1754,11 +1943,11 @@ window.completePendingSale = async function(vehicleId) {
             saleDate: saleDate,
             buyerName: buyerName,
             sellerDisplayName: sellerDisplayName,
-            sellerEmail: ownerEmail,
+            sellerEmail: sellerEmail,
             sellerUid: sellerUid,
             saleType: 'pending_completed',
             contractId: pendingSale.contractId || null,
-            salesFee: 25000, // City sales fee
+            salesFee: 25000,
             netProceeds: salePrice,
             recordedAt: new Date().toISOString(),
             recordedBy: auth.currentUser?.email
@@ -1774,7 +1963,7 @@ window.completePendingSale = async function(vehicleId) {
             soldTo: buyerName,
             soldPrice: salePrice,
             saleId: saleRef.id,
-            pendingSale: null // Clear pending sale
+            pendingSale: null
         });
         
         // Update contract status
@@ -1785,7 +1974,7 @@ window.completePendingSale = async function(vehicleId) {
             });
         }
         
-        // Award XP to seller
+        // Award XP to selected seller
         if (typeof GamificationService !== 'undefined' && GamificationService.awardXP && sellerUid) {
             await GamificationService.awardXP(sellerUid, 2500, `Sold ${p.title} for $${salePrice.toLocaleString()}`);
         }
