@@ -1773,8 +1773,8 @@ window.completePendingSale = async function(vehicleId) {
         
         // Create modal HTML
         const modalHTML = `
-            <div id="completePendingSaleModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                <div class="bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full border-2 border-amber-500/50 relative overflow-hidden">
+            <div id="completePendingSaleModal" class="complete-sale-modal fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onclick="if(event.target === this) closeCompleteSaleModal()">
+                <div class="bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full border-2 border-amber-500/50 relative overflow-hidden" onclick="event.stopPropagation()">
                     <button onclick="closeCompleteSaleModal()" class="absolute top-3 right-3 w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition z-10">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
@@ -1843,9 +1843,13 @@ window.completePendingSale = async function(vehicleId) {
         // Remove existing modal if any
         const existingModal = document.getElementById('completePendingSaleModal');
         if (existingModal) existingModal.remove();
+        document.querySelectorAll('.complete-sale-modal').forEach(el => el.remove());
         
         // Add modal to DOM
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Add escape key listener
+        document.addEventListener('keydown', window._completeSaleEscHandler);
         
         // Populate seller dropdown for admins
         if (isAdmin) {
@@ -1908,8 +1912,31 @@ async function populateCompleteSaleSellerDropdown(defaultOwnerEmail) {
  * Close the Complete Sale modal
  */
 window.closeCompleteSaleModal = function() {
+    console.log('[CompleteSale] Closing modal...');
+    
+    // Remove by ID
     const modal = document.getElementById('completePendingSaleModal');
-    if (modal) modal.remove();
+    if (modal) {
+        modal.style.display = 'none';
+        modal.remove();
+        console.log('[CompleteSale] Modal removed by ID');
+    }
+    
+    // Also remove by class (fallback)
+    document.querySelectorAll('.complete-sale-modal').forEach(el => {
+        el.style.display = 'none';
+        el.remove();
+    });
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', window._completeSaleEscHandler);
+};
+
+// Escape key handler for modal
+window._completeSaleEscHandler = function(e) {
+    if (e.key === 'Escape') {
+        closeCompleteSaleModal();
+    }
 };
 
 /**
@@ -1984,7 +2011,18 @@ window.submitCompletePendingSale = async function(vehicleId) {
         }
         
         showToast('🚗 Completing sale...', 'info');
-        closeCompleteSaleModal();
+        
+        // Close modal immediately with fallback
+        try {
+            closeCompleteSaleModal();
+        } catch (e) {
+            console.error('[CompleteSale] Error closing modal:', e);
+        }
+        // Force remove any lingering modals
+        document.querySelectorAll('#completePendingSaleModal, .complete-sale-modal').forEach(el => {
+            el.style.display = 'none';
+            el.remove();
+        });
         
         // Create sale record
         const saleDoc = {
