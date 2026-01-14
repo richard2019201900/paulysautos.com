@@ -284,6 +284,7 @@
             photo: 0,
             premium: 0,
             rent: 0,
+            subscription: 0,
             total: 0
         };
         
@@ -294,10 +295,16 @@
             }
         });
         
-        counts.rent = (state.rentAlerts.overdue?.length || 0) +
+        // Payment alerts: pending down payments + financing payments
+        counts.rent = (state.rentAlerts.pendingDownPayments?.length || 0) +
+                      (state.rentAlerts.overdue?.length || 0) +
                       (state.rentAlerts.today?.length || 0) +
                       (state.rentAlerts.tomorrow?.length || 0);
         counts.total += counts.rent;
+        
+        // Subscription alerts (admin only, set by ui-admin.js)
+        counts.subscription = window.subscriptionAlertCount || 0;
+        counts.total += counts.subscription;
         
         return counts;
     }
@@ -411,12 +418,25 @@
                 break;
                 
             case 'rent':
-                // Navigate to My Vehicles tab, scroll to rent panel
+                // Navigate to My Vehicles tab, scroll to payment alerts panel
                 if (typeof window.switchDashboardTab === 'function') {
                     window.switchDashboardTab('myVehicles');
                     await sleep(200);
                 }
-                await scrollToAndHighlight('#rentNotificationsPanel', type);
+                await scrollToAndHighlight('#paymentNotificationsPanel', type);
+                break;
+                
+            case 'subscription':
+                // Navigate to admin panel, scroll to subscription alerts
+                if (typeof window.switchDashboardTab === 'function') {
+                    window.switchDashboardTab('admin');
+                    await sleep(200);
+                }
+                if (typeof window.switchAdminTab === 'function') {
+                    window.switchAdminTab('users');
+                    await sleep(200);
+                }
+                await scrollToAndHighlight('#subscriptionNotificationsPanel', type);
                 break;
                 
             default:
@@ -516,6 +536,7 @@
         updateBadge('dropdownPhotoBadge', 'dropdownPhotoCount', counts.photo);
         updateBadge('dropdownPremiumBadge', 'dropdownPremiumCount', counts.premium);
         updateBadge('dropdownRentBadge', 'dropdownRentCount', counts.rent);
+        updateBadge('dropdownSubscriptionBadge', 'dropdownSubscriptionCount', counts.subscription);
         
         // Mobile badges
         const mobileAdminTotal = counts.user + counts.listing + counts.photo + counts.premium;
@@ -525,7 +546,7 @@
         // Navbar notification dot (shows when any admin notification exists)
         const navDot = document.getElementById('navNotificationDot');
         if (navDot) {
-            const totalAdminNotifs = counts.user + counts.listing + counts.photo + counts.premium;
+            const totalAdminNotifs = counts.user + counts.listing + counts.photo + counts.premium + counts.subscription;
             if (totalAdminNotifs > 0) {
                 navDot.classList.remove('hidden');
             } else {
@@ -550,7 +571,13 @@
     
     function refreshPanels() {
         renderNotificationStack();
-        renderRentAlertsPanel();
+        renderPaymentAlertsPanel();
+        
+        // Subscription alerts are rendered by ui-admin.js when admin panel loads
+        // Just trigger a refresh if the function exists
+        if (typeof window.renderSubscriptionAlertsPanel === 'function') {
+            window.renderSubscriptionAlertsPanel();
+        }
     }
     
     function renderNotificationStack() {
@@ -646,8 +673,8 @@
         `;
     }
     
-    function renderRentAlertsPanel() {
-        const panel = document.getElementById('rentNotificationsPanel');
+    function renderPaymentAlertsPanel() {
+        const panel = document.getElementById('paymentNotificationsPanel');
         if (!panel) return;
         
         if (!auth?.currentUser?.email) {
@@ -655,8 +682,9 @@
             return;
         }
         
-        const { overdue, today, tomorrow } = state.rentAlerts;
-        const total = overdue.length + today.length + tomorrow.length;
+        const { pendingDownPayments = [], overdue = [], today = [], tomorrow = [] } = state.rentAlerts;
+        const totalFinancing = overdue.length + today.length + tomorrow.length;
+        const total = pendingDownPayments.length + totalFinancing;
         
         if (total === 0) {
             panel.classList.add('hidden');
@@ -665,12 +693,13 @@
         
         panel.classList.remove('hidden');
         
+        const hasDownPayments = pendingDownPayments.length > 0;
         const isUrgent = overdue.length > 0;
-        const isWarning = today.length > 0;
+        const isWarning = today.length > 0 || hasDownPayments;
         
         const borderColor = isUrgent ? 'border-red-500/70' : isWarning ? 'border-orange-500/70' : 'border-yellow-500/70';
-        const headerGradient = isUrgent ? 'from-red-600 to-red-700' : isWarning ? 'from-orange-500 to-red-500' : 'from-yellow-500 to-orange-400';
-        const headerIcon = isUrgent ? '🚨' : isWarning ? '⏰' : '📅';
+        const headerGradient = isUrgent ? 'from-red-600 to-red-700' : isWarning ? 'from-orange-500 to-amber-500' : 'from-yellow-500 to-orange-400';
+        const headerIcon = isUrgent ? '🚨' : hasDownPayments ? '💰' : isWarning ? '⏰' : '📅';
         
         let html = `
             <div class="glass-effect rounded-2xl shadow-2xl overflow-hidden border-2 ${borderColor}">
@@ -679,33 +708,49 @@
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">${headerIcon}</span>
                             <div>
-                                <h3 class="text-xl font-bold text-white">Rent Collection Alert</h3>
+                                <h3 class="text-xl font-bold text-white">Payment Collection Alert</h3>
                                 <p class="text-white/80 text-sm">${total} payment${total !== 1 ? 's' : ''} need${total === 1 ? 's' : ''} attention</p>
                             </div>
                         </div>
-                        <button onclick="NotificationManager.toggleRentPanel()" id="rentPanelToggle" class="text-white/80 hover:text-white transition">
-                            <svg class="w-6 h-6 transform transition-transform" id="rentPanelArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button onclick="NotificationManager.togglePaymentPanel()" id="paymentPanelToggle" class="text-white/80 hover:text-white transition">
+                            <svg class="w-6 h-6 transform transition-transform" id="paymentPanelArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                     </div>
                 </div>
-                <div id="rentPanelContent" class="p-4 space-y-4">
+                <div id="paymentPanelContent" class="p-4 space-y-4">
         `;
         
-        if (overdue.length > 0) {
+        // Pending Down Payments section
+        if (pendingDownPayments.length > 0) {
             html += `
-                <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/50">
-                    <h4 class="text-red-400 font-bold mb-3 flex items-center gap-2">
-                        <span>🚨</span> OVERDUE (${overdue.length})
+                <div class="bg-amber-900/30 rounded-xl p-4 border border-amber-500/50">
+                    <h4 class="text-amber-400 font-bold mb-3 flex items-center gap-2">
+                        <span>💵</span> PENDING DOWN PAYMENTS (${pendingDownPayments.length})
                     </h4>
                     <div class="space-y-2">
-                        ${overdue.map(rent => renderRentItem(rent, 'overdue')).join('')}
+                        ${pendingDownPayments.map(item => renderDownPaymentItem(item)).join('')}
                     </div>
                 </div>
             `;
         }
         
+        // Financing Overdue section
+        if (overdue.length > 0) {
+            html += `
+                <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/50">
+                    <h4 class="text-red-400 font-bold mb-3 flex items-center gap-2">
+                        <span>🚨</span> FINANCING OVERDUE (${overdue.length})
+                    </h4>
+                    <div class="space-y-2">
+                        ${overdue.map(item => renderFinancingItem(item, 'overdue')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Due Today section
         if (today.length > 0) {
             html += `
                 <div class="bg-orange-900/30 rounded-xl p-4 border border-orange-500/50">
@@ -713,12 +758,13 @@
                         <span>⏰</span> DUE TODAY (${today.length})
                     </h4>
                     <div class="space-y-2">
-                        ${today.map(rent => renderRentItem(rent, 'today')).join('')}
+                        ${today.map(item => renderFinancingItem(item, 'today')).join('')}
                     </div>
                 </div>
             `;
         }
         
+        // Due Tomorrow section
         if (tomorrow.length > 0) {
             html += `
                 <div class="bg-yellow-900/30 rounded-xl p-4 border border-yellow-500/50">
@@ -726,7 +772,7 @@
                         <span>📅</span> DUE TOMORROW (${tomorrow.length})
                     </h4>
                     <div class="space-y-2">
-                        ${tomorrow.map(rent => renderRentItem(rent, 'tomorrow')).join('')}
+                        ${tomorrow.map(item => renderFinancingItem(item, 'tomorrow')).join('')}
                     </div>
                 </div>
             `;
@@ -740,29 +786,28 @@
         panel.innerHTML = html;
     }
     
-    function renderRentItem(rent, status) {
-        const statusColors = {
-            overdue: 'text-red-300',
-            today: 'text-orange-300',
-            tomorrow: 'text-yellow-300'
-        };
+    function renderDownPaymentItem(item) {
+        const vehicleId = item.propId || item.vehicleId || item.id;
+        const vehicleTitle = item.description || item.title || `Vehicle ${vehicleId}`;
+        const buyerName = item.buyerName || 'Unknown Buyer';
+        const downPayment = item.downPayment || 0;
+        const salePrice = item.salePrice || 0;
         
-        const vehicleId = rent.propId || rent.vehicleId || rent.id;
-        const paymentAmount = rent.paymentAmount || rent.weeklyPrice || 0;
-        const buyerName = rent.buyerName || 'Unknown';
-        const vehicleTitle = rent.title || `Vehicle ${vehicleId}`;
-        const dueDisplay = rent.dueDate ? new Date(rent.dueDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Unknown';
+        // Generate reminder message
+        const reminderMsg = `Hey ${buyerName}! 👋 Just a friendly reminder about your down payment of $${downPayment.toLocaleString()} for the ${vehicleTitle}. The total sale price is $${salePrice.toLocaleString()}. Let me know when you're ready to complete the payment!`;
+        const escapedReminder = reminderMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
         
         return `
-            <div id="rent-item-${vehicleId}" class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
+            <div class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
                 <div class="flex-1 min-w-0 cursor-pointer" onclick="viewVehicleStats(${vehicleId})" style="outline: none;">
-                    <div class="text-white font-medium truncate">${vehicleTitle}</div>
+                    <div class="text-white font-medium truncate">🚗 ${vehicleTitle}</div>
                     <div class="text-gray-400 text-sm">Buyer: ${buyerName}</div>
-                    <div class="${statusColors[status]} text-xs">Due: ${dueDisplay}</div>
+                    <div class="text-amber-300 text-xs">Awaiting down payment</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-white font-bold">$${paymentAmount.toLocaleString()}</div>
-                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyRentReminder('${vehicleId}', '${buyerName.replace(/'/g, "\\'")}', '${vehicleTitle.replace(/'/g, "\\'")}', ${paymentAmount})" 
+                    <div class="text-amber-400 font-bold">$${downPayment.toLocaleString()}</div>
+                    <div class="text-gray-500 text-xs">of $${salePrice.toLocaleString()}</div>
+                    <button onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapedReminder}').then(() => showToast('Reminder copied!', 'success'))" 
                             class="text-cyan-400 hover:text-cyan-300 text-xs mt-1 flex items-center gap-1"
                             style="outline: none;">
                         📋 Copy Reminder
@@ -772,9 +817,42 @@
         `;
     }
     
-    function toggleRentPanel() {
-        const content = document.getElementById('rentPanelContent');
-        const arrow = document.getElementById('rentPanelArrow');
+    function renderFinancingItem(item, status) {
+        const statusColors = {
+            overdue: 'text-red-300',
+            today: 'text-orange-300',
+            tomorrow: 'text-yellow-300'
+        };
+        
+        const vehicleId = item.propId || item.vehicleId || item.id;
+        const paymentAmount = item.paymentAmount || 0;
+        const buyerName = item.buyerName || 'Unknown';
+        const vehicleTitle = item.description || item.title || `Vehicle ${vehicleId}`;
+        const dueDisplay = item.dueDate ? new Date(item.dueDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Unknown';
+        const paymentInfo = item.totalPayments ? `Payment ${(item.currentPayment || 0) + 1} of ${item.totalPayments}` : '';
+        
+        return `
+            <div id="payment-item-${vehicleId}" class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
+                <div class="flex-1 min-w-0 cursor-pointer" onclick="viewVehicleStats(${vehicleId})" style="outline: none;">
+                    <div class="text-white font-medium truncate">🚗 ${vehicleTitle}</div>
+                    <div class="text-gray-400 text-sm">Buyer: ${buyerName}</div>
+                    <div class="${statusColors[status]} text-xs">Due: ${dueDisplay} ${paymentInfo ? `• ${paymentInfo}` : ''}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-white font-bold">$${paymentAmount.toLocaleString()}</div>
+                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyPaymentReminder('${vehicleId}', '${buyerName.replace(/'/g, "\\'")}', '${vehicleTitle.replace(/'/g, "\\'")}', ${paymentAmount})" 
+                            class="text-cyan-400 hover:text-cyan-300 text-xs mt-1 flex items-center gap-1"
+                            style="outline: none;">
+                        📋 Copy Reminder
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    function togglePaymentPanel() {
+        const content = document.getElementById('paymentPanelContent');
+        const arrow = document.getElementById('paymentPanelArrow');
         
         if (content && arrow) {
             content.classList.toggle('hidden');
@@ -782,41 +860,35 @@
         }
     }
     
-    function copyRentReminder(vehicleId, buyerName, vehicleTitle, amount) {
-        // Find the rent data to get full details (frequency, due date, days overdue)
-        const allRents = [...state.rentAlerts.overdue, ...state.rentAlerts.today, ...state.rentAlerts.tomorrow];
-        const rentData = allRents.find(r => String(r.propId) === String(vehicleId) || String(r.id) === String(vehicleId));
+    function copyPaymentReminder(vehicleId, buyerName, vehicleTitle, amount) {
+        // Find the financing data to get full details
+        const allFinancing = [...(state.rentAlerts.overdue || []), ...(state.rentAlerts.today || []), ...(state.rentAlerts.tomorrow || [])];
+        const financingData = allFinancing.find(r => String(r.propId) === String(vehicleId) || String(r.id) === String(vehicleId));
         
         let message;
         
-        if (rentData) {
-            // Use full details from rent data
-            const frequency = rentData.paymentFrequency || 'weekly';
-            const dueDate = rentData.dueDate;
-            const daysOverdue = rentData.daysOverdue || 0;
-            const paymentAmount = rentData.paymentAmount || amount;
+        if (financingData) {
+            const frequency = financingData.paymentFrequency || 'monthly';
+            const dueDate = financingData.dueDate;
+            const daysOverdue = financingData.daysOverdue || 0;
+            const paymentAmount = financingData.paymentAmount || amount;
+            const paymentNum = financingData.currentPayment ? `(Payment ${financingData.currentPayment + 1} of ${financingData.totalPayments})` : '';
             
-            // Format due date nicely
             const dueDateFormatted = dueDate ? new Date(dueDate + 'T12:00:00').toLocaleDateString('en-US', { 
                 weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
             }) : 'soon';
             
             if (daysOverdue >= 2) {
-                // 2+ days overdue - repossession warning
-                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for repossession in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
+                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for repossession in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
             } else if (daysOverdue > 0) {
-                // Overdue but less than 2 days
-                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
-            } else if (rentData.isToday) {
-                // Due today
-                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🚗`;
+                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
+            } else if (financingData.isToday) {
+                message = `Hey ${buyerName}! 👋 Just a friendly reminder that your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🚗`;
             } else {
-                // Due tomorrow
-                message = `Hey ${buyerName}, just a heads up - your ${frequency} financing payment of $${paymentAmount.toLocaleString()} is due tomorrow (${dueDateFormatted}). Thanks! 🚗`;
+                message = `Hey ${buyerName}! 👋 Just a heads up - your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} is due tomorrow (${dueDateFormatted}). Thanks! 🚗`;
             }
         } else {
-            // Fallback if rent data not found
-            message = `Hey ${buyerName}! 👋 Just a friendly reminder that rent for ${vehicleTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🚗`;
+            message = `Hey ${buyerName}! 👋 Just a friendly reminder about your financing payment for the ${vehicleTitle} ($${amount.toLocaleString()}). Please send payment when you get a chance. Thanks! 🚗`;
         }
         
         navigator.clipboard.writeText(message).then(() => {
@@ -885,9 +957,9 @@
                     }
                 }
                 
-                // Rent checks removed - PaulysAutos is a vehicle sales marketplace, not financing
-                // await checkRentDue();
-                // state.listeners.rentInterval = setInterval(checkRentDue, CONFIG.RENT_CHECK_INTERVAL);
+                // Check for financing payment alerts (down payments + recurring financing)
+                await checkPaymentAlerts();
+                state.listeners.rentInterval = setInterval(checkPaymentAlerts, CONFIG.RENT_CHECK_INTERVAL);
                 
                 state.initialized = true;
                 refreshUI();
@@ -1022,7 +1094,11 @@
             });
     }
     
-    async function checkRentDue() {
+    /**
+     * Check for payment alerts: pending down payments + financing payments due
+     * Shows alerts to vehicle OWNERS for their own vehicles
+     */
+    async function checkPaymentAlerts() {
         const currentUser = auth?.currentUser;
         if (!currentUser) return;
         
@@ -1033,110 +1109,123 @@
             const vehicles = propsDoc.data();
             const now = new Date();
             now.setHours(0, 0, 0, 0);
-            const todayStr = now.toISOString().split('T')[0];
-            const tomorrow = new Date(now.getTime() + 86400000);
-            const tomorrowStr = tomorrow.toISOString().split('T')[0];
             
-            const overdue = [];
-            const dueToday = [];
-            const dueTomorrow = [];
-            
-            const isAdmin = window.TierService?.isMasterAdmin(currentUser.email);
+            const pendingDownPayments = [];
+            const financingOverdue = [];
+            const financingDueToday = [];
+            const financingDueTomorrow = [];
             
             Object.entries(vehicles).forEach(([propId, prop]) => {
                 if (!prop) return;
                 
-                // Must have buyerName, lastPaymentDate, and paymentFrequency to calculate due date
-                if (!prop.buyerName || !prop.lastPaymentDate || !prop.paymentFrequency) {
-                    return;
-                }
-                
-                // Rent alerts are ALWAYS filtered to current user's vehicles only
-                // Even admins only see their own rent alerts (they can view all in admin panel)
+                // Only show alerts for current user's vehicles
                 if (prop.ownerEmail !== currentUser.email) return;
                 
-                // Calculate next rent due date from lastPaymentDate + paymentFrequency
-                // Parse the lastPaymentDate (format: YYYY-MM-DD)
-                const lastDateParts = prop.lastPaymentDate.split('-');
-                const lastDate = new Date(
-                    parseInt(lastDateParts[0]), 
-                    parseInt(lastDateParts[1]) - 1, 
-                    parseInt(lastDateParts[2])
-                );
-                lastDate.setHours(0, 0, 0, 0);
-                
-                const nextDate = new Date(lastDate);
-                if (prop.paymentFrequency === 'daily') {
-                    nextDate.setDate(nextDate.getDate() + 1);
-                } else if (prop.paymentFrequency === 'weekly') {
-                    nextDate.setDate(nextDate.getDate() + 7);
-                } else if (prop.paymentFrequency === 'biweekly') {
-                    nextDate.setDate(nextDate.getDate() + 14);
-                } else {
-                    // Monthly
-                    nextDate.setMonth(nextDate.getMonth() + 1);
+                // Check for pending down payments (active sale with downPaymentReceived: false)
+                if (prop.pendingSale && !prop.pendingSale.downPaymentReceived && prop.pendingSale.downPayment > 0) {
+                    pendingDownPayments.push({
+                        propId,
+                        vehicleId: propId,
+                        id: propId,
+                        title: prop.title || 'Vehicle',
+                        description: prop.description || prop.title,
+                        buyerName: prop.pendingSale.buyerName || 'Unknown Buyer',
+                        buyerPhone: prop.pendingSale.buyerPhone || '',
+                        downPayment: prop.pendingSale.downPayment,
+                        salePrice: prop.pendingSale.salePrice || prop.buyPrice,
+                        contractDate: prop.pendingSale.agreementDate || prop.pendingSale.createdAt,
+                        contractId: prop.pendingSale.contractId
+                    });
                 }
                 
-                const dueDate = nextDate.toISOString().split('T')[0];
-                const daysUntilDue = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
-                
-                // Get rent amount based on frequency
-                let paymentAmount = prop.weeklyPrice || 0;
-                if (prop.paymentFrequency === 'daily' && prop.dailyPrice) {
-                    paymentAmount = prop.dailyPrice;
-                } else if (prop.paymentFrequency === 'biweekly' && prop.biweeklyPrice) {
-                    paymentAmount = prop.biweeklyPrice;
-                } else if (prop.paymentFrequency === 'monthly' && prop.monthlyPrice) {
-                    paymentAmount = prop.monthlyPrice;
-                } else if (prop.paymentFrequency === 'daily') {
-                    paymentAmount = Math.round((prop.weeklyPrice || 0) / 7);
-                } else if (prop.paymentFrequency === 'biweekly') {
-                    paymentAmount = (prop.weeklyPrice || 0) * 2;
-                } else if (prop.paymentFrequency === 'monthly') {
-                    paymentAmount = (prop.weeklyPrice || 0) * 4;
-                }
-                
-                const rentData = {
-                    propId,
-                    vehicleId: propId,
-                    id: propId,
-                    ...prop,
-                    dueDate,
-                    nextRentDue: dueDate,
-                    paymentAmount,
-                    daysUntilDue
-                };
-                
-                if (daysUntilDue < 0) {
-                    // Overdue
-                    rentData.daysOverdue = Math.abs(daysUntilDue);
-                    overdue.push(rentData);
-                } else if (daysUntilDue === 0) {
-                    // Due today
-                    rentData.isToday = true;
-                    dueToday.push(rentData);
-                } else if (daysUntilDue === 1) {
-                    // Due tomorrow
-                    dueTomorrow.push(rentData);
+                // Check for financing payments due (has active financing with lastPaymentDate)
+                if (prop.hasActiveFinancing && prop.lastPaymentDate && prop.paymentFrequency && prop.buyerName) {
+                    // Parse the lastPaymentDate (format: YYYY-MM-DD)
+                    const lastDateParts = prop.lastPaymentDate.split('-');
+                    const lastDate = new Date(
+                        parseInt(lastDateParts[0]), 
+                        parseInt(lastDateParts[1]) - 1, 
+                        parseInt(lastDateParts[2])
+                    );
+                    lastDate.setHours(0, 0, 0, 0);
+                    
+                    const nextDate = new Date(lastDate);
+                    if (prop.paymentFrequency === 'daily') {
+                        nextDate.setDate(nextDate.getDate() + 1);
+                    } else if (prop.paymentFrequency === 'weekly') {
+                        nextDate.setDate(nextDate.getDate() + 7);
+                    } else if (prop.paymentFrequency === 'biweekly') {
+                        nextDate.setDate(nextDate.getDate() + 14);
+                    } else {
+                        // Monthly
+                        nextDate.setMonth(nextDate.getMonth() + 1);
+                    }
+                    
+                    const dueDate = nextDate.toISOString().split('T')[0];
+                    const daysUntilDue = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
+                    
+                    // Get payment amount based on frequency
+                    let paymentAmount = prop.weeklyPrice || 0;
+                    if (prop.paymentFrequency === 'daily' && prop.dailyPrice) {
+                        paymentAmount = prop.dailyPrice;
+                    } else if (prop.paymentFrequency === 'biweekly' && prop.biweeklyPrice) {
+                        paymentAmount = prop.biweeklyPrice;
+                    } else if (prop.paymentFrequency === 'monthly' && prop.monthlyPrice) {
+                        paymentAmount = prop.monthlyPrice;
+                    } else if (prop.paymentFrequency === 'daily') {
+                        paymentAmount = Math.round((prop.weeklyPrice || 0) / 7);
+                    } else if (prop.paymentFrequency === 'biweekly') {
+                        paymentAmount = (prop.weeklyPrice || 0) * 2;
+                    } else if (prop.paymentFrequency === 'monthly') {
+                        paymentAmount = (prop.weeklyPrice || 0) * 4;
+                    }
+                    
+                    const financingData = {
+                        propId,
+                        vehicleId: propId,
+                        id: propId,
+                        title: prop.title || 'Vehicle',
+                        description: prop.description || prop.title,
+                        buyerName: prop.buyerName,
+                        buyerPhone: prop.buyerPhone || '',
+                        paymentFrequency: prop.paymentFrequency,
+                        paymentAmount,
+                        dueDate,
+                        daysUntilDue,
+                        currentPayment: prop.financingCurrentPayment || 0,
+                        totalPayments: prop.financingTotalPayments || 0
+                    };
+                    
+                    if (daysUntilDue < 0) {
+                        financingData.daysOverdue = Math.abs(daysUntilDue);
+                        financingOverdue.push(financingData);
+                    } else if (daysUntilDue === 0) {
+                        financingData.isToday = true;
+                        financingDueToday.push(financingData);
+                    } else if (daysUntilDue === 1) {
+                        financingDueTomorrow.push(financingData);
+                    }
                 }
             });
             
-            console.log('[NotificationManager] Rent due results:', {
-                overdue: overdue.length,
-                today: dueToday.length,
-                tomorrow: dueTomorrow.length
+            console.log('[NotificationManager] Payment alerts:', {
+                pendingDownPayments: pendingDownPayments.length,
+                financingOverdue: financingOverdue.length,
+                financingDueToday: financingDueToday.length,
+                financingDueTomorrow: financingDueTomorrow.length
             });
             
             state.rentAlerts = {
-                overdue,
-                today: dueToday,
-                tomorrow: dueTomorrow
+                pendingDownPayments,
+                overdue: financingOverdue,
+                today: financingDueToday,
+                tomorrow: financingDueTomorrow
             };
             
             refreshUI();
             
         } catch (error) {
-            console.error('[NotificationManager] Error checking rent due:', error);
+            console.error('[NotificationManager] Error checking payment alerts:', error);
         }
     }
 
@@ -1202,10 +1291,10 @@
         refreshBadges,
         refreshPanels,
         
-        // Rent
-        checkRentDue,
-        toggleRentPanel,
-        copyRentReminder,
+        // Payment alerts (replaces rent)
+        checkPaymentAlerts,
+        togglePaymentPanel,
+        copyPaymentReminder,
         
         // Utilities
         createNotification,
@@ -1221,9 +1310,9 @@
     // Legacy aliases
     window.initAdminNotifications = init;
     window.initAdminNotificationSystem = init;
-    window.initRentNotifications = checkRentDue;
-    window.checkRentDueNotifications = checkRentDue;
-    window.renderRentNotificationsPanel = renderRentAlertsPanel;
+    window.initRentNotifications = checkPaymentAlerts;
+    window.checkRentDueNotifications = checkPaymentAlerts;
+    window.renderRentNotificationsPanel = renderPaymentAlertsPanel;
     window.updateMobileRentBadge = refreshBadges;
     window.updateMobileAdminBadges = refreshBadges;
 

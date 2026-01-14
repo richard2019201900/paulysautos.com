@@ -1061,6 +1061,12 @@
                                     </div>
                                     <!-- Notification badges inline - each clickable separately -->
                                     <div id="dropdownNotifBadges" class="flex items-center gap-1" onclick="event.stopPropagation()">
+                                        <span id="dropdownRentBadge" class="hidden bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-amber-400" title="Payments due - Click to view" onclick="NotificationManager.handleBadgeClick('rent'); closeUserDropdown()">
+                                            <span id="dropdownRentCount">0</span>
+                                        </span>
+                                        <span id="dropdownSubscriptionBadge" class="hidden bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-red-500" title="Subscription payments due - Click to view" onclick="NotificationManager.handleBadgeClick('subscription'); closeUserDropdown()">
+                                            <span id="dropdownSubscriptionCount">0</span>
+                                        </span>
                                         <span id="dropdownUserBadge" class="hidden bg-blue-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-blue-400" title="New users" onclick="NotificationManager.handleBadgeClick('user'); closeUserDropdown()">
                                             <span id="dropdownUserCount">0</span>
                                         </span>
@@ -1178,6 +1184,16 @@
             <!-- Site Update Notification -->
             <div id="siteUpdateNotificationContainer" class="mb-6">
                 <!-- Site update notification will be inserted here by JS -->
+            </div>
+
+            <!-- PAYMENT ALERTS - For vehicle owners to track down payments and financing -->
+            <div id="paymentNotificationsPanel" class="hidden mb-6">
+                <!-- Payment notifications will be rendered here by NotificationManager -->
+            </div>
+
+            <!-- SUBSCRIPTION ALERTS - For admin to track tier payments -->
+            <div id="subscriptionNotificationsPanel" class="hidden mb-6">
+                <!-- Subscription notifications will be rendered here -->
             </div>
 
             <!-- User Notifications Banner -->
