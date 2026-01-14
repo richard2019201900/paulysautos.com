@@ -525,45 +525,44 @@ window.selectPhotoPackage = function(packageType) {
     
     const singleOption = document.getElementById('photoOptionSingle');
     const bundleOption = document.getElementById('photoOptionBundle');
-    const singleCheck = document.getElementById('photoSingleCheck');
-    const bundleCheck = document.getElementById('photoBundleCheck');
+    const consignmentOption = document.getElementById('consignmentOption');
     const copyBtn = document.getElementById('photoServicesCopyBtn');
-    if (!singleOption || !bundleOption) {
-        console.error('[PhotoServices] Package option elements not found!');
-        return;
+    
+    // Reset all options
+    const allOptions = [singleOption, bundleOption, consignmentOption].filter(Boolean);
+    allOptions.forEach(opt => {
+        opt.classList.remove('ring-2', 'ring-green-500/50', 'ring-amber-500/50', 'border-green-500');
+        if (opt.id === 'photoOptionBundle') {
+            opt.classList.add('border-amber-500');
+        } else {
+            opt.classList.add('border-gray-600');
+        }
+    });
+    
+    // Highlight selected option
+    const selectedOption = document.getElementById(
+        packageType === 'single' ? 'photoOptionSingle' : 
+        packageType === 'bundle' ? 'photoOptionBundle' : 'consignmentOption'
+    );
+    
+    if (selectedOption) {
+        selectedOption.classList.remove('border-gray-600');
+        selectedOption.classList.add('border-green-500', 'ring-2', 'ring-green-500/50');
     }
     
-    if (packageType === 'single') {
-        // Select single photo option
-        singleOption.classList.remove('border-gray-600');
-        singleOption.classList.add('border-green-500', 'ring-2', 'ring-green-500/50');
-        if (singleCheck) singleCheck.classList.remove('hidden');
-        
-        // Deselect bundle
-        bundleOption.classList.remove('ring-2', 'ring-amber-500/50');
-        bundleOption.classList.add('border-amber-500');
-        if (bundleCheck) bundleCheck.classList.add('hidden');
-        
-        // Update button text
-        if (copyBtn) {
-            copyBtn.innerHTML = '<span>📷</span> Copy & Notify: Per Photo ($10k)';
-        }
-    } else if (packageType === 'bundle') {
-        // Select bundle option
-        bundleOption.classList.add('ring-2', 'ring-amber-500/50');
-        if (bundleCheck) bundleCheck.classList.remove('hidden');
-        
-        // Deselect single
-        singleOption.classList.remove('border-green-500', 'ring-2', 'ring-green-500/50');
-        singleOption.classList.add('border-gray-600');
-        if (singleCheck) singleCheck.classList.add('hidden');
-        
-        // Update button text
-        if (copyBtn) {
-            copyBtn.innerHTML = '<span>🎬</span> Copy & Notify: Premium Bundle ($125k)';
-        }
+    // Update button text based on selection
+    if (copyBtn) {
+        const buttonTexts = {
+            'single': '📷 Copy & Notify: Per Photo ($10k)',
+            'bundle': '🎬 Copy & Notify: Premium Bundle ($125k)',
+            'consignment': '🔑 Copy & Notify: Consignment Sales ($50k + 10%)'
+        };
+        copyBtn.innerHTML = buttonTexts[packageType] || 'Select an option above';
     }
 };
+
+// Alias for HTML onclick
+window.selectPhotoOption = window.selectPhotoPackage;
 
 window.copyAndNotifyPhotoServices = async function() {
     const user = auth.currentUser;
@@ -571,13 +570,23 @@ window.copyAndNotifyPhotoServices = async function() {
     
     // Check if package is selected
     if (!window.selectedPhotoPackage) {
-        showToast('⚠️ Please select a package first (Per Photo or Premium Bundle)', 'warning');
+        showToast('⚠️ Please select a service option first', 'warning');
         return;
     }
     
     const packageType = window.selectedPhotoPackage;
-    const packageName = packageType === 'bundle' ? 'Premium Bundle ($125k)' : 'Per Photo ($10k)';
-    const packageEmoji = packageType === 'bundle' ? '🎬' : '📷';
+    const packageNames = {
+        'single': 'Per Photo ($10k)',
+        'bundle': 'Premium Bundle ($125k)',
+        'consignment': 'Consignment Sales ($50k + 10%)'
+    };
+    const packageEmojis = {
+        'single': '📷',
+        'bundle': '🎬',
+        'consignment': '🔑'
+    };
+    const packageName = packageNames[packageType] || packageType;
+    const packageEmoji = packageEmojis[packageType] || '📸';
     
     // Copy phone number to clipboard
     try {
@@ -603,27 +612,26 @@ window.copyAndNotifyPhotoServices = async function() {
             username: username,
             userId: user?.uid || null,
             requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            type: 'photo_inquiry',
-            packageType: packageType,  // 'single' or 'bundle'
+            type: packageType === 'consignment' ? 'consignment_inquiry' : 'photo_inquiry',
+            packageType: packageType,
             packageName: packageName,
             status: 'pending',
             viewed: false
         });
         // Update button to show success
         if (btn) {
-            btn.innerHTML = `<span>✅</span> ${packageEmoji} ${packageName} - Team Notified!`;
+            btn.innerHTML = `✅ ${packageEmoji} ${packageName} - Team Notified!`;
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
         }
         
-        showToast(`${packageEmoji} Phone copied! Our team has been notified you want the ${packageName}!`, 'success');
+        showToast(`${packageEmoji} Phone copied! Our team has been notified about ${packageName}!`, 'success');
         
     } catch (error) {
-        console.error('[PhotoServices] Error creating notification:', error);
         // Still show success for copy even if notification failed
         showToast('📱 Phone number copied!', 'success');
         if (btn) {
-            btn.innerHTML = '<span>✅</span> Copied!';
+            btn.innerHTML = '✅ Copied!';
         }
     }
 };
