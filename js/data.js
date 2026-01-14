@@ -68,7 +68,8 @@ async function getUsernameByEmail(email) {
         const querySnapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
-            // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
+            // NEVER use internal username as fallback - prefer displayName, then firstName+lastName, then email prefix
+            // But check if userData.username looks like a display name (contains space or capital letters) as migration fallback
             let displayName;
             if (userData.displayName) {
                 displayName = userData.displayName;
@@ -76,8 +77,11 @@ async function getUsernameByEmail(email) {
                 displayName = userData.firstName + ' ' + userData.lastName;
             } else if (userData.firstName) {
                 displayName = userData.firstName;
+            } else if (userData.username && (userData.username.includes(' ') || /[A-Z]/.test(userData.username))) {
+                // Only use username if it looks like a display name (has space or caps)
+                displayName = userData.username;
             } else {
-                // Final fallback - email prefix, NEVER username
+                // Final fallback - email prefix, NEVER internal username
                 displayName = email.split('@')[0];
             }
             window.ownerUsernameCache[normalizedEmail] = displayName;

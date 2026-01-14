@@ -202,9 +202,17 @@ window.loadUsername = async function() {
             const data = doc.data();
             if (data.username) {
                 $('ownerUsername').value = data.username;
-                // Pre-populate cache for this user
-                window.ownerUsernameCache = window.ownerUsernameCache || {};
-                window.ownerUsernameCache[user.email.toLowerCase()] = data.username;
+            }
+            // Pre-populate cache for this user with displayName, NEVER username
+            window.ownerUsernameCache = window.ownerUsernameCache || {};
+            if (data.displayName) {
+                window.ownerUsernameCache[user.email.toLowerCase()] = data.displayName;
+            } else if (data.firstName && data.lastName) {
+                window.ownerUsernameCache[user.email.toLowerCase()] = data.firstName + ' ' + data.lastName;
+            } else if (data.firstName) {
+                window.ownerUsernameCache[user.email.toLowerCase()] = data.firstName;
+            } else {
+                window.ownerUsernameCache[user.email.toLowerCase()] = user.email.split('@')[0];
             }
             if (data.phone) {
                 // Sanitize phone - remove all non-digits
@@ -422,6 +430,7 @@ window.saveUsername = async function() {
     try {
         await db.collection('users').doc(user.uid).set({
             username: username,
+            displayName: username,  // Also save to displayName for consistency
             email: user.email,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
