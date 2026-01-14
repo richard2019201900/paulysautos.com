@@ -2629,7 +2629,17 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
         const maxListings = (isUserMasterAdmin || tierData.maxListings === Infinity) ? '∞' : tierData.maxListings;
         const escapedEmail = user.email.replace(/'/g, "\\'");
         const escapedId = user.id;
-        const displayName = user.username || user.email.split('@')[0];
+        // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
+        let displayName;
+        if (user.displayName) {
+            displayName = user.displayName;
+        } else if (user.firstName && user.lastName) {
+            displayName = user.firstName + ' ' + user.lastName;
+        } else if (user.firstName) {
+            displayName = user.firstName;
+        } else {
+            displayName = user.email.split('@')[0];
+        }
         
         // Format activity times
         const lastLogin = user.lastLogin?.toDate 

@@ -714,7 +714,17 @@ window.openReassignModal = async function(vehicleId) {
         snapshot.forEach(doc => {
             const user = doc.data();
             const tierData = TIERS[user.tier] || TIERS.starter;
-            const displayName = user.username || user.email.split('@')[0];
+            // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
+            let displayName;
+            if (user.displayName) {
+                displayName = user.displayName;
+            } else if (user.firstName && user.lastName) {
+                displayName = user.firstName + ' ' + user.lastName;
+            } else if (user.firstName) {
+                displayName = user.firstName;
+            } else {
+                displayName = user.email.split('@')[0];
+            }
             const option = document.createElement('option');
             option.value = user.email;
             option.textContent = `${tierData.icon} ${displayName} (${user.email})`;
@@ -774,11 +784,13 @@ window.confirmReassignProperty = async function() {
                 
                 if (!userSnapshot.empty) {
                     const userData = userSnapshot.docs[0].data();
-                    // Prefer firstName + lastName, fallback to username
-                    if (userData.firstName && userData.lastName) {
+                    // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
+                    if (userData.displayName) {
+                        ownerDisplayName = userData.displayName;
+                    } else if (userData.firstName && userData.lastName) {
                         ownerDisplayName = userData.firstName + ' ' + userData.lastName;
-                    } else if (userData.username) {
-                        ownerDisplayName = userData.username;
+                    } else if (userData.firstName) {
+                        ownerDisplayName = userData.firstName;
                     } else {
                         ownerDisplayName = actualNewEmail.split('@')[0];
                     }
@@ -1812,12 +1824,14 @@ window.previewBatchSync = async function() {
         usersSnapshot.docs.forEach(doc => {
             const data = doc.data();
             if (data.email) {
-                // Build display name: prefer firstName + lastName, fallback to username, then email prefix
+                // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
                 let displayName;
-                if (data.firstName && data.lastName) {
+                if (data.displayName) {
+                    displayName = data.displayName;
+                } else if (data.firstName && data.lastName) {
                     displayName = data.firstName + ' ' + data.lastName;
-                } else if (data.username) {
-                    displayName = data.username;
+                } else if (data.firstName) {
+                    displayName = data.firstName;
                 } else {
                     displayName = data.email.split('@')[0];
                 }
@@ -1898,12 +1912,14 @@ window.batchSyncOwnerProfiles = async function() {
         usersSnapshot.docs.forEach(doc => {
             const data = doc.data();
             if (data.email) {
-                // Build display name: prefer firstName + lastName, fallback to username, then email prefix
+                // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
                 let displayName;
-                if (data.firstName && data.lastName) {
+                if (data.displayName) {
+                    displayName = data.displayName;
+                } else if (data.firstName && data.lastName) {
                     displayName = data.firstName + ' ' + data.lastName;
-                } else if (data.username) {
-                    displayName = data.username;
+                } else if (data.firstName) {
+                    displayName = data.firstName;
                 } else {
                     displayName = data.email.split('@')[0];
                 }

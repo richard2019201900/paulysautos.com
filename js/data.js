@@ -68,12 +68,17 @@ async function getUsernameByEmail(email) {
         const querySnapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
-            // Prefer firstName + lastName, then username, then email prefix
+            // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
             let displayName;
-            if (userData.firstName && userData.lastName) {
+            if (userData.displayName) {
+                displayName = userData.displayName;
+            } else if (userData.firstName && userData.lastName) {
                 displayName = userData.firstName + ' ' + userData.lastName;
+            } else if (userData.firstName) {
+                displayName = userData.firstName;
             } else {
-                displayName = userData.username || email.split('@')[0];
+                // Final fallback - email prefix, NEVER username
+                displayName = email.split('@')[0];
             }
             window.ownerUsernameCache[normalizedEmail] = displayName;
             return displayName;

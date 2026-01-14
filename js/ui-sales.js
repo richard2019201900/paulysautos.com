@@ -289,14 +289,16 @@ async function populateSellerDropdown(vehicleId, defaultOwnerEmail) {
         usersSnapshot.forEach(doc => {
             const data = doc.data();
             if (data.email) {
-                // Build display name: prefer firstName + lastName, then displayName, then username
+                // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
                 let displayName;
-                if (data.firstName && data.lastName) {
-                    displayName = data.firstName + ' ' + data.lastName;
-                } else if (data.displayName) {
+                if (data.displayName) {
                     displayName = data.displayName;
+                } else if (data.firstName && data.lastName) {
+                    displayName = data.firstName + ' ' + data.lastName;
+                } else if (data.firstName) {
+                    displayName = data.firstName;
                 } else {
-                    displayName = data.username || data.email.split('@')[0];
+                    displayName = data.email.split('@')[0];
                 }
                 
                 owners.push({
@@ -356,17 +358,20 @@ window.submitVehicleSale = async function(vehicleId, saleType, financingContract
         sellerEmail = auth.currentUser?.email || '';
         sellerUid = auth.currentUser?.uid || null;
         
-        // Get display name from Firestore (prefer firstName + lastName)
+        // Get display name from Firestore - NEVER use username
         try {
             const userDoc = await db.collection('users').doc(sellerUid).get();
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                if (userData.firstName && userData.lastName) {
-                    sellerDisplayName = userData.firstName + ' ' + userData.lastName;
-                } else if (userData.displayName) {
+                if (userData.displayName) {
                     sellerDisplayName = userData.displayName;
+                } else if (userData.firstName && userData.lastName) {
+                    sellerDisplayName = userData.firstName + ' ' + userData.lastName;
+                } else if (userData.firstName) {
+                    sellerDisplayName = userData.firstName;
                 } else {
-                    sellerDisplayName = userData.username || sellerEmail.split('@')[0];
+                    // Final fallback - email prefix, NEVER username
+                    sellerDisplayName = sellerEmail.split('@')[0];
                 }
             } else {
                 sellerDisplayName = sellerEmail.split('@')[0];
@@ -1904,13 +1909,16 @@ async function populateCompleteSaleSellerDropdown(defaultOwnerEmail) {
         usersSnapshot.forEach(doc => {
             const data = doc.data();
             if (data.email) {
+                // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
                 let displayName;
-                if (data.firstName && data.lastName) {
-                    displayName = data.firstName + ' ' + data.lastName;
-                } else if (data.displayName) {
+                if (data.displayName) {
                     displayName = data.displayName;
+                } else if (data.firstName && data.lastName) {
+                    displayName = data.firstName + ' ' + data.lastName;
+                } else if (data.firstName) {
+                    displayName = data.firstName;
                 } else {
-                    displayName = data.username || data.email.split('@')[0];
+                    displayName = data.email.split('@')[0];
                 }
                 
                 owners.push({
