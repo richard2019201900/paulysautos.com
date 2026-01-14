@@ -371,7 +371,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Per Photo -->
                     <div id="photoOptionSingle" onclick="selectPhotoOption('single')" class="photo-option bg-gray-800/70 rounded-xl p-4 border-2 border-gray-600 hover:border-amber-500 transition cursor-pointer">
-                        <div class="text-2xl font-black text-white">$10k<span class="text-gray-400 text-sm font-normal">/photo</span></div>
+                        <div class="text-2xl font-black text-white">$5k<span class="text-gray-400 text-sm font-normal">/photo</span></div>
                         <div class="text-gray-400 text-xs mt-1">10 photo minimum</div>
                         <div class="text-green-400 text-xs mt-1">✓ Extra angles included free</div>
                     </div>
@@ -379,7 +379,7 @@
                     <!-- Bundle -->
                     <div id="photoOptionBundle" onclick="selectPhotoOption('bundle')" class="photo-option bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-xl p-4 border-2 border-amber-500 cursor-pointer hover:border-amber-400 transition relative">
                         <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">BEST VALUE</div>
-                        <div class="text-2xl font-black text-amber-400 mt-1">$125k</div>
+                        <div class="text-2xl font-black text-amber-400 mt-1">$75k</div>
                         <div class="text-amber-300/80 text-xs mt-1">Complete media package</div>
                         <div class="text-gray-300 text-xs mt-1">✓ 10 photos + video tour + 4 weeks premium listing</div>
                     </div>
@@ -402,16 +402,16 @@
                 </div>
             </div>
             
-            <!-- CTA -->
-            <div class="text-center">
-                <button id="photoServicesCopyBtn" onclick="copyAndNotifyPhotoServices()" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg mb-2">
+            <!-- CTA - buttons on same row -->
+            <div class="flex gap-3 mb-2">
+                <button id="photoServicesCopyBtn" onclick="copyAndNotifyPhotoServices()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
                     Select an option above
                 </button>
-                <button onclick="closeModal('photoServicesModal')" class="w-24 bg-gray-700 text-gray-200 px-4 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                <button onclick="closeModal('photoServicesModal')" class="bg-gray-700 text-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                     Close
                 </button>
-                <p class="text-gray-500 text-xs mt-3">Copies our number (205-702-8233) • Text in city for fastest response</p>
             </div>
+            <p class="text-gray-500 text-xs text-center">Copies our number (205-702-8233) • Text in city for fastest response</p>
         </div>
     </div>
 
@@ -998,7 +998,7 @@
                     <a onclick="navigateTo('home')" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Home</a>
                     <a onclick="navigateTo('vehicles')" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Vehicles</a>
                     <a onclick="navigateTo('leaderboard')" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Leaderboard</a>
-                    <a onclick="openServicesModal()" class="text-amber-400 hover:text-amber-300 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-300 rounded px-1" role="button" tabindex="0">Services</a>
+                    <a onclick="openServicesModal()" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Services</a>
                     <a id="navDashboardLink" onclick="goToDashboard()" class="hidden text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Dashboard</a>
                 </div>
                 
@@ -1126,7 +1126,7 @@
             <a onclick="navigateTo('leaderboard'); hideMobileMenu();" class="block px-4 py-3 text-gray-300 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
                 <span>🏆</span> Leaderboard
             </a>
-            <a onclick="openServicesModal(); hideMobileMenu();" class="block px-4 py-3 text-amber-400 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
+            <a onclick="openServicesModal(); hideMobileMenu();" class="block px-4 py-3 text-gray-300 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
                 <span>📸</span> Services
             </a>
             <a id="mobileDashboardLink" onclick="goToDashboard(); hideMobileMenu();" class="hidden px-4 py-3 text-amber-400 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
@@ -2243,7 +2243,7 @@
                         <li><a onclick="navigateTo('home')" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Home</a></li>
                         <li><a onclick="navigateTo('vehicles')" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Vehicles</a></li>
                         <li><a onclick="navigateTo('leaderboard')" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Leaderboard</a></li>
-                        <li><a onclick="openServicesModal()" class="text-amber-400 hover:text-amber-300 cursor-pointer transition font-medium" role="button" tabindex="0">Services</a></li>
+                        <li><a onclick="openServicesModal()" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Services</a></li>
                     </ul>
                 </div>
                 <div>

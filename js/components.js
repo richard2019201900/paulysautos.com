@@ -553,8 +553,8 @@ window.selectPhotoPackage = function(packageType) {
     // Update button text based on selection
     if (copyBtn) {
         const buttonTexts = {
-            'single': '📷 Copy & Notify: Per Photo ($10k)',
-            'bundle': '🎬 Copy & Notify: Premium Bundle ($125k)',
+            'single': '📷 Copy & Notify: Per Photo ($5k)',
+            'bundle': '🎬 Copy & Notify: Premium Bundle ($75k)',
             'consignment': '🔑 Copy & Notify: Consignment Sales ($50k + 10%)'
         };
         copyBtn.innerHTML = buttonTexts[packageType] || 'Select an option above';
@@ -576,8 +576,8 @@ window.copyAndNotifyPhotoServices = async function() {
     
     const packageType = window.selectedPhotoPackage;
     const packageNames = {
-        'single': 'Per Photo ($10k)',
-        'bundle': 'Premium Bundle ($125k)',
+        'single': 'Per Photo ($5k)',
+        'bundle': 'Premium Bundle ($75k)',
         'consignment': 'Consignment Sales ($50k + 10%)'
     };
     const packageEmojis = {
