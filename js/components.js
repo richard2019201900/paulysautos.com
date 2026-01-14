@@ -553,9 +553,9 @@ window.selectPhotoPackage = function(packageType) {
     // Update button text based on selection
     if (copyBtn) {
         const buttonTexts = {
-            'single': '📷 Copy & Notify: Per Photo ($5k)',
-            'bundle': '🎬 Copy & Notify: Premium Bundle ($75k)',
-            'consignment': '🔑 Copy & Notify: Consignment Sales ($50k + 10%)'
+            'single': '📷 Copy Number & Request Photos',
+            'bundle': '🎬 Copy Number & Request Bundle',
+            'consignment': '🔑 Copy Number & Request Consignment'
         };
         copyBtn.innerHTML = buttonTexts[packageType] || 'Select an option above';
     }
@@ -576,9 +576,9 @@ window.copyAndNotifyPhotoServices = async function() {
     
     const packageType = window.selectedPhotoPackage;
     const packageNames = {
-        'single': 'Per Photo ($5k)',
-        'bundle': 'Premium Bundle ($75k)',
-        'consignment': 'Consignment Sales ($50k + 10%)'
+        'single': 'Per Photo service',
+        'bundle': 'Premium Bundle',
+        'consignment': 'Consignment Sales'
     };
     const packageEmojis = {
         'single': '📷',
@@ -620,18 +620,18 @@ window.copyAndNotifyPhotoServices = async function() {
         });
         // Update button to show success
         if (btn) {
-            btn.innerHTML = `✅ ${packageEmoji} ${packageName} - Team Notified!`;
+            btn.innerHTML = `✅ Number Copied - Text us in city!`;
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
         }
         
-        showToast(`${packageEmoji} Phone copied! Our team has been notified about ${packageName}!`, 'success');
+        showToast(`📱 Phone number copied! Text 205-702-8233 in city to schedule your ${packageName}`, 'success');
         
     } catch (error) {
         // Still show success for copy even if notification failed
-        showToast('📱 Phone number copied!', 'success');
+        showToast('📱 Phone number copied! Text 205-702-8233 in city to schedule', 'success');
         if (btn) {
-            btn.innerHTML = '✅ Copied!';
+            btn.innerHTML = '✅ Number Copied - Text us in city!';
         }
     }
 };
