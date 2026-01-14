@@ -278,7 +278,6 @@ window.deleteActivityEntry = async function(userId, activityIndex) {
         });
         
         showToast('Activity entry deleted', 'success');
-        console.log(`[Admin] Deleted activity entry ${activityIndex} for user ${userId}: "${reason}"`);
         
         // The real-time listener will automatically update the UI
         
@@ -439,7 +438,6 @@ async function updateUserRankCard() {
 // No listener cleanup needed anymore - using Cloud Functions instead
 window.cleanupLeaderboardListener = function() {
     // Legacy function - no-op since we no longer use real-time listeners
-    console.log('[Leaderboard] Using Cloud Functions - no listener to cleanup');
 };
 
 // Render the XP widget in dashboard
@@ -592,7 +590,6 @@ window.setupCelebrationListener = function() {
             hideCelebrationBanner();
         }
     }, error => {
-        console.log('[Celebrations] Listener error (may not have doc yet):', error.message);
     });
 };
 
@@ -655,4 +652,3 @@ function escapeHtmlSafe(text) {
 // Also expose globally for other modules
 window.escapeHtml = window.escapeHtml || escapeHtmlSafe;
 
-console.log('[UI-Leaderboard] Module loaded');

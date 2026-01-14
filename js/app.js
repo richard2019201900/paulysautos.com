@@ -31,7 +31,6 @@
     
     // Apply FiveM mode if detected
     if (isFiveM || isLbPhone || (isCEF && !hasBackdropFilter)) {
-        console.log('[FiveM Compat] FiveM/lb-phone environment detected, loading compatibility styles');
         
         // Add class to document for CSS targeting
         document.documentElement.classList.add('fivem-mode');
@@ -1660,7 +1659,6 @@ window.executeTileSave = async function(field, vehicleId, type, newValue, tile, 
                             console.warn('[RTO] Could not update contract deposit status:', e);
                         }
                     }
-                    console.log(`[RTO] Deposit of $${financingDownPayment.toLocaleString()} recorded for contract ${financingContractId}`);
                     
                     // Store info for confirmation modal
                     const financingTotalPayments = VehicleDataService.getValue(vehicleId, 'financingTotalPayments', p?.financingTotalPayments || 0);
@@ -1688,7 +1686,6 @@ window.executeTileSave = async function(field, vehicleId, type, newValue, tile, 
                             console.warn('[RTO] Could not update contract payment number:', e);
                         }
                     }
-                    console.log(`[RTO] Monthly payment ${newPaymentNumber} recorded for contract ${financingContractId}`);
                     
                     // Store info for confirmation modal
                     const financingTotalPayments = VehicleDataService.getValue(vehicleId, 'financingTotalPayments', p?.financingTotalPayments || 0);
@@ -3376,7 +3373,6 @@ window.reorderPropertyImages = async function(vehicleId, fromIndex, toIndex) {
     const prop = vehicles.find(p => p.id === vehicleId);
     if (!prop || !prop.images) return;
     
-    console.log(`[Images] Reordering: moving index ${fromIndex} to ${toIndex}`);
     
     try {
         // Remove from old position and insert at new position
@@ -3610,7 +3606,6 @@ window.userTierUnsubscribe = null;
  * Cleans up all listeners and signs out the user
  */
 window.forceLogout = function() {
-    console.log('[Auth] Force logout triggered - user document deleted');
     
     // Clean up all listeners first (prevent further callbacks)
     if (window.userTierUnsubscribe) {
@@ -3740,7 +3735,6 @@ window.startUserTierListener = function() {
                         return;
                     }
                     // User document was deleted - force logout
-                    console.log('[UserTierListener] User document deleted, forcing logout');
                     forceLogout();
                     return;
                 }
@@ -3750,7 +3744,6 @@ window.startUserTierListener = function() {
                 
                 // Check if tier changed
                 if (state.userTier && state.userTier !== newTier) {
-                    console.log('[UserTierListener] Tier changed:', state.userTier, '->', newTier);
                     state.userTier = newTier;
                     
                     // Update UI to reflect tier change
@@ -3781,7 +3774,6 @@ window.startUserTierListener = function() {
                 // Don't force logout on errors - could be temporary permission issue
             });
         
-        console.log('[UserTierListener] Started listening for user document changes');
     } catch (error) {
         console.error('[UserTierListener] Failed to start listener:', error);
     }
@@ -3840,7 +3832,6 @@ async function init() {
             // Initialize NotificationManager immediately on login for real-time notifications
             // This ensures we start listening for new users/listings right away, not just when dashboard opens
             if (typeof NotificationManager !== 'undefined' && !NotificationManager.state?.initialized) {
-                console.log('[Auth] Initializing NotificationManager on login');
                 NotificationManager.init();
             }
             
@@ -4467,7 +4458,6 @@ window.completeSale = async function(vehicleId) {
                 prop.lastPaymentDate = '';
             }
             
-            console.log('[CompleteSale] Pre-refresh state clear done');
             
             // Update all relevant UI components
             renderVehicles(state.filteredVehicles);
@@ -4574,7 +4564,6 @@ window.deleteTenureRecord = async function(vehicleId, tenureId) {
             renderVehicleAnalytics(vehicleId);
         }
         
-        console.log('[TenureHistory] Deleted tenure:', tenureId, 'from vehicle:', vehicleId);
         
     } catch (error) {
         console.error('[TenureHistory] Error deleting:', error);
@@ -4598,7 +4587,6 @@ async function clearBuyerData(vehicleId) {
     const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
     const prop = vehicles.find(p => p.id === numericId);
     
-    console.log('[ClearBuyerData] Starting clear for vehicle:', numericId);
     
     // STEP 1: Clear local vehicle object immediately
     if (prop) {
@@ -4609,7 +4597,6 @@ async function clearBuyerData(vehicleId) {
         prop.lastPaymentDate = '';
     }
     
-    console.log('[ClearBuyerData] Local state cleared');
     
     try {
         // UNIFIED: All vehicles write to settings/properties
@@ -4622,8 +4609,6 @@ async function clearBuyerData(vehicleId) {
         
         await db.collection('settings').doc('properties').update(updateData);
         
-        console.log('[ClearBuyerData] Successfully cleared all buyer data for vehicle:', numericId);
-        console.log('[ClearBuyerData] vehicle object:', prop ? { buyerName: prop.buyerName, paymentFrequency: prop.paymentFrequency } : 'not found');
         
     } catch (error) {
         console.error('[ClearBuyerData] Error clearing data:', error);
@@ -4850,7 +4835,6 @@ window.showRentToOwnWizard = async function(vehicleId) {
     try {
         const ownerInfo = await getVehicleOwnerWithTier(vehicleId);
         sellerName = ownerInfo.display || ownerInfo.username || '';
-        console.log('[RTO] Got owner from getVehicleOwnerWithTier:', sellerName);
     } catch (e) {
         console.warn('Could not get seller name from getVehicleOwnerWithTier:', e);
     }
@@ -4869,24 +4853,19 @@ window.showRentToOwnWizard = async function(vehicleId) {
     try {
         // Try VehicleDataService first
         vehicleDescription = VehicleDataService.getValue(vehicleId, 'location', '');
-        console.log('[RTO] Description from VehicleDataService:', vehicleDescription);
         
         // Fallback to vehicle object
         if (!vehicleDescription) {
             vehicleDescription = p.location || '';
-            console.log('[RTO] Description from p.location:', vehicleDescription);
         }
         
         // Last fallback - try description field
         if (!vehicleDescription) {
             vehicleDescription = VehicleDataService.getValue(vehicleId, 'description', '') || p.description || '';
-            console.log('[RTO] Description from description field:', vehicleDescription);
         }
     } catch (e) {
         vehicleDescription = p.location || p.description || '';
-        console.log('[RTO] Description from fallback:', vehicleDescription);
     }
-    console.log('[RTO] Final vehicle description:', vehicleDescription);
     
     // Get buy price
     let buyPrice = 0;
@@ -4930,14 +4909,6 @@ window.showRentToOwnWizard = async function(vehicleId) {
             vehicleCategory: minPriceInfo.category
         }
     };
-    
-    console.log('[RTO] Wizard initialized:', {
-        seller: sellerName,
-        buyer: buyerName,
-        buyPrice: buyPrice,
-        finalPayment: finalPaymentBase,
-        category: minPriceInfo.category
-    });
     
     renderRTOWizardStep(1);
 };
@@ -5022,7 +4993,6 @@ function getMinimumBuyPrice(vehicle) {
         }
     }
     
-    console.log('[RTO] Detecting vehicle type:', { interiorType, type, storageSpace, title });
     
     // Check for walk-in house first (highest tier) - $1.5M
     // Case-insensitive check for any variation of "walk-in" or "walkin"
@@ -6526,7 +6496,6 @@ window.deleteRTOContract = async function(vehicleId, contractId) {
         // 1. Delete the contract document from Firestore
         if (contractId) {
             await db.collection('financingContracts').doc(contractId).delete();
-            console.log(`[RTO] Deleted contract document: ${contractId}`);
         }
         
         // 2. Remove last RTO-related payment(s) from payment history
@@ -6546,7 +6515,6 @@ window.deleteRTOContract = async function(vehicleId, contractId) {
                         payments: payments,
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    console.log(`[RTO] Removed ${removedCount} Financing payment(s) from history`);
                 }
             }
         } catch (e) {
@@ -6573,7 +6541,6 @@ window.deleteRTOContract = async function(vehicleId, contractId) {
         };
         
         await VehicleDataService.writeMultiple(vehicleId, rtoFieldsToClear);
-        console.log(`[RTO] Cleared Financing fields and monthlyPrice from vehicle ${vehicleId}`);
         
         // 4. Update local vehicles array
         const prop = vehicles.find(p => p.id === vehicleId);

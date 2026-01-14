@@ -99,7 +99,6 @@ const GamificationService = {
                 
                 // Check if already earned
                 if (gamification.achievements && gamification.achievements[achievementId]) {
-                    console.log(`[Gamification] Achievement ${achievementId} already earned, skipping`);
                     return { alreadyEarned: true };
                 }
                 
@@ -141,7 +140,6 @@ const GamificationService = {
                 return result;
             }
             
-            console.log(`[Gamification] Awarded ${xpAmount} XP for ${achievementId}. Total: ${result.newXP}`);
             
             // Handle level up
             if (result.leveledUp) {
@@ -210,7 +208,6 @@ const GamificationService = {
                 };
             });
             
-            console.log(`[Gamification] Awarded ${xpAmount} XP for ${reason}. Total: ${result.newXP}`);
             
             if (result.leveledUp) {
                 await this.handleLevelUp(userId, result.newLevelInfo, result.userData);
@@ -280,10 +277,8 @@ const GamificationService = {
                 };
             });
             
-            console.log(`[Gamification] Deducted ${result.xpLost} XP for ${reason}. Total: ${result.newXP}`);
             
             if (result.leveledDown) {
-                console.log(`[Gamification] Level decreased from ${result.oldLevel} to ${result.newLevel}`);
             }
             
             return result;
@@ -296,7 +291,6 @@ const GamificationService = {
 
     // Handle level up events
     handleLevelUp: async function(userId, newLevelInfo, userData) {
-        console.log(`[Gamification] Level up! Now Level ${newLevelInfo.level}: ${newLevelInfo.title}`);
         
         // Show level up modal
         if (typeof showLevelUpModal === 'function') {
@@ -336,7 +330,6 @@ const GamificationService = {
             }
         });
         
-        console.log(`[Gamification] Granted reward: ${rewardId}`);
         
         if (typeof showToast === 'function') {
             showToast('🎁 You earned a free premium week! Use it on any listing.', 'success');
@@ -409,7 +402,6 @@ const GamificationService = {
                 active: firebase.firestore.FieldValue.arrayUnion(celebration)
             }, { merge: true });
             
-            console.log(`[Gamification] Created celebration: ${celebration.message}`);
             
         } catch (error) {
             console.error('[Gamification] Error creating celebration:', error);
@@ -492,7 +484,6 @@ const GamificationService = {
             }
         });
         
-        console.log(`[Gamification] Initialized new user: ${userId}`);
     },
 
     // Trigger migration for all users (calls Cloud Function)
@@ -505,7 +496,6 @@ const GamificationService = {
             const migrateAll = firebase.functions().httpsCallable('migrateAllUsersToGamification');
             const result = await migrateAll();
             
-            console.log('[Gamification] Migration result:', result.data);
             
             // Store global migration completion flag in Firestore
             // This prevents migration from ever running again
@@ -515,7 +505,6 @@ const GamificationService = {
                     migrationDate: new Date().toISOString(),
                     usersMigrated: result.data.migrated || 0
                 }, { merge: true });
-                console.log('[Gamification] Migration completion flag stored in Firestore');
             } catch (flagError) {
                 console.warn('[Gamification] Could not store migration flag:', flagError);
             }
@@ -551,7 +540,6 @@ const GamificationService = {
         // First check the global flag - if migration is complete, never run again
         const alreadyComplete = await this.isMigrationComplete();
         if (alreadyComplete) {
-            console.log('[Gamification] Migration already complete (Firestore flag)');
             return false;
         }
         
@@ -559,13 +547,11 @@ const GamificationService = {
         const needsMigration = users.some(u => !u.gamification?.migrated);
         
         if (needsMigration) {
-            console.log('[Gamification] Users need migration, triggering...');
             await this.triggerMigration();
             return true;
         }
         
         // All users are migrated but flag wasn't set - set it now
-        console.log('[Gamification] All users migrated, setting completion flag');
         try {
             await firebase.firestore().collection('settings').doc('gamification').set({
                 migrationComplete: true,

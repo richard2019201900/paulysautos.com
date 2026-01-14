@@ -221,14 +221,12 @@
     function addNotification(notification) {
         // Check if already dismissed - log for debugging
         if (state.dismissed.has(notification.id)) {
-            console.log('[NotificationManager] Skipping dismissed notification:', notification.id);
             return;
         }
         
         const exists = state.notifications.find(n => n.id === notification.id);
         if (exists) return;
         
-        console.log('[NotificationManager] Adding notification:', notification.id, notification.title);
         state.notifications.unshift(notification);
         
         // Trim if over max
@@ -242,14 +240,12 @@
     }
     
     function dismissNotification(id) {
-        console.log('[NotificationManager] Dismissing notification:', id);
         state.dismissed.add(id);
         state.notifications = state.notifications.filter(n => n.id !== id);
         
         // Save to Firestore via UserPreferencesService
         if (window.UserPreferencesService) {
             UserPreferencesService.dismissNotification(id);
-            console.log('[NotificationManager] Saved dismissal to Firestore');
         }
         
         // Remove the notification card from DOM
@@ -335,7 +331,6 @@
             return;
         }
         
-        console.log('[NotificationManager] Handling click:', notification.type, action);
         
         // Step 1: Ensure dashboard is visible
         if (typeof window.goToDashboard === 'function') {
@@ -366,7 +361,6 @@
      * Used by dropdown and mobile badges
      */
     async function handleBadgeClick(type) {
-        console.log('[NotificationManager] Badge click:', type);
         
         // Ensure dashboard is visible
         if (typeof window.goToDashboard === 'function') {
@@ -927,7 +921,6 @@
         // Create promise to prevent concurrent calls
         initPromise = (async () => {
             try {
-                console.log('[NotificationManager] Initializing for:', currentUser.email);
                 
                 // Load preferences from Firestore via UserPreferencesService
                 if (window.UserPreferencesService) {
@@ -936,11 +929,9 @@
                     // Load dismissed notifications into local Set for fast lookups
                     const dismissedList = UserPreferencesService.getAll().dismissedNotifications || [];
                     state.dismissed = new Set(dismissedList);
-                    console.log('[NotificationManager] Loaded', dismissedList.length, 'dismissed notifications:', dismissedList);
                     
                     // Load last admin visit time
                     state.lastAdminVisit = UserPreferencesService.getAdminLastVisit();
-                    console.log('[NotificationManager] Last admin visit:', state.lastAdminVisit);
                 }
                 
                 state.sessionStart = new Date();
@@ -964,7 +955,6 @@
                 state.initialized = true;
                 refreshUI();
                 
-                console.log('[NotificationManager] Initialization complete');
             } catch (error) {
                 console.error('[NotificationManager] Init error:', error);
                 initPromise = null; // Allow retry on error
@@ -985,7 +975,6 @@
         state.knownUserIds.clear();
         state.knownListingIds.clear();
         
-        console.log('[NotificationManager] Destroyed');
     }
     
     function startUserListener() {
@@ -1007,7 +996,6 @@
                         // Check if user was created after last admin visit
                         if (createdAt && state.lastAdminVisit && createdAt > state.lastAdminVisit) {
                             const notificationId = `user-${userId}`;
-                            console.log('[NotificationManager] User', userId, 'created after last visit, checking if dismissed:', notificationId);
                             
                             const notification = createNotification('user', user, {
                                 id: notificationId,
@@ -1208,13 +1196,6 @@
                 }
             });
             
-            console.log('[NotificationManager] Payment alerts:', {
-                pendingDownPayments: pendingDownPayments.length,
-                financingOverdue: financingOverdue.length,
-                financingDueToday: financingDueToday.length,
-                financingDueTomorrow: financingDueTomorrow.length
-            });
-            
             state.rentAlerts = {
                 pendingDownPayments,
                 overdue: financingOverdue,
@@ -1316,6 +1297,5 @@
     window.updateMobileRentBadge = refreshBadges;
     window.updateMobileAdminBadges = refreshBadges;
 
-    console.log('[NotificationManager] Module loaded');
 
 })();

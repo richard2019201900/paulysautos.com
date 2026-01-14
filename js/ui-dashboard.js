@@ -917,7 +917,6 @@ window.saveCellEdit = async function(input, vehicleId, field, type) {
                                 statUpdate: { totalSales: 1 }
                             }).then(async (result) => {
                                 if (result && !result.alreadyEarned) {
-                                    console.log('[Gamification] Awarded 1000 XP for first sale');
                                     // Create celebration
                                     const userName = userData.username || user.email.split('@')[0];
                                     const propTitle = p?.title || 'a vehicle';
@@ -937,7 +936,6 @@ window.saveCellEdit = async function(input, vehicleId, field, type) {
                         } else {
                             // Additional sale - award 500 XP and create celebration
                             GamificationService.awardXP(user.uid, 500, 'additional_sale').then(async () => {
-                                console.log('[Gamification] Awarded 500 XP for additional sale');
                                 // Update stats
                                 await db.collection('users').doc(user.uid).update({
                                     'gamification.stats.totalSales': firebase.firestore.FieldValue.increment(1)

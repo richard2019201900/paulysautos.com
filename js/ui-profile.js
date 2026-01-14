@@ -461,7 +461,6 @@ window.saveUsername = async function() {
         if (typeof GamificationService !== 'undefined') {
             GamificationService.awardAchievement(user.uid, 'display_name', 50).then(result => {
                 if (result && !result.alreadyEarned) {
-                    console.log('[Gamification] Awarded 50 XP for display name');
                     // Check if profile is now complete
                     if (phone && phone.length === 10) {
                         GamificationService.awardAchievement(user.uid, 'profile_complete', 100);
@@ -527,7 +526,6 @@ window.saveOwnerPhone = async function() {
         if (typeof GamificationService !== 'undefined') {
             GamificationService.awardAchievement(user.uid, 'phone_added', 150).then(result => {
                 if (result && !result.alreadyEarned) {
-                    console.log('[Gamification] Awarded 150 XP for phone number');
                     // Check if profile is now complete
                     if (username) {
                         GamificationService.awardAchievement(user.uid, 'profile_complete', 100);

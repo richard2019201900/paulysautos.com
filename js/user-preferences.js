@@ -60,7 +60,6 @@ const UserPreferencesService = (function() {
     async function load() {
         const user = auth?.currentUser;
         if (!user) {
-            console.log('[UserPreferences] No user logged in, using memory-only mode');
             isLoaded = true;
             return cache;
         }
@@ -97,7 +96,6 @@ const UserPreferencesService = (function() {
                         adminActivityLog: prefs.adminActivityLog || []
                     };
                     
-                    console.log('[UserPreferences] Loaded from Firestore:', Object.keys(cache));
                 }
                 
                 isLoaded = true;
@@ -126,7 +124,6 @@ const UserPreferencesService = (function() {
         
         const user = auth?.currentUser;
         if (!user) {
-            console.log('[UserPreferences] No user, preference saved to memory only:', key);
             return;
         }
         
@@ -137,7 +134,6 @@ const UserPreferencesService = (function() {
                 }
             }, { merge: true });
             
-            console.log('[UserPreferences] Saved to Firestore:', key);
             
         } catch (error) {
             console.error('[UserPreferences] Error saving:', key, error);
@@ -154,7 +150,6 @@ const UserPreferencesService = (function() {
         
         const user = auth?.currentUser;
         if (!user) {
-            console.log('[UserPreferences] No user, preferences saved to memory only');
             return;
         }
         
@@ -163,7 +158,6 @@ const UserPreferencesService = (function() {
                 preferences: prefs
             }, { merge: true });
             
-            console.log('[UserPreferences] Saved multiple to Firestore:', Object.keys(prefs));
             
         } catch (error) {
             console.error('[UserPreferences] Error saving multiple:', error);
@@ -188,10 +182,8 @@ const UserPreferencesService = (function() {
      * @param {string} notificationId 
      */
     async function dismissNotification(notificationId) {
-        console.log('[UserPreferences] Dismissing notification:', notificationId);
         if (!cache.dismissedNotifications.includes(notificationId)) {
             cache.dismissedNotifications.push(notificationId);
-            console.log('[UserPreferences] Added to cache, now have:', cache.dismissedNotifications.length, 'dismissed');
             
             // Also remove from pending if present
             cache.pendingUserNotifications = cache.pendingUserNotifications.filter(id => id !== notificationId);
@@ -202,9 +194,7 @@ const UserPreferencesService = (function() {
                 pendingUserNotifications: cache.pendingUserNotifications,
                 pendingListingNotifications: cache.pendingListingNotifications
             });
-            console.log('[UserPreferences] Saved dismissal to Firestore');
         } else {
-            console.log('[UserPreferences] Already dismissed');
         }
     }
     
@@ -276,7 +266,6 @@ const UserPreferencesService = (function() {
         
         if (cache[key].length !== before) {
             await save(key, cache[key]);
-            console.log(`[UserPreferences] Cleaned up ${before - cache[key].length} stale ${type} notifications`);
         }
     }
 
@@ -398,7 +387,6 @@ const UserPreferencesService = (function() {
         isLoading = false;
         loadPromise = null;
         currentUserId = null;
-        console.log('[UserPreferences] Reset');
     }
     
     /**
@@ -449,4 +437,3 @@ const UserPreferencesService = (function() {
 // Make globally available
 window.UserPreferencesService = UserPreferencesService;
 
-console.log('[UserPreferencesService] Loaded');

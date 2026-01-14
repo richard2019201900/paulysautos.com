@@ -127,7 +127,6 @@ window.filterProperties = function(type, btn) {
  */
 window.applyAllFilters = function() {
     // Debug: log current state
-    console.log('[Filters] Applying filters, vehicles count:', vehicles.length, 'activeTypeFilter:', activeTypeFilter);
     
     var filtered = vehicles.slice();
     
@@ -144,7 +143,6 @@ window.applyAllFilters = function() {
             var pType = (getVehicleValue(p, 'type') || '').toLowerCase();
             return pType === activeTypeFilter.toLowerCase();
         });
-        console.log('[Filters] After type filter:', filtered.length);
     }
     
     // My Vehicles
@@ -175,11 +173,9 @@ window.applyAllFilters = function() {
             
             return true;
         });
-        console.log('[Filters] After hide sold filter:', filtered.length);
     }
     
     state.filteredVehicles = filtered;
-    console.log('[Filters] Final filtered count:', filtered.length);
     renderVehicles(state.filteredVehicles);
 };
 
@@ -243,4 +239,3 @@ window.clearFilters = function() {
     applyAllFilters();
 };
 
-console.log('[Filters] Button-based filter system loaded');

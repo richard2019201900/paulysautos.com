@@ -298,4 +298,3 @@ function ownsVehicle(vehicleId) {
 // Alias for backwards compatibility
 const ownsProperty = ownsVehicle;
 
-console.log('[Data] PaulysAutos vehicle data module loaded');

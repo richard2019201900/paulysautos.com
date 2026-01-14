@@ -152,7 +152,6 @@ exports.migrateAllUsersToGamification = functions.https.onCall(async (data, cont
             usersMigrated: migratedCount
         }, { merge: true });
 
-        console.log(`[Migration] Migrated ${migratedCount} users to gamification`);
 
         return {
             success: true,
@@ -201,7 +200,6 @@ exports.deleteAuthUser = functions.https.onCall(async (data, context) => {
         // Delete the user from Firebase Auth
         await admin.auth().deleteUser(userRecord.uid);
         
-        console.log('[deleteAuthUser] Deleted user:', userRecord.uid, email);
         
         return {
             success: true,
@@ -236,7 +234,6 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
         // Check if user doc already exists
         const existingDoc = await userRef.get();
         if (existingDoc.exists) {
-            console.log(`[onUserCreated] User ${user.uid} already exists in Firestore`);
             return null;
         }
 
@@ -261,7 +258,6 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
         };
 
         await userRef.set(userData);
-        console.log(`[onUserCreated] Created Firestore doc for user ${user.uid}`);
 
         return null;
 

@@ -478,7 +478,6 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
     if (!email) return;
     
     const normalizedEmail = email.toLowerCase();
-    console.log('[ProfileSync] Syncing profile to vehicles for:', normalizedEmail);
     
     try {
         // Get all vehicles owned by this user
@@ -487,7 +486,6 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
             : [];
         
         if (userVehicles.length === 0) {
-            console.log('[ProfileSync] No vehicles found for user');
             // Still update caches even if no vehicles
             if (displayName) {
                 window.ownerUsernameCache = window.ownerUsernameCache || {};
@@ -526,11 +524,6 @@ window.syncOwnerProfileToProperties = async function(email, displayName, phone) 
             window.ownerUsernameCache = window.ownerUsernameCache || {};
             window.ownerUsernameCache[normalizedEmail] = displayName;
         }
-        
-        console.log(`[ProfileSync] Updated ${userVehicles.length} vehicles:`, {
-            displayName: displayName || '(not updated)',
-            phone: phone ? '***' + phone.slice(-4) : '(not updated)'
-        });
         
         // Sync DOM elements
         syncOwnerNameEverywhere(normalizedEmail, displayName);
@@ -797,7 +790,6 @@ window.confirmReassignProperty = async function() {
                     ownerContactPhone = userData.phone || null;
                 }
             } catch (e) {
-                console.log('[Reassign] Could not fetch new owner details:', e);
             }
         }
         
@@ -1930,13 +1922,11 @@ window.batchSyncOwnerProfiles = async function() {
                 };
             }
         });
-        console.log(`[BatchSync] Found ${Object.keys(users).length} users`);
         
         // Step 2: Get all vehicles
         statusDiv.textContent = 'Fetching vehicles...';
         const propsDoc = await db.collection('settings').doc('properties').get();
         const allVehicles = propsDoc.exists ? propsDoc.data() : {};
-        console.log(`[BatchSync] Found ${Object.keys(allVehicles).length} vehicles`);
         
         // Step 3: Build updates
         statusDiv.textContent = 'Building updates...';
@@ -1972,7 +1962,6 @@ window.batchSyncOwnerProfiles = async function() {
             }
         }
         
-        console.log(`[BatchSync] ${updateCount} vehicles to update, ${skipCount} skipped`);
         
         if (updateCount === 0) {
             statusDiv.className = 'mb-3 p-3 rounded-lg text-sm bg-green-900/50 text-green-300';
@@ -2017,7 +2006,6 @@ window.batchSyncOwnerProfiles = async function() {
             renderVehicles(state.filteredVehicles || vehicles);
         }
         
-        console.log(`[BatchSync] Complete! Updated ${updateCount} vehicles`);
         
     } catch (error) {
         console.error('[BatchSync] Error:', error);

@@ -498,7 +498,6 @@ const VehicleDataService = {
                 prop[field] = value;
             }
             
-            console.log(`[VehicleDataService] Wrote ${field}=${value} for vehicle ${numericId}`);
             return true;
         } catch (error) {
             console.error('[VehicleDataService] WRITE error:', error);
@@ -534,7 +533,6 @@ const VehicleDataService = {
                 Object.assign(prop, fields);
             }
             
-            console.log(`[VehicleDataService] Wrote ${Object.keys(fields).length} fields for vehicle ${numericId}`);
             return true;
         } catch (error) {
             console.error('[VehicleDataService] WRITE MULTIPLE error:', error);
@@ -618,7 +616,6 @@ const VehicleDataService = {
  * Call from console: await viewFirestoreState()
  */
 window.viewFirestoreState = async function() {
-    console.log('========== FIRESTORE STATE (UNIFIED ARCHITECTURE) ==========');
     
     try {
         const [propsDoc, availDoc] = await Promise.all([
@@ -626,37 +623,26 @@ window.viewFirestoreState = async function() {
             db.collection('settings').doc('vehicleAvailability').get()
         ]);
         
-        console.log('\n📁 settings/properties (SINGLE SOURCE OF TRUTH):');
         if (propsDoc.exists) {
             const data = propsDoc.data();
             const propIds = Object.keys(data).filter(k => data[k]?.title).sort((a,b) => parseInt(a) - parseInt(b));
-            console.log(`   Total vehicles: ${propIds.length}`);
             propIds.forEach(id => {
                 const p = data[id];
-                console.log(`   ${id}: ${p.title} | Owner: ${p.ownerEmail || 'master'} | Premium: ${p.isPremium || false}`);
             });
         } else {
-            console.log('   (does not exist - run migration first!)');
         }
         
-        console.log('\n📁 settings/vehicleAvailability:');
         if (availDoc.exists) {
             const data = availDoc.data();
-            console.log(`   Entries: ${Object.keys(data).length}`);
             Object.keys(data).sort((a,b) => parseInt(a) - parseInt(b)).forEach(id => {
-                console.log(`   ${id}: ${data[id] ? 'Available' : 'Sold'}`);
             });
         } else {
-            console.log('   (does not exist)');
         }
         
         // Check for old vehicleOverrides (should be deleted after migration)
         const overridesDoc = await db.collection('settings').doc('vehicleOverrides').get();
         if (overridesDoc.exists) {
-            console.log('\n⚠️  OLD DATA DETECTED: settings/vehicleOverrides still exists!');
-            console.log('   Run migration.js deleteOldOverrides() to clean up.');
         } else {
-            console.log('\n✅ Clean: No old vehicleOverrides document');
         }
         
     } catch (error) {
@@ -671,28 +657,21 @@ window.viewFirestoreState = async function() {
 window.showPropertyData = async function(vehicleId) {
     const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
     
-    console.log(`========== PROPERTY ${numericId} DATA ==========`);
     
     // Local data
     const prop = vehicles.find(p => p.id === numericId);
-    console.log('\n📦 Local vehicles array:');
-    console.log(prop ? JSON.stringify(prop, null, 2) : 'Not found');
     
     // Firestore data
     try {
         const doc = await db.collection('settings').doc('properties').get();
         if (doc.exists && doc.data()[numericId]) {
-            console.log('\n☁️  Firestore settings/properties:');
-            console.log(JSON.stringify(doc.data()[numericId], null, 2));
         } else {
-            console.log('\n☁️  Firestore: Not found');
         }
     } catch (error) {
         console.error('Firestore error:', error);
     }
     
     // Availability
-    console.log('\n📊 Availability:', state.availability[numericId] !== false ? 'Available' : 'Sold');
 };
 
 // ==================== FIRESTORE SYNC (UNIFIED ARCHITECTURE) ====================
@@ -784,7 +763,6 @@ function setupRealtimeListener() {
 window.saveAvailability = async function(id, isAvailable) {
     try {
         await db.collection('settings').doc('vehicleAvailability').set({ [id]: isAvailable }, { merge: true });
-        console.log('[Availability] Saved to Firestore:', id, isAvailable);
         return true;
     } catch (error) {
         console.error('[Availability] Save error:', error);
@@ -1112,16 +1090,13 @@ window._publicVehiclesLoaded = false;
 window.loadPublicVehicles = async function(forceReload = false) {
     // Prevent duplicate loads (unless forced or array is empty)
     if (!forceReload && window._publicVehiclesLoaded && vehicles.length > 0) {
-        console.log('[Public] Vehicles already loaded, skipping');
         return;
     }
     
     try {
-        console.log('[Public] Loading vehicles for public view...');
         const doc = await db.collection('settings').doc('properties').get();
         
         if (!doc.exists) {
-            console.log('[Public] No vehicles document found');
             return;
         }
         
@@ -1132,7 +1107,6 @@ window.loadPublicVehicles = async function(forceReload = false) {
         vehicles.length = 0;
         
         // DEBUG: Log raw keys to understand data structure
-        console.log('[Public] Raw Firestore keys:', Object.keys(rawData).slice(0, 20));
         
         // Reconstruct nested objects from flat keys (e.g., "1.title" -> { "1": { title: "..." } })
         const vehiclesData = {};
@@ -1172,11 +1146,8 @@ window.loadPublicVehicles = async function(forceReload = false) {
         // DEBUG: Log reconstructed vehicle data
         Object.keys(vehiclesData).forEach(vId => {
             const v = vehiclesData[vId];
-            console.log('[Public] Vehicle', vId, 'fields:', Object.keys(v));
-            console.log('[Public] Vehicle', vId, 'ownerEmail:', v.ownerEmail, 'images:', v.images?.length || 0);
         });
         
-        console.log('[Public] Reconstructed', Object.keys(vehiclesData).length, 'vehicles from Firestore');
         
         Object.keys(vehiclesData).forEach(key => {
             const vehicleId = parseInt(key);
@@ -1186,7 +1157,6 @@ window.loadPublicVehicles = async function(forceReload = false) {
             
             // Only include valid vehicles with a title
             if (!vehicle || !vehicle.title) {
-                console.log('[Public] Vehicle', vehicleId, 'has no title, skipping');
                 return;
             }
             
@@ -1228,7 +1198,6 @@ window.loadPublicVehicles = async function(forceReload = false) {
         });
         
         window._publicVehiclesLoaded = true;
-        console.log('[Public] Loaded', loadedCount, 'vehicles, total:', vehicles.length);
         
         // Update filtered vehicles and render
         state.filteredVehicles = [...vehicles];
@@ -1264,7 +1233,6 @@ window.startVehicleSyncListener = function() {
     window.vehicleSyncUnsubscribe = db.collection('settings').doc('properties')
         .onSnapshot((doc) => {
             if (!doc.exists) {
-                console.log('[VehicleSync] Document does not exist');
                 return;
             }
             
@@ -1273,7 +1241,6 @@ window.startVehicleSyncListener = function() {
             let processedCount = 0;
             
             // DEBUG: Log raw keys to understand data structure
-            console.log('[VehicleSync] Raw Firestore keys:', Object.keys(rawData).slice(0, 20));
             
             // Store current vehicle count before processing
             const vehicleCountBefore = vehicles.length;
@@ -1316,11 +1283,8 @@ window.startVehicleSyncListener = function() {
             // DEBUG: Log reconstructed vehicle data
             Object.keys(vehiclesData).forEach(vId => {
                 const v = vehiclesData[vId];
-                console.log('[VehicleSync] Vehicle', vId, 'fields:', Object.keys(v));
-                console.log('[VehicleSync] Vehicle', vId, 'ownerEmail:', v.ownerEmail, 'images:', v.images?.length || 0);
             });
             
-            console.log('[VehicleSync] Reconstructed', Object.keys(vehiclesData).length, 'vehicles from Firestore');
             
             Object.keys(vehiclesData).forEach(key => {
                 const vehicleId = parseInt(key);
@@ -1334,13 +1298,11 @@ window.startVehicleSyncListener = function() {
                 
                 // Skip if vehicle data is invalid or missing
                 if (!vehicle || typeof vehicle !== 'object') {
-                    console.log('[VehicleSync] Skipping invalid vehicle data for key:', key);
                     return;
                 }
                 
                 // Only skip if vehicle is completely invalid (must have at least a title)
                 if (!vehicle.title) {
-                    console.log('[VehicleSync] Vehicle', vehicleId, 'has no title, skipping');
                     return;
                 }
                 
@@ -1441,7 +1403,6 @@ window.startVehicleSyncListener = function() {
             // Update filtered vehicles
             state.filteredVehicles = [...vehicles];
             
-            console.log('[VehicleSync] Processed', processedCount, 'vehicles, array count:', vehicles.length, '(was', vehicleCountBefore, ')');
             
             // Only render on first snapshot or if there are actual changes
             // Skip re-render if user is on Owner Stats page (to avoid interrupting edits)
@@ -1456,7 +1417,6 @@ window.startVehicleSyncListener = function() {
                     renderVehicles(state.filteredVehicles);
                 }
                 isFirstSnapshot = false;
-                console.log('[VehicleSync] Initial load complete, total vehicles:', vehicles.length);
             } else if (hasChanges && !statsPageVisible) {
                 // Subsequent changes - only render if not on stats page
                 if (typeof applyAllFilters === 'function') {
@@ -1490,4 +1450,3 @@ window.stopVehicleSyncListener = function() {
 // Export VehicleDataService globally
 window.VehicleDataService = VehicleDataService;
 
-console.log('[Services] PaulysAutos services module loaded');

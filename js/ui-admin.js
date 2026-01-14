@@ -368,7 +368,6 @@ window.markPhotoRequestReviewed = async function(requestId) {
             });
         } catch (e) {
             // Notification may not exist yet, that's OK
-            console.log('[NotifV2] No notification to dismiss for:', notifId);
         }
         
         // Refresh the list
@@ -400,7 +399,6 @@ window.deletePhotoRequest = async function(requestId) {
             });
         } catch (e) {
             // Notification may not exist, that's OK
-            console.log('[NotifV2] No notification to dismiss for:', notifId);
         }
         
         // Refresh the list
@@ -1438,7 +1436,6 @@ window.showNewListingNotification = function(listing, isMissed = false) {
  * Handle click on listing notification - navigate to user who created the listing
  */
 window.handleListingNotificationClick = async function(ownerEmail, listingId) {
-    console.log('[Notification] Listing click - navigating to user:', ownerEmail);
     
     // Ensure we're on the dashboard
     if (typeof goToDashboard === 'function') {
@@ -1713,7 +1710,6 @@ window.showNewUserNotification = function(user, isMissed = false) {
 
 // Handle click on new user notification - navigate and highlight user
 window.handleNewUserNotificationClick = async function(userId) {
-    console.log('[Notification] User click - navigating to user:', userId);
     
     // Ensure we're on the dashboard
     if (typeof goToDashboard === 'function') {
@@ -1802,7 +1798,6 @@ window.scrollToAndHighlightElement = async function(options) {
     const element = await waitForElement(targetSelector, maxWaitMs);
     
     if (!element) {
-        console.log('[ScrollHighlight] Element not found:', targetSelector);
         if (onNotFound) onNotFound();
         return false;
     }
@@ -2553,7 +2548,6 @@ window.loadAllUsers = async function() {
                     const updatedUsers = await TierService.getAllUsers();
                     window.adminUsersData = updatedUsers;
                     users = updatedUsers;
-                    console.log('[Gamification] Migration complete, users refreshed');
                 }
             } catch (migrationError) {
                 console.error('[Gamification] Migration check failed:', migrationError);
@@ -3322,17 +3316,14 @@ window.filterAdminUsers = function() {
  * Admin-only feature to track tier subscription payments
  */
 window.renderSubscriptionAlertsPanel = async function() {
-    console.log('[SubscriptionAlerts] Starting render...');
     
     const panel = $('subscriptionNotificationsPanel');
     if (!panel) {
-        console.log('[SubscriptionAlerts] Panel element not found');
         return;
     }
     
     // Only show for master admin
     if (!TierService.isMasterAdmin(auth?.currentUser?.email)) {
-        console.log('[SubscriptionAlerts] Not master admin, hiding panel');
         panel.classList.add('hidden');
         window.subscriptionAlertCount = 0;
         return;
@@ -3341,7 +3332,6 @@ window.renderSubscriptionAlertsPanel = async function() {
     try {
         // Get all users
         const usersSnapshot = await db.collection('users').get();
-        console.log('[SubscriptionAlerts] Loaded', usersSnapshot.size, 'users');
         
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -3414,7 +3404,6 @@ window.renderSubscriptionAlertsPanel = async function() {
         });
         
         const total = overdue.length + dueToday.length + dueTomorrow.length;
-        console.log('[SubscriptionAlerts] Results:', { overdue: overdue.length, dueToday: dueToday.length, dueTomorrow: dueTomorrow.length, total });
         
         // Set global count for notification badges
         window.subscriptionAlertCount = total;
@@ -3574,7 +3563,6 @@ function renderSubscriptionItem(sub, urgency) {
  * Navigate to admin panel and highlight a user by email
  */
 window.goToAdminUserByEmail = function(email) {
-    console.log('[SubscriptionAlerts] Navigating to user:', email);
     
     // Switch to admin panel tab
     if (typeof switchDashboardTab === 'function') {

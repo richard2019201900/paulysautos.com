@@ -606,7 +606,6 @@ window.goToRentAlerts = function() {
         maxWaitMs: 3000,
         highlightColor: 'rgba(239, 68, 68, 0.7)',
         glowColor: 'rgba(239, 68, 68, 0.4)',
-        onNotFound: () => console.log('[RentAlerts] Rent notifications panel not found or hidden')
     });
 };
 
@@ -792,7 +791,6 @@ window.navigateTo = function(section) {
     
     // If vehicles array is empty, try to reload
     if (vehicles.length === 0) {
-        console.log('[navigateTo] Vehicles array empty, reloading...');
         if (auth.currentUser && typeof startVehicleSyncListener === 'function') {
             startVehicleSyncListener();
         } else if (typeof loadPublicVehicles === 'function') {
@@ -820,7 +818,6 @@ window.goBack = function() {
     
     // If vehicles array is somehow empty, try to reload
     if (vehicles.length === 0) {
-        console.log('[goBack] Vehicles array empty, reloading...');
         if (auth.currentUser && typeof startVehicleSyncListener === 'function') {
             startVehicleSyncListener();
         } else if (typeof loadPublicVehicles === 'function') {
@@ -846,5 +843,22 @@ window.goBack = function() {
             vehiclesEl.scrollIntoView({ behavior: 'smooth' });
         }
     }
+};
+
+// ==================== SERVICES MODAL ====================
+/**
+ * Open the Services modal (photo services, managed services, etc.)
+ */
+window.openServicesModal = function() {
+    openModal('photoServicesModal');
+};
+
+/**
+ * Legacy fallback for cached HTML that might call toggleServicesSubmenu
+ */
+window.toggleServicesSubmenu = function(event) {
+    if (event) event.preventDefault();
+    openServicesModal();
+    closeUserDropdown();
 };
 
