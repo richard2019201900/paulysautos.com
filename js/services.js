@@ -1106,7 +1106,6 @@ window.loadPublicVehicles = async function(forceReload = false) {
         // Clear array for fresh load
         vehicles.length = 0;
         
-        // DEBUG: Log raw keys to understand data structure
         
         // Reconstruct nested objects from flat keys (e.g., "1.title" -> { "1": { title: "..." } })
         const vehiclesData = {};
@@ -1143,7 +1142,6 @@ window.loadPublicVehicles = async function(forceReload = false) {
             }
         });
         
-        // DEBUG: Log reconstructed vehicle data
         Object.keys(vehiclesData).forEach(vId => {
             const v = vehiclesData[vId];
         });
@@ -1240,7 +1238,6 @@ window.startVehicleSyncListener = function() {
             let hasChanges = false;
             let processedCount = 0;
             
-            // DEBUG: Log raw keys to understand data structure
             
             // Store current vehicle count before processing
             const vehicleCountBefore = vehicles.length;
@@ -1280,7 +1277,6 @@ window.startVehicleSyncListener = function() {
                 }
             });
             
-            // DEBUG: Log reconstructed vehicle data
             Object.keys(vehiclesData).forEach(vId => {
                 const v = vehiclesData[vId];
             });

@@ -26,6 +26,22 @@
  * ============================================================================
  */
 
+// ==================== ADMIN AUTH GUARD ====================
+// Security: Verify admin status before allowing sensitive operations
+window.requireAdmin = function(operationName) {
+    if (!auth.currentUser) {
+        console.error(`[Security] ${operationName}: No user logged in`);
+        showToast('You must be logged in to perform this action', 'error');
+        return false;
+    }
+    if (!TierService.isMasterAdmin(auth.currentUser.email)) {
+        console.error(`[Security] ${operationName}: User ${auth.currentUser.email} is not admin`);
+        showToast('Admin access required for this action', 'error');
+        return false;
+    }
+    return true;
+}
+
 // ==================== SUBSCRIPTION TRACKING ====================
 
 // Edit subscription last paid date - opens inline date picker
@@ -71,6 +87,8 @@ window.confirmSubscriptionDate = async function(userId, email) {
 
 // Save subscription date to Firestore
 window.saveSubscriptionDate = async function(userId, email, date) {
+    if (!requireAdmin('saveSubscriptionDate')) return;
+    
     try {
         await db.collection('users').doc(userId).update({
             subscriptionLastPaid: date || '',
@@ -418,6 +436,8 @@ window.showSubscriptionAlert = function() {
 };
 
 window.updateAdminUserField = async function(userId, email, field, value) {
+    if (!requireAdmin('updateAdminUserField')) return;
+    
     try {
         await db.collection('users').doc(userId).update({
             [field]: value,
@@ -539,6 +559,8 @@ window.updateOwnerDisplayNameOnProperties = function(email, displayName) {
 };
 
 window.adminDeleteUser = async function(userId, email) {
+    if (!requireAdmin('adminDeleteUser')) return;
+    
     // CRITICAL: Use OwnershipService for consistent vehicle ownership
     const userVehicles = OwnershipService.getVehiclesForOwner(email);
     const vehicleCount = userVehicles.length;
@@ -630,6 +652,8 @@ window.adminDeleteUser = async function(userId, email) {
 
 // Helper to orphan a vehicle (clear owner but keep vehicle)
 window.orphanProperty = async function(vehicleId) {
+    if (!requireAdmin('orphanProperty')) return;
+    
     try {
         // Get the old owner email before clearing
         const prop = vehicles.find(p => p.id === vehicleId);
@@ -873,6 +897,8 @@ window.confirmReassignProperty = async function() {
 
 // Helper to completely delete a vehicle
 window.deletePropertyCompletely = async function(vehicleId, ownerEmail) {
+    if (!requireAdmin('deletePropertyCompletely')) return;
+    
     try {
         // Get vehicle title before deletion for notification
         const prop = vehicles.find(p => p.id === vehicleId);
@@ -991,6 +1017,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 window.adminCreateUser = async function(email, password, displayName, tier) {
+    if (!requireAdmin('adminCreateUser')) return;
+    
     let uid;
     
     // Try Cloud Function first (preferred method)
@@ -1172,6 +1200,8 @@ window.deleteUpgradeHistory = async function(entryId) {
 };
 
 window.adminUpgradeUser = async function(email, newTier, currentTier) {
+    if (!requireAdmin('adminUpgradeUser')) return;
+    
     const tierData = TIERS[newTier];
     const price = newTier === 'pro' ? '$25,000' : '$50,000';
     
@@ -1471,6 +1501,8 @@ window.confirmUpgrade = async function(email, newTier, currentTier) {
 
 // Convert a trial user to paid subscription
 window.convertTrialToPaid = async function(userId, email) {
+    if (!requireAdmin('convertTrialToPaid')) return;
+    
     if (!confirm(`Convert ${email} from FREE TRIAL to PAID subscription?\n\nThis will mark them as a paying customer and reset their subscription date to today.`)) return;
     
     const paymentNote = prompt('Enter payment confirmation details:');
@@ -1509,6 +1541,8 @@ window.convertTrialToPaid = async function(userId, email) {
 
 // Mark a paid user as trial (for corrections/adjustments)
 window.markAsTrial = async function(userId, email) {
+    if (!requireAdmin('markAsTrial')) return;
+    
     if (!confirm(`Mark ${email} as FREE TRIAL?\n\nThis will remove them from revenue calculations.`)) return;
     
     const reason = prompt('Reason for marking as trial (optional):');
@@ -1536,6 +1570,8 @@ window.markAsTrial = async function(userId, email) {
 };
 
 window.adminDowngradeUser = async function(email, currentTier, targetTier = 'starter') {
+    if (!requireAdmin('adminDowngradeUser')) return;
+    
     const tierName = targetTier === 'pro' ? 'Pro' : 'Starter';
     const confirmMsg = targetTier === 'starter' 
         ? `Are you sure you want to reset ${email} to Starter tier?\n\nThis will also clear their subscription payment history and trial status.`

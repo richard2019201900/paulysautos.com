@@ -383,6 +383,8 @@ window.markPhotoRequestReviewed = async function(requestId) {
  * Delete a photo request
  */
 window.deletePhotoRequest = async function(requestId) {
+    if (!requireAdmin('deletePhotoRequest')) return;
+    
     if (!confirm('Are you sure you want to delete this photo request?')) return;
     
     try {
@@ -412,6 +414,8 @@ window.deletePhotoRequest = async function(requestId) {
 
 // Approve upgrade request - show modal with trial option
 window.approveUpgradeRequest = async function(requestId, userEmail, newTier, currentTier) {
+    if (!requireAdmin('approveUpgradeRequest')) return;
+    
     const tierData = TIERS[newTier];
     const price = newTier === 'pro' ? '$25,000' : '$50,000';
     
@@ -665,6 +669,8 @@ window.confirmApproveRequest = async function(requestId, userEmail, newTier, cur
 
 // Deny upgrade request
 window.denyUpgradeRequest = async function(requestId, userEmail) {
+    if (!requireAdmin('denyUpgradeRequest')) return;
+    
     const reason = prompt(`Denying request from ${userEmail}\n\nReason (optional):`);
     if (reason === null) return;
     

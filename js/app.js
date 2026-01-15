@@ -517,7 +517,6 @@ function renderVehicleStatsContent(id) {
     const paymentFrequency = VehicleDataService.getValue(id, 'paymentFrequency', p.paymentFrequency || '');
     const lastPaymentDate = VehicleDataService.getValue(id, 'lastPaymentDate', p.lastPaymentDate || '');
     
-    // DEBUG: Log vehicle render (without sensitive buyer data)
     // Debug log removed
     
     // NOTE: Removed AUTO-FIX logic that was causing race conditions with sale completion
@@ -665,7 +664,7 @@ function renderVehicleStatsContent(id) {
         <div class="relative">
             ${statsSoldOverlay}
             ${p.images && p.images.length > 0 && p.images[0] 
-                ? `<img src="${p.images[0]}" alt="${sanitize(p.title)}" class="w-full h-64 md:h-80 object-cover cursor-pointer hover:opacity-90 transition" onclick="scrollToImagesSection(${id})" title="Click to view all images" onerror="this.onerror=null; this.parentElement.querySelector('.stats-img-container').innerHTML=this.parentElement.querySelector('.stats-img-container').dataset.placeholder;" >
+                ? `<img src="${p.images[0]}" alt="${sanitize(p.title)}" class="w-full h-64 md:h-80 object-cover cursor-pointer hover:opacity-90 transition" onclick="scrollToImagesSection(${id})" title="Click to view all images" loading="lazy" onerror="this.onerror=null; this.parentElement.querySelector('.stats-img-container').innerHTML=this.parentElement.querySelector('.stats-img-container').dataset.placeholder;" >
                    <div class="stats-img-container hidden" data-placeholder="<div class='w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center'><span class='text-8xl mb-4'>🚗</span><span class='text-gray-400 font-semibold text-xl'>Photos Coming Soon</span><span class='text-gray-500 text-sm mt-2'>Check back later for vehicle images</span></div>"></div>`
                 : `<div class="w-full h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 flex flex-col items-center justify-center">
                        <span class="text-8xl mb-4">🚗</span>
