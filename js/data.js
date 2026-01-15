@@ -59,6 +59,12 @@ async function getUsernameByEmail(email) {
     
     const normalizedEmail = email.toLowerCase();
     
+    // HARDCODED: Master admin always shows "Pauly Amato"
+    if (typeof TierService !== 'undefined' && TierService.isMasterAdmin(normalizedEmail)) {
+        window.ownerUsernameCache[normalizedEmail] = 'Pauly Amato';
+        return 'Pauly Amato';
+    }
+    
     // Check cache first
     if (window.ownerUsernameCache[normalizedEmail]) {
         return window.ownerUsernameCache[normalizedEmail];
@@ -68,18 +74,19 @@ async function getUsernameByEmail(email) {
         const querySnapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
-            // NEVER use internal username as fallback - prefer displayName, then firstName+lastName, then email prefix
-            // But check if userData.username looks like a display name (contains space or capital letters) as migration fallback
+            // Prefer displayName if it looks like a real name (has space), then firstName+lastName, then email prefix
+            // NEVER use internal username field for display
             let displayName;
-            if (userData.displayName) {
+            if (userData.displayName && userData.displayName.includes(' ')) {
+                // displayName with space = likely a real name like "John Smith"
                 displayName = userData.displayName;
             } else if (userData.firstName && userData.lastName) {
                 displayName = userData.firstName + ' ' + userData.lastName;
             } else if (userData.firstName) {
                 displayName = userData.firstName;
-            } else if (userData.username && (userData.username.includes(' ') || /[A-Z]/.test(userData.username))) {
-                // Only use username if it looks like a display name (has space or caps)
-                displayName = userData.username;
+            } else if (userData.displayName) {
+                // Use displayName even without space as fallback
+                displayName = userData.displayName;
             } else {
                 // Final fallback - email prefix, NEVER internal username
                 displayName = email.split('@')[0];

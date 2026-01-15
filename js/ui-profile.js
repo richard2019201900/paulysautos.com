@@ -205,12 +205,20 @@ window.loadUsername = async function() {
             }
             // Pre-populate cache for this user with displayName, NEVER username
             window.ownerUsernameCache = window.ownerUsernameCache || {};
-            if (data.displayName) {
+            
+            // HARDCODED: Master admin always shows "Pauly Amato"
+            if (TierService.isMasterAdmin(user.email)) {
+                window.ownerUsernameCache[user.email.toLowerCase()] = 'Pauly Amato';
+            } else if (data.displayName && data.displayName.includes(' ')) {
+                // Only use displayName if it looks like a real name (has space)
                 window.ownerUsernameCache[user.email.toLowerCase()] = data.displayName;
             } else if (data.firstName && data.lastName) {
                 window.ownerUsernameCache[user.email.toLowerCase()] = data.firstName + ' ' + data.lastName;
             } else if (data.firstName) {
                 window.ownerUsernameCache[user.email.toLowerCase()] = data.firstName;
+            } else if (data.displayName) {
+                // Use displayName even without space as last resort before email
+                window.ownerUsernameCache[user.email.toLowerCase()] = data.displayName;
             } else {
                 window.ownerUsernameCache[user.email.toLowerCase()] = user.email.split('@')[0];
             }

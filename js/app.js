@@ -295,7 +295,7 @@ window.viewVehicle = function(id, forcePublic = false) {
                         html += '<div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 border-2 border-amber-500 rounded-xl p-6 text-center max-w-md w-full">';
                         html += '<div class="text-amber-400 text-sm font-bold mb-2">🚗 VEHICLE PRICE</div>';
                         html += '<div class="text-amber-400 text-3xl md:text-4xl font-black">$' + buyPrice.toLocaleString() + '</div>';
-                        html += '<div class="text-amber-400/60 text-sm mt-2">+$25k one-time city sales fee</div>';
+                        html += '<div class="text-amber-400/60 text-sm mt-2">+$25k LUX app city fee (not charged by PaulysAutos)</div>';
                         html += '</div>';
                     } else {
                         html += '<div class="text-gray-400 text-center p-4">Price not set</div>';
@@ -1057,7 +1057,7 @@ function renderVehicleStatsContent(id) {
                     <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div id="value-buyPrice-${id}" class="text-3xl font-black">$${buyPrice > 0 ? buyPrice.toLocaleString() : '0'}</div>
-                <div class="text-xs text-amber-200 mt-2 opacity-80">+$25k city sales fee</div>
+                <div class="text-xs text-amber-200 mt-2 opacity-80">+$25k LUX city fee</div>
                 <div class="text-xs mt-1 opacity-70">Click to edit</div>
             </div>
             
