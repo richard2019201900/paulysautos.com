@@ -443,21 +443,24 @@ window.updateAdminUserField = async function(userId, email, field, value) {
             [field]: value,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        // Update cache and sync everywhere
-        if (field === 'username') {
+        
+        // ============================================================
+        // CACHE UPDATE LOGIC
+        // Only update the display name cache when displayName field changes
+        // The internal 'username' field should NOT affect display cache
+        // ============================================================
+        if (field === 'displayName') {
             window.ownerUsernameCache = window.ownerUsernameCache || {};
             window.ownerUsernameCache[email.toLowerCase()] = value;
             
             // If this is the current user, update nav and profile
             const currentUser = auth.currentUser;
             if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-                // Update nav display
                 const navUserName = $('navUserName');
                 if (navUserName) navUserName.textContent = value;
                 
-                // Update profile input
-                const ownerUsername = $('ownerUsername');
-                if (ownerUsername) ownerUsername.value = value;
+                const ownerUsernameInput = $('ownerUsername');
+                if (ownerUsernameInput) ownerUsernameInput.value = value;
             }
             
             // Update any vehicle cards showing this owner

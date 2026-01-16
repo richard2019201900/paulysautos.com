@@ -200,28 +200,39 @@ window.loadUsername = async function() {
         const doc = await db.collection('users').doc(user.uid).get();
         if (doc.exists) {
             const data = doc.data();
-            if (data.username) {
-                $('ownerUsername').value = data.username;
-            }
-            // Pre-populate cache for this user with displayName, NEVER username
-            window.ownerUsernameCache = window.ownerUsernameCache || {};
             
-            // HARDCODED: Master admin always shows "Pauly Amato"
-            if (TierService.isMasterAdmin(user.email)) {
-                window.ownerUsernameCache[user.email.toLowerCase()] = 'Pauly Amato';
-            } else if (data.displayName && data.displayName.includes(' ')) {
-                // Only use displayName if it looks like a real name (has space)
-                window.ownerUsernameCache[user.email.toLowerCase()] = data.displayName;
+            // ============================================================
+            // DISPLAY NAME HIERARCHY (single source of truth)
+            // Priority: displayName > firstName+lastName > email prefix
+            // NEVER use internal 'username' field for public display
+            // ============================================================
+            let displayNameToShow = '';
+            
+            if (data.displayName && data.displayName.includes(' ')) {
+                // Best case: displayName looks like a real name
+                displayNameToShow = data.displayName;
             } else if (data.firstName && data.lastName) {
-                window.ownerUsernameCache[user.email.toLowerCase()] = data.firstName + ' ' + data.lastName;
-            } else if (data.firstName) {
-                window.ownerUsernameCache[user.email.toLowerCase()] = data.firstName;
+                displayNameToShow = data.firstName + ' ' + data.lastName;
             } else if (data.displayName) {
-                // Use displayName even without space as last resort before email
-                window.ownerUsernameCache[user.email.toLowerCase()] = data.displayName;
+                // displayName exists but no space - use it anyway
+                displayNameToShow = data.displayName;
+            } else if (data.firstName) {
+                displayNameToShow = data.firstName;
             } else {
-                window.ownerUsernameCache[user.email.toLowerCase()] = user.email.split('@')[0];
+                // Last resort: email prefix
+                displayNameToShow = user.email.split('@')[0];
             }
+            
+            // Populate the input field with the resolved display name
+            const inputEl = $('ownerUsername');
+            if (inputEl) {
+                inputEl.value = displayNameToShow;
+            }
+            
+            // Pre-populate cache with the same value
+            window.ownerUsernameCache = window.ownerUsernameCache || {};
+            window.ownerUsernameCache[user.email.toLowerCase()] = displayNameToShow;
+            
             if (data.phone) {
                 // Sanitize phone - remove all non-digits
                 $('ownerPhone').value = data.phone.replace(/\D/g, '');
@@ -233,7 +244,7 @@ window.loadUsername = async function() {
             
             // Check profile completion (skip for master owner)
             if (!TierService.isMasterAdmin(user.email)) {
-                checkProfileCompletion(data.username, data.phone);
+                checkProfileCompletion(displayNameToShow, data.phone);
             }
         } else {
             // New user with no document - show profile completion
@@ -421,11 +432,17 @@ window.saveUsername = async function() {
     const user = auth.currentUser;
     if (!user) return;
     
-    const username = $('ownerUsername').value.trim();
+    // ============================================================
+    // DISPLAY NAME SAVE LOGIC
+    // This saves to 'displayName' field ONLY
+    // The 'username' field is internal and should not be used for display
+    // ============================================================
+    
+    const newDisplayName = $('ownerUsername').value.trim();
     const btn = $('saveUsernameBtn');
     const status = $('usernameStatus');
     
-    if (!username) {
+    if (!newDisplayName) {
         status.textContent = 'Please enter a display name';
         status.className = 'text-yellow-400 text-sm mt-3';
         showElement(status);
@@ -436,43 +453,42 @@ window.saveUsername = async function() {
     btn.textContent = 'Saving...';
     
     try {
+        // ONLY update displayName - never touch the internal username field
         await db.collection('users').doc(user.uid).set({
-            username: username,
-            displayName: username,  // Also save to displayName for consistency
+            displayName: newDisplayName,
             email: user.email,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
-        // IMPORTANT: Sync display name (and phone if available) to all user's vehicles
-        // This allows non-admin users to see owner info without permission issues
+        // Sync display name to all user's vehicles (for permission-denied fallback)
         const phone = $('ownerPhone')?.value?.replace(/\D/g, '') || '';
-        await syncOwnerProfileToProperties(user.email, username, phone);
+        await syncOwnerProfileToProperties(user.email, newDisplayName, phone);
         
         status.textContent = 'Display name saved successfully!';
         status.className = 'text-green-400 text-sm mt-3';
         showElement(status);
         
-        // Update cache
+        // Update cache with the new display name
         window.ownerUsernameCache = window.ownerUsernameCache || {};
-        window.ownerUsernameCache[user.email.toLowerCase()] = username;
+        window.ownerUsernameCache[user.email.toLowerCase()] = newDisplayName;
         
         // Update nav bar display
         updateNavUserDisplay();
         
-        // Sync everywhere
-        syncOwnerNameEverywhere(user.email, username);
+        // Sync everywhere (updates any visible UI elements)
+        syncOwnerNameEverywhere(user.email, newDisplayName);
         
         // Update admin user list if visible
         const adminCard = document.querySelector(`[data-userid]`);
         if (adminCard) {
             const inputField = document.querySelector(`[id^="adminName_"]`);
             if (inputField && inputField.closest('[data-email]')?.dataset.email === user.email) {
-                inputField.value = username;
+                inputField.value = newDisplayName;
             }
         }
         
-        // Re-check profile completion (reuse phone variable from sync call above)
-        checkProfileCompletion(username, phone);
+        // Re-check profile completion
+        checkProfileCompletion(newDisplayName, phone);
         
         // Award XP for adding display name (gamification)
         if (typeof GamificationService !== 'undefined') {

@@ -53,19 +53,25 @@ function getVehicleOwnerEmail(vehicleId) {
 // Alias for backwards compatibility
 const getPropertyOwnerEmail = getVehicleOwnerEmail;
 
-// Fetch username by email from Firestore
+// ============================================================
+// GET DISPLAY NAME BY EMAIL
+// This is the SINGLE SOURCE OF TRUTH for user display names
+// 
+// Priority order:
+// 1. displayName field (if contains space = likely real name)
+// 2. firstName + lastName
+// 3. firstName only
+// 4. displayName field (even without space)
+// 5. Email prefix as last resort
+//
+// NEVER use the internal 'username' field for display
+// ============================================================
 async function getUsernameByEmail(email) {
     if (!email) return 'Unassigned';
     
     const normalizedEmail = email.toLowerCase();
     
-    // HARDCODED: Master admin always shows "Pauly Amato"
-    if (typeof TierService !== 'undefined' && TierService.isMasterAdmin(normalizedEmail)) {
-        window.ownerUsernameCache[normalizedEmail] = 'Pauly Amato';
-        return 'Pauly Amato';
-    }
-    
-    // Check cache first
+    // Check cache first (cache is populated by this function only)
     if (window.ownerUsernameCache[normalizedEmail]) {
         return window.ownerUsernameCache[normalizedEmail];
     }
@@ -74,30 +80,17 @@ async function getUsernameByEmail(email) {
         const querySnapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
-            // Prefer displayName if it looks like a real name (has space), then firstName+lastName, then email prefix
-            // NEVER use internal username field for display
-            let displayName;
-            if (userData.displayName && userData.displayName.includes(' ')) {
-                // displayName with space = likely a real name like "John Smith"
-                displayName = userData.displayName;
-            } else if (userData.firstName && userData.lastName) {
-                displayName = userData.firstName + ' ' + userData.lastName;
-            } else if (userData.firstName) {
-                displayName = userData.firstName;
-            } else if (userData.displayName) {
-                // Use displayName even without space as fallback
-                displayName = userData.displayName;
-            } else {
-                // Final fallback - email prefix, NEVER internal username
-                displayName = email.split('@')[0];
-            }
+            
+            // Apply the display name hierarchy
+            let displayName = resolveDisplayName(userData, email);
+            
             window.ownerUsernameCache[normalizedEmail] = displayName;
             return displayName;
         }
     } catch (error) {
         // Permission denied - try getting from vehicle data
         if (error.code === 'permission-denied') {
-            // Check if we have ownerDisplayName stored on any vehicle in Firestore settings
+            // Check if we have ownerDisplayName stored on any vehicle
             try {
                 const vehiclesDoc = await db.collection('settings').doc('properties').get();
                 if (vehiclesDoc.exists) {
@@ -113,7 +106,7 @@ async function getUsernameByEmail(email) {
                     }
                 }
             } catch (e) {
-                // Can't read settings either, fall through to other fallbacks
+                // Can't read settings either, fall through
             }
             
             // Check local OwnershipService for ownerDisplayName
@@ -121,7 +114,6 @@ async function getUsernameByEmail(email) {
                 ? OwnershipService.getVehiclesForOwner(normalizedEmail)
                 : [];
             
-            // Look for ownerDisplayName on any of their vehicles
             for (const vehicle of userVehicles) {
                 if (vehicle.ownerDisplayName) {
                     window.ownerUsernameCache[normalizedEmail] = vehicle.ownerDisplayName;
@@ -129,22 +121,46 @@ async function getUsernameByEmail(email) {
                 }
             }
             
-            // Check if master admin
-            if (typeof TierService !== 'undefined' && TierService.isMasterAdmin(normalizedEmail)) {
-                const fallback = 'Pauly Amato';
-                window.ownerUsernameCache[normalizedEmail] = fallback;
-                return fallback;
-            }
-            
             // Final fallback to email prefix
             const fallback = email.split('@')[0];
             window.ownerUsernameCache[normalizedEmail] = fallback;
             return fallback;
         }
-        console.error('Error fetching username:', error);
+        console.error('Error fetching display name:', error);
     }
     
     return 'Unassigned';
+}
+
+// ============================================================
+// RESOLVE DISPLAY NAME FROM USER DATA
+// Helper function that applies the display name hierarchy
+// This ensures consistent logic everywhere
+// ============================================================
+function resolveDisplayName(userData, email) {
+    // Priority 1: displayName with space (looks like "First Last")
+    if (userData.displayName && userData.displayName.includes(' ')) {
+        return userData.displayName;
+    }
+    
+    // Priority 2: firstName + lastName
+    if (userData.firstName && userData.lastName) {
+        return userData.firstName + ' ' + userData.lastName;
+    }
+    
+    // Priority 3: firstName only
+    if (userData.firstName) {
+        return userData.firstName;
+    }
+    
+    // Priority 4: displayName without space (better than email)
+    if (userData.displayName) {
+        return userData.displayName;
+    }
+    
+    // Priority 5: Email prefix as last resort
+    // NEVER use userData.username - that's internal only
+    return email ? email.split('@')[0] : 'Unknown';
 }
 
 // Get vehicle owner with tier info (for display)
