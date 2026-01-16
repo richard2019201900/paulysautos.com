@@ -16,10 +16,12 @@
 window.openCreateListingModal = async function() {
     hideElement($('mobileMenu'));
     
-    // Check tier limits before opening
+    // Check auth FIRST - redirect to login/signup if not authenticated
     const user = auth.currentUser;
     if (!user) {
-        alert('Please sign in to create a listing.');
+        // Open login modal which has both Sign In and Create Account options
+        openModal('loginModal');
+        showToast('Please sign in or create a free account to list a vehicle', 'info');
         return;
     }
     
