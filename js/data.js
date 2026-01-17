@@ -136,6 +136,10 @@ async function getUsernameByEmail(email) {
 // RESOLVE DISPLAY NAME FROM USER DATA
 // Helper function that applies the display name hierarchy
 // This ensures consistent logic everywhere
+// 
+// IMPORTANT: For backwards compatibility with existing users,
+// we fall back to 'username' field if displayName is not set.
+// New accounts should always have displayName set.
 // ============================================================
 function resolveDisplayName(userData, email) {
     // Priority 1: displayName with space (looks like "First Last")
@@ -153,13 +157,23 @@ function resolveDisplayName(userData, email) {
         return userData.firstName;
     }
     
-    // Priority 4: displayName without space (better than email)
+    // Priority 4: displayName without space (better than username)
     if (userData.displayName) {
         return userData.displayName;
     }
     
-    // Priority 5: Email prefix as last resort
-    // NEVER use userData.username - that's internal only
+    // Priority 5: BACKWARDS COMPATIBILITY - use username if it looks like a name
+    // This handles existing users who only have username field set
+    if (userData.username && userData.username.includes(' ')) {
+        return userData.username;
+    }
+    
+    // Priority 6: username without space (still better than email prefix)
+    if (userData.username) {
+        return userData.username;
+    }
+    
+    // Priority 7: Email prefix as absolute last resort
     return email ? email.split('@')[0] : 'Unknown';
 }
 
@@ -184,7 +198,8 @@ async function getVehicleOwnerWithTier(vehicleId, options = {}) {
                 else if (typeof agentsCache !== 'undefined' && agentsCache.length > 0) {
                     const agent = agentsCache.find(a => a.email.toLowerCase() === agentEmail.toLowerCase());
                     if (agent) {
-                        agentName = agent.username;
+                        // Prefer displayName, fall back to username for backwards compatibility
+                        agentName = agent.displayName || agent.username;
                     }
                 } 
                 else if (typeof loadAgents === 'function' && auth?.currentUser) {
@@ -192,7 +207,8 @@ async function getVehicleOwnerWithTier(vehicleId, options = {}) {
                         const loadedAgents = await loadAgents();
                         const agent = loadedAgents.find(a => a.email.toLowerCase() === agentEmail.toLowerCase());
                         if (agent) {
-                            agentName = agent.username;
+                            // Prefer displayName, fall back to username for backwards compatibility
+                            agentName = agent.displayName || agent.username;
                         }
                     } catch (e) {
                         // Silent fail for anonymous users

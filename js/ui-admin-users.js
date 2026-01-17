@@ -1052,9 +1052,11 @@ window.adminCreateUser = async function(email, password, displayName, tier) {
     }
     
     // Create user document in Firestore
+    // CRITICAL: Save to displayName field - this is what gets displayed on tiles
     await db.collection('users').doc(uid).set({
         email: email.toLowerCase(),
-        username: displayName,
+        displayName: displayName,  // PRIMARY field for display
+        username: displayName,     // Keep for backwards compatibility
         tier: tier,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         createdBy: auth.currentUser?.email || 'admin'

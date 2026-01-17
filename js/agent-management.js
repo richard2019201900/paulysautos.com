@@ -885,7 +885,7 @@ window.migrateAgentDisplayNames = async function() {
                         return a.email.toLowerCase() === emailLower;
                     });
                     if (agent) {
-                        displayNames[emailLower] = agent.username;
+                        displayNames[emailLower] = agent.displayName || agent.username;
                         phones[emailLower] = agent.phone || '2057028233';
                     } else {
                         displayNames[emailLower] = 'Agent';

@@ -486,9 +486,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 // Create user document with starter tier, display name, and gamification
+                // CRITICAL: Save to displayName field - this is what gets displayed on tiles
                 await db.collection('users').doc(user.uid).set({
                     email: user.email.toLowerCase(),
-                    username: displayName,
+                    displayName: displayName,  // PRIMARY field for display
+                    username: displayName,     // Keep for backwards compatibility
                     tier: 'starter',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     gamification: {

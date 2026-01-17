@@ -40,7 +40,7 @@ exports.getLeaderboard = functions.https.onCall(async (data, context) => {
             if (gamification.xp > 0) {
                 leaderboard.push({
                     odbc: doc.id, // Obfuscated document ID (not email)
-                    username: userData.username || 'Anonymous', // Use username field
+                    username: userData.displayName || userData.username || 'Anonymous', // Prefer displayName
                     xp: gamification.xp || 0,
                     level: gamification.level || 1,
                     title: getLevelTitle(gamification.level || 1),
@@ -241,9 +241,11 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
         }
 
         // Create user document with initial gamification
+        // CRITICAL: Save to displayName field - this is what gets displayed on tiles
         const userData = {
             email: user.email,
-            username: user.displayName || '',
+            displayName: user.displayName || '',  // PRIMARY field for display
+            username: user.displayName || '',     // Keep for backwards compatibility
             createdAt: new Date().toISOString(),
             tier: 'starter',
             gamification: {
