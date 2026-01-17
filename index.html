@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PaulysAutos.com - Elite Luxury Vehicle Marketplace in Los Santos</title>
-    <meta name="description" content="Premium vehicle marketplace in Los Santos. Browse free - cars, trucks, SUVs, boats & motorcycles. Sign up only to list your vehicle for sale.">
+    <title>PaulysProperties.com - Premium Real Estate Rentals in Los Santos</title>
+    <meta name="description" content="Browse 14+ premium properties in Los Santos. Luxury apartments, houses, condos & villas. Instance and Walk-in interiors. Weekly & monthly rentals available. Find your dream home today!">
     <meta name="robots" content="index, follow">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://paulysautos.com/">
+    <link rel="canonical" href="https://paulysproperties.com/">
     
     <!-- Simple Emoji Favicon (works everywhere, no external files needed) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>">
-    <meta name="theme-color" content="#D4AF37">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+    <meta name="theme-color" content="#667eea">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://paulysautos.com/">
-    <meta property="og:title" content="PaulysAutos.com - Premium Vehicle Marketplace">
-    <meta property="og:description" content="Premium vehicle marketplace. Browse free - cars, trucks, SUVs, boats & motorcycles. Sign up only to list.">
-    <meta property="og:site_name" content="PaulysAutos.com">
+    <meta property="og:url" content="https://paulysproperties.com/">
+    <meta property="og:title" content="PaulysProperties.com - Premium Real Estate Rentals">
+    <meta property="og:description" content="Browse luxury properties in Los Santos. Apartments, houses, condos & villas available for rent. Instance and Walk-in interiors.">
+    <meta property="og:site_name" content="PaulysProperties.com">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="PaulysAutos.com - Elite Luxury Vehicle Marketplace">
-    <meta name="twitter:description" content="Premium vehicle marketplace. Browse free - cars, trucks, SUVs, boats & motorcycles.">
+    <meta name="twitter:title" content="PaulysProperties.com - Premium Real Estate Rentals">
+    <meta name="twitter:description" content="Browse luxury properties in Los Santos. Apartments, houses, condos & villas available for rent.">
     
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,9 +47,9 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "AutoDealer",
-      "name": "PaulysAutos.com",
-      "description": "Premium vehicle marketplace in Los Santos. Browse free - cars, trucks, SUVs, boats & motorcycles.",
+      "@type": "RealEstateAgent",
+      "name": "PaulysProperties.com",
+      "description": "Premium property rentals in Los Santos. Apartments, houses, condos and villas available for weekly and monthly rent.",
       "url": "https://yoursite.com",
       "telephone": "2057028233",
       "priceRange": "$$",
@@ -153,15 +153,6 @@
         select:focus-visible {
             box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5) !important;
         }
-        
-        /* Hide scrollbar but keep scroll functionality */
-        .scrollbar-hide {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;  /* Chrome, Safari, Opera */
-        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-gray-100">
@@ -182,7 +173,7 @@
     <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
         <button onclick="closeLightbox()" class="lightbox-btn lightbox-close" aria-label="Close">✕</button>
         <button onclick="changeImage(-1)" class="lightbox-btn lightbox-prev" aria-label="Previous image">‹</button>
-        <img id="lightboxImage" class="lightbox-content" src="" alt="Vehicle Image">
+        <img id="lightboxImage" class="lightbox-content" src="" alt="Property Image">
         <button onclick="changeImage(1)" class="lightbox-btn lightbox-next" aria-label="Next image">›</button>
     </div>
 
@@ -190,7 +181,7 @@
     <div id="contactModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
         <div class="glass-effect rounded-2xl shadow-2xl p-10 max-w-lg w-full mx-4 max-h-screen overflow-y-auto border border-gray-700">
             <h2 id="modalTitle" class="text-3xl font-black bg-clip-text text-transparent mb-4 text-center"></h2>
-            <p id="modalVehicleName" class="text-xl font-bold text-gray-200 mb-4 text-center"></p>
+            <p id="modalPropertyName" class="text-xl font-bold text-gray-200 mb-4 text-center"></p>
             <p class="text-gray-400 mb-6 text-center font-medium">Text us in city! Copy the number and message below.</p>
             
             <div class="mb-6">
@@ -203,7 +194,7 @@
             
             <div class="mb-6">
                 <label class="block text-gray-300 font-bold mb-3">💬 Your Message (edit as needed):</label>
-                <textarea id="modalMessage" rows="4" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 font-medium text-white focus:ring-2 focus:ring-amber-500 transition"></textarea>
+                <textarea id="modalMessage" rows="4" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 font-medium text-white focus:ring-2 focus:ring-purple-500 transition"></textarea>
                 <button onclick="copyToClipboard('modalMessage', this)" class="w-full mt-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg">Copy Message</button>
             </div>
             
@@ -220,198 +211,84 @@
         </div>
     </div>
 
-    <!-- Start Sale Modal -->
-    <div id="startSaleModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
-        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-emerald-500/50">
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h2 class="text-3xl font-black bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">📝 Start Vehicle Sale</h2>
-                    <p class="text-gray-400 mt-2">Generate a contract and track the sale</p>
-                </div>
-                <button onclick="closeModal('startSaleModal')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-            </div>
-            
-            <!-- Trust Warning -->
-            <div class="bg-gradient-to-r from-red-900/60 to-orange-900/60 border-2 border-red-500 rounded-xl p-4 mb-6">
-                <div class="flex items-start gap-3">
-                    <span class="text-3xl">🚨</span>
-                    <div>
-                        <h4 class="text-red-300 font-bold mb-2">⚠️ IMPORTANT: TRUST WARNING</h4>
-                        <ul class="text-red-200/90 text-sm space-y-1">
-                            <li>• Only proceed if you TRUST this buyer</li>
-                            <li>• VERIFY their identity in person before accepting cash</li>
-                            <li>• SCREENSHOT all transactions and contracts</li>
-                            <li>• Meet in PUBLIC areas with witnesses</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <form id="startSaleForm" class="space-y-4">
-                <input type="hidden" id="saleVehicleId" value="">
-                
-                <!-- Buyer Info -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-gray-300 font-bold mb-2">👤 Buyer Name *</label>
-                        <input type="text" id="saleBuyerName" required placeholder="Character name in city" 
-                            class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-gray-300 font-bold mb-2">📱 Buyer Phone *</label>
-                        <input type="text" id="saleBuyerPhone" required placeholder="In-city phone number" 
-                            class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                </div>
-                
-                <!-- Sale Price (editable) -->
-                <div>
-                    <label class="block text-gray-300 font-bold mb-2">💰 Sale Price *</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                        <input type="number" id="salePriceEdit" required placeholder="Negotiated sale price"
-                            class="w-full pl-8 pr-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500"
-                            onchange="updateSaleBreakdown()">
-                    </div>
-                    <p class="text-gray-500 text-xs mt-1">Enter the final negotiated price</p>
-                </div>
-                
-                <!-- Payment Breakdown (auto-calculated) -->
-                <div id="salePaymentBreakdown" class="bg-gray-800/50 rounded-xl p-4 border border-gray-600">
-                    <!-- Will be populated by JS -->
-                </div>
-                
-                <!-- Agreement Date -->
-                <div>
-                    <label class="block text-gray-300 font-bold mb-2">📅 Agreement Date</label>
-                    <input type="date" id="saleAgreementDate" 
-                        class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500">
-                </div>
-                
-                <!-- Notes -->
-                <div>
-                    <label class="block text-gray-300 font-bold mb-2">📝 Additional Notes (optional)</label>
-                    <textarea id="saleNotes" rows="2" placeholder="Any special terms or conditions..."
-                        class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-emerald-500"></textarea>
-                </div>
-                
-                <!-- Acknowledgment Checkbox -->
-                <div class="bg-amber-900/30 rounded-xl p-4 border border-amber-500/50">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" id="saleAcknowledge" required class="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-emerald-500 focus:ring-emerald-500">
-                        <span class="text-amber-200 text-sm">
-                            I understand that <strong>PaulysAutos.com is NOT responsible</strong> for any disputes arising from this sale. 
-                            I have verified the buyer's identity and accept all risks associated with accepting a down payment.
-                        </span>
-                    </label>
-                </div>
-                
-                <div class="flex gap-3 pt-4">
-                    <button type="button" onclick="closeModal('startSaleModal')" class="flex-1 bg-gray-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-gray-500 transition border border-gray-500">
-                        Cancel
-                    </button>
-                    <button type="submit" class="flex-1 bg-emerald-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-emerald-500 transition flex items-center justify-center gap-2 border border-emerald-400 shadow-lg">
-                        <span>📄</span>
-                        Generate Contract & Start Sale
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- View Sale Contract Modal -->
-    <div id="viewSaleContractModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
-        <div class="glass-effect rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-amber-500/50">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h2 class="text-2xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent flex items-center gap-2">📄 Vehicle Sale Contract</h2>
-                    <p class="text-gray-400 text-sm mt-1">Official agreement for city court records</p>
-                </div>
-                <button onclick="closeModal('viewSaleContractModal')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-            </div>
-            
-            <!-- Contract Content for Display -->
-            <div id="saleContractContent" class="bg-gray-800 rounded-xl p-4 mb-4 max-h-[50vh] overflow-y-auto">
-                <!-- Contract content will be populated by JS -->
-            </div>
-            
-            <!-- Action Buttons - matching PaulysProperties style -->
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="copySaleContract()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 px-4 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                    Copy Text
-                </button>
-                <button onclick="downloadContractAsPNG()" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-4 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Download Image
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Photo Services Modal -->
     <div id="photoServicesModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
-        <div class="glass-effect rounded-2xl shadow-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto border border-amber-500/50">
+        <div class="glass-effect rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-amber-500/50">
             <!-- Header -->
-            <div class="flex justify-between items-start mb-4">
+            <div class="flex justify-between items-start mb-5">
                 <div>
-                    <h2 class="text-2xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent">Vehicle Owner Services</h2>
-                    <p class="text-gray-400 text-sm">Get your vehicle sold faster with professional help</p>
+                    <h2 class="text-2xl font-black bg-gradient-to-r from-amber-500 to-pink-600 bg-clip-text text-transparent">Property Owner Services</h2>
+                    <p class="text-gray-400 text-sm">Get your property rented faster with professional help</p>
                 </div>
                 <button onclick="closeModal('photoServicesModal')" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
             </div>
             
-            <!-- Professional Photography Section -->
-            <div class="mb-6">
-                <h3 class="text-white font-bold mb-2 flex items-center gap-2">
-                    <span>📸</span> Professional Photography
-                </h3>
-                <p class="text-gray-400 text-sm mb-4">High-quality photos that showcase your vehicle's best features. Vehicles with pro photos sell <span class="text-green-400 font-bold">3x faster</span> and command higher prices.</p>
-                
+            <!-- Professional Photography -->
+            <div class="mb-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xl">📸</span>
+                    <h3 class="text-lg font-bold text-white">Professional Photography</h3>
+                </div>
+                <p class="text-gray-300 text-sm mb-3">High-quality photos that showcase your property's best features. Properties with pro photos rent <span class="text-green-400 font-bold">3x faster</span> and command higher prices.</p>
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Per Photo -->
-                    <div id="photoOptionSingle" onclick="selectPhotoOption('single')" class="photo-option bg-gray-800/70 rounded-xl p-4 border-2 border-gray-600 hover:border-amber-500 transition cursor-pointer">
-                        <div class="text-2xl font-black text-white">$5k<span class="text-gray-400 text-sm font-normal">/photo</span></div>
-                        <div class="text-gray-400 text-xs mt-1">10 photo minimum</div>
+                    <div id="photoOptionSingle" onclick="selectPhotoServiceOption('single')"
+                        class="bg-gray-800/70 rounded-lg p-4 border-2 border-gray-600 hover:border-green-500 transition cursor-pointer relative">
+                        <div id="photoSingleCheck" class="hidden absolute top-2 right-2 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">✓</div>
+                        <div class="text-2xl font-black text-white mb-1">$5k<span class="text-sm text-gray-400 font-normal">/photo</span></div>
+                        <div class="text-gray-400 text-sm">10 photo minimum</div>
                         <div class="text-green-400 text-xs mt-1">✓ Extra angles included free</div>
                     </div>
-                    
-                    <!-- Bundle -->
-                    <div id="photoOptionBundle" onclick="selectPhotoOption('bundle')" class="photo-option bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-xl p-4 border-2 border-amber-500 cursor-pointer hover:border-amber-400 transition relative">
-                        <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">BEST VALUE</div>
-                        <div class="text-2xl font-black text-amber-400 mt-1">$75k</div>
-                        <div class="text-amber-300/80 text-xs mt-1">Complete media package</div>
-                        <div class="text-gray-300 text-xs mt-1">✓ 10 photos + video tour + 4 weeks premium listing</div>
+                    <!-- Premium Bundle -->
+                    <div id="photoOptionBundle" onclick="selectPhotoServiceOption('bundle')"
+                        class="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-lg p-4 border-2 border-amber-500 relative cursor-pointer hover:border-amber-400 transition">
+                        <div id="photoBundleCheck" class="hidden absolute top-2 right-2 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">✓</div>
+                        <div class="absolute -top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">BEST VALUE</div>
+                        <div class="text-2xl font-black text-amber-400 mt-1 mb-1">$75k</div>
+                        <div class="text-amber-200 text-sm">Complete media package</div>
+                        <div class="text-amber-300/80 text-xs mt-1">✓ 10 photos + video tour + 4 weeks premium listing</div>
                     </div>
                 </div>
             </div>
             
-            <!-- Turn-Key Sales Section -->
-            <div class="mb-6">
-                <h3 class="text-white font-bold mb-2 flex items-center gap-2">
-                    <span>🔑</span> Turn-Key Vehicle Sales
-                    <span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">HANDS-FREE</span>
-                </h3>
-                <p class="text-gray-400 text-sm mb-4">Hand over the keys and let us handle everything. We'll photograph, list, show, negotiate with buyers, and manage the entire sales process so you can focus on what matters.</p>
-                
-                <div id="consignmentOption" onclick="selectPhotoOption('consignment')" class="photo-option bg-gray-800/70 rounded-xl p-4 border-2 border-gray-600 hover:border-amber-500 transition cursor-pointer">
-                    <div class="text-amber-400 text-xs font-bold mb-1">FOR SALES</div>
-                    <div class="text-2xl font-black text-white">$50k <span class="text-amber-400 text-lg">+ 10%</span></div>
-                    <div class="text-gray-400 text-xs mt-1">One-time fee + 10% of sale price</div>
-                    <div class="text-gray-300 text-xs mt-2">✓ Photos, listing, tours, negotiation, closing</div>
+            <!-- Turn-Key Management -->
+            <div class="mb-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xl">🔑</span>
+                    <h3 class="text-lg font-bold text-white">Turn-Key Property Management</h3>
+                    <span class="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">HANDS-FREE</span>
+                </div>
+                <p class="text-gray-300 text-sm mb-3">Hand over the keys and let us handle everything. We'll photograph, list, show, screen tenants, and manage the entire process so you can focus on what matters.</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- For Rentals -->
+                    <div id="managedOptionRental" onclick="selectPhotoServiceOption('rental')" class="bg-gray-800/70 rounded-lg p-4 border-2 border-gray-600 hover:border-purple-500 transition cursor-pointer relative">
+                        <div id="managedRentalCheck" class="hidden absolute top-2 right-2 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">✓</div>
+                        <div class="text-purple-400 text-xs font-bold mb-1">FOR RENTALS</div>
+                        <div class="text-2xl font-black text-white">$25k <span class="text-purple-300 text-sm font-normal">+ 10%/mo</span></div>
+                        <div class="text-gray-400 text-sm mt-1">One-time fee + 10% of monthly rent</div>
+                        <div class="text-purple-300/80 text-xs mt-1">✓ Photos, listing, tours, screening, rent collection</div>
+                    </div>
+                    <!-- For Sales -->
+                    <div id="managedOptionSale" onclick="selectPhotoServiceOption('sale')" class="bg-gray-800/70 rounded-lg p-4 border-2 border-gray-600 hover:border-pink-500 transition cursor-pointer relative">
+                        <div id="managedSaleCheck" class="hidden absolute top-2 right-2 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">✓</div>
+                        <div class="text-pink-400 text-xs font-bold mb-1">FOR SALES</div>
+                        <div class="text-2xl font-black text-white">$50k <span class="text-pink-300 text-sm font-normal">+ 10%</span></div>
+                        <div class="text-gray-400 text-sm mt-1">One-time fee + 10% of sale price</div>
+                        <div class="text-pink-300/80 text-xs mt-1">✓ Photos, listing, tours, negotiation, closing</div>
+                    </div>
                 </div>
             </div>
             
-            <!-- CTA - buttons on same row -->
-            <div class="flex gap-3 mb-2">
-                <button id="photoServicesCopyBtn" onclick="copyAndNotifyPhotoServices()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
-                    Select an option above
+            <!-- CTA -->
+            <div class="flex gap-3 items-center">
+                <button id="photoServicesCopyBtn" onclick="copyAndNotifyPhotoServices()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
+                    <span id="photoServicesBtnText">Select an option above</span>
                 </button>
-                <button onclick="closeModal('photoServicesModal')" class="bg-gray-700 text-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                <button onclick="closeModal('photoServicesModal')" class="bg-gray-700 text-gray-300 px-5 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
                     Close
                 </button>
             </div>
-            <p class="text-gray-500 text-xs text-center">Copies phone number to clipboard • Text us in city to schedule</p>
+            <p class="text-gray-500 text-xs text-center mt-2">Copies our number (205-702-8233) • Text in city for fastest response</p>
         </div>
     </div>
 
@@ -421,7 +298,7 @@
             <div class="text-center mb-6">
                 <div class="text-5xl mb-4">⚠️</div>
                 <h2 class="text-2xl font-black text-yellow-400 mb-2">Complete Your Profile</h2>
-                <p class="text-gray-300">Before you can browse the site, please complete your profile settings. This information is required so buyers can contact you about your vehicles.</p>
+                <p class="text-gray-300">Before you can browse the site, please complete your profile settings. This information is required so renters can contact you about your properties.</p>
             </div>
             
             <div class="bg-gray-800/50 rounded-xl p-4 mb-6">
@@ -449,15 +326,15 @@
         </div>
     </div>
 
-    <!-- Reassign Vehicle Modal (Admin Only) -->
+    <!-- Reassign Property Modal (Admin Only) -->
     <div id="reassignModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
-        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-amber-700/50">
-            <h2 class="text-2xl font-black text-amber-400 mb-2 text-center">🔄 Reassign Vehicle</h2>
-            <p id="reassignVehicleTitle" class="text-gray-400 text-center mb-6"></p>
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-purple-700/50">
+            <h2 class="text-2xl font-black text-purple-400 mb-2 text-center">🔄 Reassign Property</h2>
+            <p id="reassignPropertyTitle" class="text-gray-400 text-center mb-6"></p>
             
             <div class="mb-6">
                 <label class="block text-gray-300 font-semibold mb-2">Select New Owner</label>
-                <select id="reassignOwnerSelect" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500">
+                <select id="reassignOwnerSelect" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500">
                     <option value="">-- Select Owner --</option>
                     <option value="unassigned">🚫 Unassigned (No Owner)</option>
                 </select>
@@ -467,8 +344,8 @@
             <div id="reassignError" class="hidden text-red-400 text-sm mb-4 text-center"></div>
             <div id="reassignSuccess" class="hidden text-green-400 text-sm mb-4 text-center"></div>
             
-            <button id="reassignBtn" onclick="confirmReassignVehicle()" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg mb-3">
-                ✓ Reassign Vehicle
+            <button id="reassignBtn" onclick="confirmReassignProperty()" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg mb-3">
+                ✓ Reassign Property
             </button>
             <button onclick="closeModal('reassignModal')" class="w-full bg-gray-700 text-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition shadow-lg">Cancel</button>
         </div>
@@ -480,91 +357,96 @@
             <h2 class="text-3xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent mb-6 text-center">✨ Create New Listing</h2>
             
             <form id="createListingForm" class="space-y-4" autocomplete="off">
-                <!-- Description (Main Display Title) -->
-                <div>
-                    <label class="block text-gray-300 font-semibold mb-2">Description *</label>
-                    <input type="text" id="newListingDescription" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. OG Bacalar, Fully Upgraded Luxury Convertible">
-                </div>
-                
-                <!-- Model with Benny's tip -->
-                <div>
-                    <label class="block text-gray-300 font-semibold mb-2 flex items-center gap-2">
-                        Model *
-                        <span class="relative group">
-                            <span class="text-amber-400 cursor-help text-sm">💡</span>
-                            <span class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-amber-300 text-xs px-3 py-2 rounded-lg shadow-lg border border-amber-500/50 w-64 z-50">
-                                Copy & paste from Benny's app for best results! The model name helps buyers find your vehicle.
-                            </span>
-                        </span>
-                    </label>
-                    <input type="text" id="newListingTitle" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. rmodbacalar, sultanrs, elegy2">
-                </div>
-                
-                <!-- License Plate & Vehicle Type -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">License Plate *</label>
-                        <input type="text" id="newListingPlate" required autocomplete="off" maxlength="8" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition uppercase" placeholder="e.g. 1L4XG8EM">
+                        <label class="block text-gray-300 font-semibold mb-2">Property Address *</label>
+                        <input type="text" id="newListingTitle" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. 1234 Eclipse Blvd, Apt 105">
                     </div>
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">Vehicle Type *</label>
+                        <label class="block text-gray-300 font-semibold mb-2">Property Type *</label>
                         <select id="newListingType" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
                             <option value="">Select type...</option>
-                            <option value="car">Car</option>
-                            <option value="truck">Truck</option>
-                            <option value="suv">SUV</option>
-                            <option value="boat">Boat</option>
-                            <option value="motorcycle">Motorcycle</option>
-                            <option value="other">Other</option>
+                            <option value="apartment">Apartment</option>
+                            <option value="house">House</option>
+                            <option value="condo">Condo</option>
+                            <option value="villa">Villa</option>
+                            <option value="hotel">Hotel</option>
+                            <option value="office">Office</option>
+                            <option value="warehouse">Warehouse</option>
+                            <option value="hideout">Hideout</option>
                         </select>
                     </div>
                 </div>
                 
-                <!-- Price -->
                 <div>
-                    <label class="block text-gray-300 font-semibold mb-2">Price *</label>
-                    <input type="number" id="newListingBuyPrice" required min="1" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. 200000">
+                    <label class="block text-gray-300 font-semibold mb-2">Description</label>
+                    <input type="text" id="newListingLocation" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. Close to Benny's, garage included, ocean view (optional)">
                 </div>
                 
-                <!-- Vehicle Specs - Benny's Style Dropdowns -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">Upgrades *</label>
-                        <select id="newListingUpgrades" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
-                            <option value="">Select...</option>
-                            <option value="None">None</option>
-                            <option value="Some">Some</option>
-                            <option value="Max">Max</option>
-                        </select>
+                        <label class="block text-gray-300 font-semibold mb-2">Bedrooms</label>
+                        <input type="number" id="newListingBedrooms" min="0" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="1">
                     </div>
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">Speed *</label>
-                        <select id="newListingSpeed" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
-                            <option value="">Select...</option>
-                            <option value="Normal">Normal</option>
-                            <option value="Fast">Fast</option>
-                            <option value="Ludicrous">Ludicrous</option>
-                        </select>
+                        <label class="block text-gray-300 font-semibold mb-2">Bathrooms</label>
+                        <input type="number" id="newListingBathrooms" min="0" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="1">
                     </div>
                     <div>
                         <label class="block text-gray-300 font-semibold mb-2">Storage *</label>
-                        <select id="newListingStorage" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
-                            <option value="">Select...</option>
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                        </select>
+                        <input type="number" id="newListingStorage" required min="1" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="600">
                     </div>
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-2">Seats *</label>
-                        <select id="newListingSeats" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
-                            <option value="">Select...</option>
-                            <option value="Two">Two</option>
-                            <option value="Three">Three</option>
-                            <option value="Four">Four</option>
-                            <option value="Five">Five</option>
-                            <option value="Six">Six</option>
+                        <label class="block text-gray-300 font-semibold mb-2">Interior *</label>
+                        <select id="newListingInterior" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <option value="">Select interior...</option>
+                            <option value="Instance">Instance</option>
+                            <option value="Walk-in">Walk-in</option>
                         </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-2">Weekly Price</label>
+                        <input type="number" id="newListingWeekly" min="0" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="35000 (optional)" oninput="checkPriceWarning()">
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-2">Biweekly Price</label>
+                        <input type="number" id="newListingBiweekly" min="0" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="65000 (optional)" oninput="checkPriceWarning()">
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-2">Monthly Price</label>
+                        <input type="number" id="newListingMonthly" min="0" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="110000 (optional)" oninput="checkPriceWarning()">
+                    </div>
+                </div>
+                
+                <!-- Buy It Now Price -->
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-2">Buy It Now Price (Optional)</label>
+                    <input type="number" id="newListingBuyPrice" min="0" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="Leave blank if not for sale" oninput="validateBuyPrice()">
+                    <div id="buyPriceHint" class="text-gray-500 text-xs mt-1">Enter a price if this property is available for purchase</div>
+                </div>
+                
+                <!-- Buy Price Warning/Error -->
+                <div id="buyPriceWarning" class="hidden bg-gradient-to-r from-red-900/50 to-orange-900/50 border border-red-500 rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🚫</span>
+                        <div>
+                            <p class="text-red-300 font-bold">City Minimum Violation</p>
+                            <p id="buyPriceWarningText" class="text-red-200 text-sm">Your price is below the PMA Government minimum for this property type.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Price Warning -->
+                <div id="priceWarning" class="hidden bg-gradient-to-r from-orange-900/50 to-red-900/50 border border-orange-500 rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">⚠️</span>
+                        <div>
+                            <p class="text-orange-300 font-bold">Pricing Warning</p>
+                            <p id="priceWarningText" class="text-orange-200 text-sm">Your biweekly/monthly price is lower than expected. Usually longer terms cost more, not less.</p>
+                        </div>
                     </div>
                 </div>
                 
@@ -578,42 +460,29 @@
                                 <span class="text-amber-300 font-bold text-lg">Premium Listing</span>
                                 <span class="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 text-xs font-bold px-2 py-1 rounded-full">$10,000/week</span>
                             </div>
-                            <p class="text-amber-200/70 text-sm mt-1">Feature your vehicle at the TOP of all listings with an eye-catching gold border. Stand out from the crowd and sell faster!</p>
+                            <p class="text-amber-200/70 text-sm mt-1">Feature your property at the TOP of all listings with an eye-catching gold border. Stand out from the crowd and rent faster!</p>
                             <div class="flex gap-4 mt-2 text-xs text-amber-300/60">
                                 <span>✓ Top placement</span>
                                 <span>✓ Gold border</span>
                                 <span>✓ Premium badge</span>
                             </div>
-                            <p class="text-orange-400 text-xs mt-2 font-semibold">⚠️ Weekly payment required - Please contact Pauly ASAP in-city to send the $10k payment</p>
+                            <p class="text-orange-400 text-xs mt-2 font-semibold">⚠️ Weekly payment required - Pauly will contact you in-city to collect $10k payment</p>
                         </div>
                     </label>
                 </div>
                 
-                <!-- Image URLs -->
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2">Image URLs (one per line)</label>
-                    <!-- Hosting Recommendation -->
-                    <div class="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 border border-cyan-600/40 rounded-lg p-3 mb-2">
-                        <div class="flex items-start gap-2">
-                            <span class="text-lg">💡</span>
-                            <div class="text-xs">
-                                <p class="text-cyan-300 font-bold">Recommended: Use a Free Image Host</p>
-                                <p class="text-gray-300">Upload to <a href="https://fivemanage.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">fivemanage.com</a> (free, made for FiveM) and paste the link.</p>
-                                <p class="text-yellow-400 mt-1">⚠️ Discord links expire! Local files won't work.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <textarea id="newListingImages" rows="3" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="https://fivemanage.com/your-image.jpg&#10;https://example.com/image2.jpg"></textarea>
-                    <p class="text-gray-500 text-xs mt-1">Add image URLs for your vehicle photos</p>
+                    <textarea id="newListingImages" rows="3" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+                    <p class="text-gray-500 text-xs mt-1">Add image URLs for your property photos</p>
                 </div>
                 
-                <div id="createListingWarning" class="hidden bg-yellow-900/50 border border-yellow-600/50 rounded-lg p-3 text-sm"></div>
                 <div id="createListingError" class="hidden text-red-400 text-sm font-medium"></div>
                 <div id="createListingSuccess" class="hidden text-green-400 text-sm font-medium"></div>
                 
                 <div class="flex gap-4 pt-4">
                     <button type="submit" id="createListingBtn" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
-                        🚗 Create Listing
+                        🏠 Create Listing
                     </button>
                     <button type="button" id="cancelListingBtn" onclick="closeModal('createListingModal')" class="flex-1 bg-gray-700 text-gray-200 px-6 py-4 rounded-xl font-bold hover:bg-gray-600 transition shadow-lg">Cancel</button>
                 </div>
@@ -626,16 +495,16 @@
         <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-red-700/50">
             <div class="text-center">
                 <div class="text-6xl mb-4">⚠️</div>
-                <h2 class="text-2xl font-black text-red-400 mb-4">Delete Vehicle?</h2>
+                <h2 class="text-2xl font-black text-red-400 mb-4">Delete Property?</h2>
                 <p class="text-gray-300 mb-2">Are you sure you want to delete:</p>
-                <p id="deleteVehicleName" class="text-white font-bold text-lg mb-6"></p>
-                <p class="text-gray-400 text-sm mb-6">This action cannot be undone. The vehicle will be permanently removed from your inventory and all listings.</p>
+                <p id="deletePropertyName" class="text-white font-bold text-lg mb-6"></p>
+                <p class="text-gray-400 text-sm mb-6">This action cannot be undone. The property will be permanently removed from your inventory and all listings.</p>
                 
                 <div class="flex gap-4">
                     <button onclick="cancelDelete()" class="flex-1 bg-gray-700 text-gray-200 px-6 py-4 rounded-xl font-bold hover:bg-gray-600 transition shadow-lg">
                         Cancel
                     </button>
-                    <button id="confirmDeleteBtn" onclick="executeDeleteVehicle()" class="flex-1 bg-gradient-to-r from-red-500 to-red-700 text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
+                    <button id="confirmDeleteBtn" onclick="executeDeleteProperty()" class="flex-1 bg-gradient-to-r from-red-500 to-red-700 text-white px-6 py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
                         🗑️ Yes, Delete
                     </button>
                 </div>
@@ -645,7 +514,7 @@
 
     <!-- Upgrade Tier Modal -->
     <div id="upgradeModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
-        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4 border border-amber-700/50 relative">
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4 border border-purple-700/50 relative">
             <!-- Close X button -->
             <button onclick="closeModal('upgradeModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white transition p-1" title="Close">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -653,7 +522,7 @@
             
             <div class="text-center mb-6">
                 <div class="text-6xl mb-4">🚀</div>
-                <h2 class="text-2xl font-black text-amber-400 mb-2">Upgrade Your Plan</h2>
+                <h2 class="text-2xl font-black text-purple-400 mb-2">Upgrade Your Plan</h2>
                 <p id="upgradeReason" class="text-gray-300 mb-4"></p>
             </div>
             
@@ -671,11 +540,11 @@
                     <div class="text-gray-400 text-sm">3 Listings</div>
                     <div class="text-yellow-400 font-bold mt-2">$25k/mo</div>
                 </div>
-                <div id="tierElite" class="p-4 rounded-xl border-2 border-amber-600 bg-amber-900/20 text-center">
+                <div id="tierElite" class="p-4 rounded-xl border-2 border-purple-600 bg-purple-900/20 text-center">
                     <div class="text-3xl mb-2">👑</div>
                     <div class="text-white font-bold">Elite</div>
                     <div class="text-gray-400 text-sm">Unlimited</div>
-                    <div class="text-amber-400 font-bold mt-2">$50k/mo</div>
+                    <div class="text-purple-400 font-bold mt-2">$50k/mo</div>
                 </div>
             </div>
             
@@ -684,7 +553,7 @@
                 
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2">Select Desired Plan</label>
-                    <select id="upgradeRequestedTier" onchange="generateUpgradeMessage()" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500">
+                    <select id="upgradeRequestedTier" onchange="generateUpgradeMessage()" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500">
                         <option value="">Choose a plan...</option>
                         <option value="pro">⭐ Pro - 3 Listings ($25k/month)</option>
                         <option value="elite">👑 Elite - Unlimited ($50k/month)</option>
@@ -693,7 +562,7 @@
                 
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2">Message to Send In-City</label>
-                    <textarea id="upgradeMessage" rows="4" readonly class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-800 text-white focus:ring-2 focus:ring-amber-500 resize-none"></textarea>
+                    <textarea id="upgradeMessage" rows="4" readonly class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-800 text-white focus:ring-2 focus:ring-purple-500 resize-none"></textarea>
                     <p class="text-gray-500 text-xs mt-1">This message will be auto-generated based on your selection</p>
                 </div>
                 
@@ -734,7 +603,7 @@
                 <div id="levelUpNewLevel" class="text-5xl font-black text-white mb-2">Level 5</div>
                 <div id="levelUpNewTitle" class="text-xl text-amber-400 font-bold mb-6">Real Estate Tycoon</div>
                 
-                <div id="levelUpReward" class="hidden bg-amber-600/30 rounded-xl p-4 mb-6 border border-amber-500/50">
+                <div id="levelUpReward" class="hidden bg-purple-600/30 rounded-xl p-4 mb-6 border border-purple-500/50">
                     <div class="flex items-center justify-center gap-2 text-white font-bold">
                         <span class="text-2xl">🎁</span>
                         <span>You unlocked a Free Premium Week!</span>
@@ -777,25 +646,12 @@
             <h2 class="text-2xl font-black bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent mb-6 text-center">📸 Add Images</h2>
             
             <div class="space-y-4">
-                <!-- Hosting Recommendation Banner -->
-                <div class="bg-gradient-to-r from-blue-900/50 to-cyan-900/50 border border-cyan-600/50 rounded-xl p-4">
-                    <div class="flex items-start gap-3">
-                        <span class="text-2xl">💡</span>
-                        <div class="text-sm">
-                            <p class="text-cyan-300 font-bold mb-1">Recommended: Use a Free Image Host</p>
-                            <p class="text-gray-300">For best results, upload your images to <a href="https://fivemanage.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">fivemanage.com</a> (free, made for FiveM) and paste the direct link here.</p>
-                            <p class="text-yellow-400 mt-2 text-xs">⚠️ Discord links expire! Local file paths won't work for other users.</p>
-                        </div>
-                    </div>
-                </div>
-                
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2">Image URLs (one per line)</label>
-                    <textarea id="newImageUrls" rows="5" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-green-500 transition" placeholder="https://fivemanage.com/your-image.jpg&#10;https://example.com/image2.jpg&#10;https://example.com/image3.jpg"></textarea>
+                    <textarea id="newImageUrls" rows="5" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-green-500 transition" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg&#10;https://example.com/image3.jpg"></textarea>
                     <p class="text-gray-500 text-xs mt-1">Paste multiple image URLs, one per line</p>
                 </div>
                 
-                <div id="addImageWarning" class="hidden bg-yellow-900/50 border border-yellow-600/50 rounded-lg p-3 text-sm"></div>
                 <div id="addImageError" class="hidden text-red-400 text-sm font-medium"></div>
                 
                 <div class="flex gap-4 pt-4">
@@ -814,7 +670,7 @@
     <div id="loginModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true">
         <div class="glass-effect rounded-2xl shadow-2xl p-10 max-w-md w-full mx-4 border border-gray-700">
             <div id="loginOptions">
-                <h2 class="text-4xl font-bold bg-gradient-to-r from-amber-500 to-yellow-600 bg-clip-text text-transparent mb-6 text-center">Welcome to PaulysAutos.com</h2>
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 text-center">Welcome!</h2>
                 <p class="text-gray-300 mb-8 text-center font-medium">Sign in or create your free account</p>
                 
                 <div class="space-y-4">
@@ -827,11 +683,16 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                         <span>Create Free Account</span>
                     </button>
+                    
+                    <button onclick="loginAsRenter()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-xl font-semibold hover:opacity-90 transition flex items-center justify-center space-x-3 shadow-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <span>Browse Listings Free</span>
+                    </button>
                 </div>
                 
                 <!-- Free tier info -->
                 <div class="mt-6 p-4 bg-green-900/20 border border-green-600/30 rounded-xl">
-                    <p class="text-green-400 text-sm text-center font-medium">🌱 <strong>Free Starter Account:</strong> Create an account to list 1 vehicle for free!</p>
+                    <p class="text-green-400 text-sm text-center font-medium">🌱 <strong>Free Starter Account:</strong> Create an account to list 1 property for free!</p>
                 </div>
                 
                 <button onclick="closeModal('loginModal')" class="w-full mt-6 text-gray-400 hover:text-gray-200 font-semibold transition">Close</button>
@@ -839,19 +700,19 @@
             
             <!-- Sign In Form -->
             <div id="ownerLoginForm" class="hidden">
-                <h2 class="text-3xl font-bold bg-gradient-to-r from-amber-500 to-yellow-600 bg-clip-text text-transparent mb-6 text-center">Sign In</h2>
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6 text-center">Sign In</h2>
                 <p class="text-gray-300 mb-6 text-center font-medium">Enter your credentials to access the dashboard</p>
                 <form id="firebaseLoginForm" class="space-y-4" autocomplete="off">
                     <div>
                         <label for="ownerEmail" class="block text-gray-300 font-semibold mb-2">Username</label>
                         <div class="flex">
-                            <input type="text" id="ownerEmail" required autocomplete="off" class="flex-1 px-4 py-3 border-2 border-gray-600 rounded-l-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="yourname">
-                            <span class="px-4 py-3 bg-gray-600 border-2 border-l-0 border-gray-600 rounded-r-xl text-amber-400 font-semibold">@pma.network</span>
+                            <input type="text" id="ownerEmail" required autocomplete="off" class="flex-1 px-4 py-3 border-2 border-gray-600 rounded-l-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 transition" placeholder="yourname">
+                            <span class="px-4 py-3 bg-gray-600 border-2 border-l-0 border-gray-600 rounded-r-xl text-purple-400 font-semibold">@pma.network</span>
                         </div>
                     </div>
                     <div>
                         <label for="ownerPassword" class="block text-gray-300 font-semibold mb-2">Password</label>
-                        <input type="password" id="ownerPassword" required autocomplete="current-password" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="••••••••">
+                        <input type="password" id="ownerPassword" required autocomplete="current-password" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 transition" placeholder="••••••••">
                     </div>
                     <div id="loginError" class="hidden text-red-400 text-sm font-medium text-center p-3 bg-red-900/30 rounded-xl"></div>
                     <button type="submit" id="loginSubmitBtn" class="w-full gradient-bg text-white px-6 py-4 rounded-xl font-semibold hover:opacity-90 transition shadow-lg">Sign In</button>
@@ -917,63 +778,41 @@
 
     <nav class="glass-effect shadow-xl sticky top-0 z-40 border-b border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16 md:h-20">
+            <div class="flex justify-between items-center h-18 md:h-20 py-2">
                 <!-- Logo with Site Switcher Dropdown -->
                 <div class="relative flex-shrink-0 mr-4" id="siteSwitcherContainer">
-                    <button onclick="toggleSiteSwitcher()" class="flex items-center space-x-2 cursor-pointer p-2 rounded-xl border-2 border-amber-500/50 hover:border-amber-400 transition-all duration-300 site-switcher-glow" role="button" tabindex="0" aria-label="Switch between Pauly's sites" id="siteSwitcherBtn">
+                    <button onclick="toggleSiteSwitcher()" class="flex items-center space-x-2 cursor-pointer p-2 md:p-3 rounded-xl border-2 border-purple-500/50 hover:border-purple-400 transition-all duration-300 site-switcher-glow" role="button" tabindex="0" aria-label="Switch between Pauly's sites" id="siteSwitcherBtn">
                         <div class="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
                             <svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-lg" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
                                     <linearGradient id="logoGradientNav" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" style="stop-color:#D4AF37;stop-opacity:1" />
-                                        <stop offset="100%" style="stop-color:#B8960C;stop-opacity:1" />
+                                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
                                     </linearGradient>
                                 </defs>
-                                <!-- Rounded square base - black background -->
-                                <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a" stroke="url(#logoGradientNav)" stroke-width="3"/>
-                                <!-- Car icon in gold -->
-                                <path d="M30 70 L35 55 L45 45 L75 45 L85 55 L90 70 L90 80 L30 80 Z" fill="url(#logoGradientNav)" />
-                                <!-- Windshield -->
-                                <path d="M42 55 L50 47 L70 47 L78 55 Z" fill="#1a1a1a" />
-                                <!-- Wheels -->
-                                <circle cx="42" cy="80" r="10" fill="#333" stroke="url(#logoGradientNav)" stroke-width="2"/>
-                                <circle cx="78" cy="80" r="10" fill="#333" stroke="url(#logoGradientNav)" stroke-width="2"/>
-                                <!-- Wheel centers -->
-                                <circle cx="42" cy="80" r="4" fill="url(#logoGradientNav)"/>
-                                <circle cx="78" cy="80" r="4" fill="url(#logoGradientNav)"/>
+                                <!-- Rounded square base -->
+                                <rect x="10" y="10" width="100" height="100" rx="20" fill="url(#logoGradientNav)" />
+                                <!-- House icon in white -->
+                                <path d="M30 55 L60 25 L90 55 L90 100 L72 100 L72 75 L48 75 L48 100 L30 100 Z" fill="white" />
+                                <!-- Door -->
+                                <rect x="54" y="85" width="12" height="15" fill="url(#logoGradientNav)" />
+                                <!-- Window -->
+                                <rect x="68" y="60" width="12" height="12" rx="2" fill="url(#logoGradientNav)" />
                             </svg>
                         </div>
                         <div class="flex items-center gap-2">
-                            <h1 class="text-sm sm:text-base md:text-lg font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent tracking-tight whitespace-nowrap">PaulysAutos.com</h1>
-                            <svg class="w-4 h-4 text-amber-400 transition-transform" id="siteSwitcherArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <h1 class="text-sm md:text-base lg:text-lg font-black bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent tracking-tight whitespace-nowrap">PaulysProperties.com</h1>
+                            <svg class="w-4 h-4 text-purple-400 transition-transform duration-300" id="siteSwitcherArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </button>
                     
                     <!-- Site Switcher Dropdown -->
-                    <div id="siteSwitcherDropdown" class="hidden absolute top-full left-0 mt-2 bg-gray-800 border border-amber-500/50 rounded-xl shadow-2xl overflow-hidden z-50 min-w-[220px]">
+                    <div id="siteSwitcherDropdown" class="hidden absolute top-full left-0 mt-2 bg-gray-800 border border-purple-500/50 rounded-xl shadow-2xl overflow-hidden z-50 min-w-[220px]">
                         <div class="p-2">
                             <div class="text-xs text-gray-500 uppercase tracking-wider px-3 py-1">Pauly's Platforms</div>
                             
-                            <!-- Current Site (PaulysAutos) -->
-                            <div class="flex items-center gap-3 px-3 py-2 bg-amber-500/20 rounded-lg border border-amber-500/30 mb-1">
-                                <div class="w-8 h-8 flex-shrink-0">
-                                    <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a" stroke="#D4AF37" stroke-width="3"/>
-                                        <path d="M30 70 L35 55 L45 45 L75 45 L85 55 L90 70 L90 80 L30 80 Z" fill="#D4AF37" />
-                                        <path d="M42 55 L50 47 L70 47 L78 55 Z" fill="#1a1a1a" />
-                                        <circle cx="42" cy="80" r="10" fill="#333" stroke="#D4AF37" stroke-width="2"/>
-                                        <circle cx="78" cy="80" r="10" fill="#333" stroke="#D4AF37" stroke-width="2"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <div class="text-amber-400 font-bold text-sm">PaulysAutos.com</div>
-                                    <div class="text-gray-500 text-xs">Vehicle Marketplace</div>
-                                </div>
-                                <span class="ml-auto text-amber-400 text-xs">✓ Current</span>
-                            </div>
-                            
-                            <!-- Link to PaulysProperties (same window) -->
-                            <a href="https://paulysproperties.com" class="flex items-center gap-3 px-3 py-2 hover:bg-gray-700/50 rounded-lg transition cursor-pointer group">
+                            <!-- Current Site (PaulysProperties) -->
+                            <div class="flex items-center gap-3 px-3 py-2 bg-purple-500/20 rounded-lg border border-purple-500/30 mb-1">
                                 <div class="w-8 h-8 flex-shrink-0">
                                     <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                                         <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a" stroke="#8B5CF6" stroke-width="3"/>
@@ -984,10 +823,28 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="text-white font-bold text-sm group-hover:text-purple-400 transition">PaulysProperties.com</div>
+                                    <div class="text-purple-400 font-bold text-sm">PaulysProperties.com</div>
                                     <div class="text-gray-500 text-xs">Property Rentals</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 ml-auto group-hover:text-purple-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                                <span class="ml-auto text-purple-400 text-xs">✓ Current</span>
+                            </div>
+                            
+                            <!-- Link to PaulysAutos -->
+                            <a href="https://paulysautos.com" class="flex items-center gap-3 px-3 py-2 hover:bg-gray-700/50 rounded-lg transition cursor-pointer group">
+                                <div class="w-8 h-8 flex-shrink-0">
+                                    <svg viewBox="0 0 120 120" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a" stroke="#D4AF37" stroke-width="3"/>
+                                        <path d="M30 70 L35 55 L45 45 L75 45 L85 55 L90 70 L90 80 L30 80 Z" fill="#D4AF37" />
+                                        <path d="M42 55 L50 47 L70 47 L78 55 Z" fill="#1a1a1a" />
+                                        <circle cx="42" cy="80" r="10" fill="#333" stroke="#D4AF37" stroke-width="2"/>
+                                        <circle cx="78" cy="80" r="10" fill="#333" stroke="#D4AF37" stroke-width="2"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-white font-bold text-sm group-hover:text-amber-400 transition">PaulysAutos.com</div>
+                                    <div class="text-gray-500 text-xs">Vehicle Marketplace</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-500 ml-auto group-hover:text-amber-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                             </a>
                         </div>
                     </div>
@@ -995,11 +852,11 @@
                 
                 <!-- Center nav links (hidden on mobile, shown on lg+) -->
                 <div class="hidden lg:flex items-center space-x-4 xl:space-x-6 flex-shrink-0">
-                    <a onclick="navigateTo('home')" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Home</a>
-                    <a onclick="navigateTo('vehicles')" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Vehicles</a>
-                    <a onclick="navigateTo('leaderboard')" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Leaderboard</a>
-                    <a onclick="openServicesModal()" class="text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Services</a>
-                    <a id="navDashboardLink" onclick="goToDashboard()" class="hidden text-gray-300 hover:text-amber-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-amber-400 rounded px-1" role="button" tabindex="0">Dashboard</a>
+                    <a id="navHomeLink" onclick="navigateTo('home')" class="text-gray-300 hover:text-purple-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-purple-400 rounded px-1" role="button" tabindex="0">Home</a>
+                    <a id="navPropertiesLink" onclick="navigateTo('properties')" class="text-gray-300 hover:text-purple-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-purple-400 rounded px-1" role="button" tabindex="0">Properties</a>
+                    <a id="navLeaderboardLink" onclick="navigateTo('leaderboard')" class="text-gray-300 hover:text-purple-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-purple-400 rounded px-1" role="button" tabindex="0">Leaderboard</a>
+                    <a id="navServicesLink" onclick="openPhotoServicesModal()" class="text-gray-300 hover:text-purple-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-purple-400 rounded px-1" role="button" tabindex="0">Services</a>
+                    <a id="navDashboardLink" onclick="goToDashboard()" class="hidden text-gray-300 hover:text-purple-400 font-semibold cursor-pointer transition text-sm outline-none focus:text-purple-400 rounded px-1" role="button" tabindex="0">Dashboard</a>
                 </div>
                 
                 <!-- Right side: buttons + user - with proper spacing -->
@@ -1017,9 +874,11 @@
                     <div id="navUserDisplay" class="hidden items-center">
                         <!-- Username area with dropdown -->
                         <div class="relative">
-                            <!-- Notification indicator dot (shows when there are unread notifications) -->
-                            <div id="navNotificationDot" class="hidden absolute -top-1 -right-1 z-10">
-                                <span class="bg-red-500 w-3 h-3 rounded-full block animate-pulse shadow-lg"></span>
+                            <!-- Notification badge with count (shows total pending notifications) -->
+                            <div id="navNotificationBadge" class="hidden absolute -top-1 -right-1 z-10">
+                                <span class="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 animate-pulse shadow-lg">
+                                    <span id="navNotificationCount">0</span>
+                                </span>
                             </div>
                             <div class="text-right cursor-pointer hover:bg-gray-700/50 px-3 py-2 rounded-xl transition flex items-center gap-2" onclick="toggleUserDropdown()">
                                 <div>
@@ -1033,12 +892,12 @@
                                 <!-- Dashboard with notification badges -->
                                 <a onclick="goToDashboard(); closeUserDropdown()" class="flex items-center justify-between px-4 py-3 text-gray-200 hover:bg-gray-700 cursor-pointer transition">
                                     <div class="flex items-center gap-3">
-                                        <span class="text-lg">🚗</span>
+                                        <span class="text-lg">🏠</span>
                                         <span class="font-medium">Dashboard</span>
                                     </div>
                                     <!-- Notification badges inline - each clickable separately -->
                                     <div id="dropdownNotifBadges" class="flex items-center gap-1" onclick="event.stopPropagation()">
-                                        <span id="dropdownRentBadge" class="hidden bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-amber-400" title="Payments due - Click to view" onclick="NotificationManager.handleBadgeClick('rent'); closeUserDropdown()">
+                                        <span id="dropdownRentBadge" class="hidden bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-amber-400" title="Rent due - Click to view" onclick="NotificationManager.handleBadgeClick('rent'); closeUserDropdown()">
                                             <span id="dropdownRentCount">0</span>
                                         </span>
                                         <span id="dropdownSubscriptionBadge" class="hidden bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-red-500" title="Subscription payments due - Click to view" onclick="NotificationManager.handleBadgeClick('subscription'); closeUserDropdown()">
@@ -1053,7 +912,7 @@
                                         <span id="dropdownPremiumBadge" class="hidden bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-amber-400" title="Premium" onclick="NotificationManager.handleBadgeClick('premium'); closeUserDropdown()">
                                             <span id="dropdownPremiumCount">0</span>
                                         </span>
-                                        <span id="dropdownPhotoBadge" class="hidden bg-amber-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-purple-400" title="Photo requests" onclick="NotificationManager.handleBadgeClick('photo'); closeUserDropdown()">
+                                        <span id="dropdownPhotoBadge" class="hidden bg-purple-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse cursor-pointer hover:bg-purple-400" title="Photo requests" onclick="NotificationManager.handleBadgeClick('photo'); closeUserDropdown()">
                                             <span id="dropdownPhotoCount">0</span>
                                         </span>
                                     </div>
@@ -1073,7 +932,7 @@
                                     </div>
                                     <span id="siteUpdateBadge" class="hidden bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">1</span>
                                 </a>
-                                <a id="navUpgradeOption" onclick="openUpgradeModal('Upgrade your account', state.userTier || 'starter'); closeUserDropdown()" class="flex items-center gap-3 px-4 py-3 text-amber-400 hover:bg-gray-700 cursor-pointer transition">
+                                <a id="navUpgradeOption" onclick="openUpgradeModal('Upgrade your account', state.userTier || 'starter'); closeUserDropdown()" class="flex items-center gap-3 px-4 py-3 text-purple-400 hover:bg-gray-700 cursor-pointer transition">
                                     <span class="text-lg">⭐</span>
                                     <span class="font-medium">Upgrade Plan</span>
                                 </a>
@@ -1108,6 +967,10 @@
                     </div>
                     <!-- Mobile Notification Badges -->
                     <div id="mobileNotificationBadges" class="flex items-center gap-2">
+                        <!-- Rent badge (all property owners) -->
+                        <span id="mobileRentBadge" class="hidden bg-red-600 text-white text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-lg animate-pulse cursor-pointer" onclick="NotificationManager.handleBadgeClick('rent'); hideMobileMenu();" title="Rent due">
+                            <span id="mobileRentCount">0</span>
+                        </span>
                         <!-- Combined notification badge (admin only) -->
                         <span id="mobileAdminBadge" class="hidden bg-blue-500 text-white text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-lg animate-pulse cursor-pointer" onclick="NotificationManager.handleBadgeClick('user'); hideMobileMenu();" title="Notifications">
                             <span id="mobileAdminCount">0</span>
@@ -1122,15 +985,15 @@
             
             <!-- Navigation Links -->
             <a onclick="navigateTo('home'); hideMobileMenu();" class="block px-4 py-3 text-gray-300 hover:bg-gray-800 cursor-pointer">Home</a>
-            <a onclick="navigateTo('vehicles'); hideMobileMenu();" class="block px-4 py-3 text-gray-300 hover:bg-gray-800 cursor-pointer">Vehicles</a>
+            <a onclick="navigateTo('properties'); hideMobileMenu();" class="block px-4 py-3 text-gray-300 hover:bg-gray-800 cursor-pointer">Properties</a>
             <a onclick="navigateTo('leaderboard'); hideMobileMenu();" class="block px-4 py-3 text-gray-300 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
                 <span>🏆</span> Leaderboard
             </a>
-            <a onclick="openServicesModal(); hideMobileMenu();" class="block px-4 py-3 text-gray-300 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
-                <span>📸</span> Services
+            <a id="mobileDashboardLink" onclick="goToDashboard(); hideMobileMenu();" class="hidden px-4 py-3 text-purple-400 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
+                <span>🏠</span> Dashboard
             </a>
-            <a id="mobileDashboardLink" onclick="goToDashboard(); hideMobileMenu();" class="hidden px-4 py-3 text-amber-400 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
-                <span>🚗</span> Dashboard
+            <a onclick="openPhotoServicesModal(); hideMobileMenu();" class="px-4 py-3 text-amber-400 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
+                <span>📸</span> Services
             </a>
             <a id="mobileCreateListingBtn" onclick="openCreateListingModal(); hideMobileMenu();" class="hidden px-4 py-3 text-green-400 hover:bg-gray-800 cursor-pointer font-semibold flex items-center gap-2">
                 <span>➕</span> New Listing
@@ -1142,7 +1005,7 @@
             
             <!-- Auth/Logout buttons -->
             <div class="border-t border-gray-700 mt-2 pt-2">
-                <button id="mobileAuthBtn" onclick="handleAuthClick(); hideMobileMenu();" class="block w-full text-left px-4 py-3 text-amber-400 hover:bg-gray-800 font-semibold">Register / Sign In</button>
+                <button id="mobileAuthBtn" onclick="handleAuthClick(); hideMobileMenu();" class="block w-full text-left px-4 py-3 text-purple-400 hover:bg-gray-800 font-semibold">Register / Sign In</button>
                 <button id="mobileLogoutBtn" onclick="logout(); hideMobileMenu();" class="hidden w-full text-left px-4 py-3 text-red-400 hover:bg-gray-800 font-semibold flex items-center gap-2">
                     <span>🚪</span> Logout
                 </button>
@@ -1154,9 +1017,9 @@
     <section id="ownerDashboard" class="hidden min-h-screen py-12 px-4 sm:px-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h2 class="text-4xl md:text-5xl font-black bg-gradient-to-r from-amber-500 to-yellow-600 bg-clip-text text-transparent">Vehicle Owner Dashboard</h2>
+                <h2 class="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Property Owner Dashboard</h2>
                 <p id="syncStatus" class="text-green-400 mt-2 font-medium">✓ Real-time sync enabled</p>
-                <p class="text-gray-400 mt-1 text-sm">💡 Click on any vehicle name below to view detailed stats</p>
+                <p class="text-gray-400 mt-1 text-sm">💡 Click on any property name below to view detailed stats</p>
             </div>
 
             <!-- Site Update Notification -->
@@ -1164,14 +1027,19 @@
                 <!-- Site update notification will be inserted here by JS -->
             </div>
 
-            <!-- PAYMENT ALERTS - For vehicle owners to track down payments and financing -->
-            <div id="paymentNotificationsPanel" class="hidden mb-6">
-                <!-- Payment notifications will be rendered here by NotificationManager -->
+            <!-- RENT ALERTS - First thing users see -->
+            <div id="rentNotificationsPanel" class="hidden mb-6" onclick="handleRentPanelClick(event)">
+                <!-- Rent notifications will be rendered here by NotificationManager -->
             </div>
 
             <!-- SUBSCRIPTION ALERTS - For admin to track tier payments -->
-            <div id="subscriptionNotificationsPanel" class="hidden mb-6">
+            <div id="subscriptionNotificationsPanel" class="hidden mb-6" onclick="handleSubscriptionPanelClick(event)">
                 <!-- Subscription notifications will be rendered here -->
+            </div>
+
+            <!-- PREMIUM LISTING ALERTS - For admin to track weekly premium fees -->
+            <div id="premiumNotificationsPanel" class="hidden mb-6" onclick="handlePremiumPanelClick(event)">
+                <!-- Premium listing notifications will be rendered here -->
             </div>
 
             <!-- User Notifications Banner -->
@@ -1195,9 +1063,9 @@
             <!-- Dashboard Tabs (Admin Only) -->
             <div id="dashboardTabs" class="hidden mb-6">
                 <div class="flex gap-2 bg-gray-800/50 p-1 rounded-xl inline-flex">
-                    <button onclick="switchDashboardTab('myVehicles')" id="dashboardTab-myVehicles" 
-                            class="dashboard-tab px-6 py-3 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white">
-                        <span>🚗</span> My Vehicles
+                    <button onclick="switchDashboardTab('myProperties')" id="dashboardTab-myProperties" 
+                            class="dashboard-tab px-6 py-3 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                        <span>🏠</span> My Properties
                     </button>
                     <button onclick="switchDashboardTab('admin')" id="dashboardTab-admin" 
                             class="dashboard-tab px-6 py-3 rounded-lg font-bold text-sm transition flex items-center gap-2 bg-gray-700 text-gray-300 hover:bg-gray-600">
@@ -1254,7 +1122,7 @@
                             <span class="text-2xl">👑</span>
                             <div>
                                 <div class="text-amber-300 font-bold">Premium Listing Requests</div>
-                                <div id="pendingPremiumCount" class="text-amber-400/70 text-sm">0 vehicles need payment setup</div>
+                                <div id="pendingPremiumCount" class="text-amber-400/70 text-sm">0 properties need payment setup</div>
                             </div>
                         </div>
                         <div class="flex gap-2">
@@ -1323,13 +1191,13 @@
                     <div class="admin-stat-tile cursor-pointer" onclick="flipAdminTile('elite')">
                         <div id="adminTileElite" class="relative min-h-[7rem] transition-transform duration-500" style="transform-style: preserve-3d;">
                             <!-- Front -->
-                            <div class="absolute inset-0 bg-gray-800/50 rounded-xl p-4 text-center border border-amber-700/50 flex flex-col justify-center" style="backface-visibility: hidden;">
-                                <div id="adminStatElite" class="text-2xl font-bold text-amber-400">-</div>
+                            <div class="absolute inset-0 bg-gray-800/50 rounded-xl p-4 text-center border border-purple-700/50 flex flex-col justify-center" style="backface-visibility: hidden;">
+                                <div id="adminStatElite" class="text-2xl font-bold text-purple-400">-</div>
                                 <div class="text-gray-400 text-sm">Elite Users</div>
                                 <div id="adminStatEliteBreakdown" class="text-cyan-400 text-xs mt-0.5"></div>
                             </div>
                             <!-- Back -->
-                            <div class="absolute inset-0 bg-amber-900/30 rounded-xl p-3 border border-amber-600 flex flex-col justify-start text-xs overflow-y-auto" style="backface-visibility: hidden; transform: rotateY(180deg);">
+                            <div class="absolute inset-0 bg-purple-900/30 rounded-xl p-3 border border-purple-600 flex flex-col justify-start text-xs overflow-y-auto" style="backface-visibility: hidden; transform: rotateY(180deg);">
                                 <div id="adminStatEliteDetail" class="text-gray-300 space-y-1"></div>
                             </div>
                         </div>
@@ -1390,13 +1258,13 @@
                     <div class="admin-stat-tile cursor-pointer" onclick="flipAdminTile('eliteRevenue')">
                         <div id="adminTileEliteRevenue" class="relative min-h-[9rem] transition-transform duration-500" style="transform-style: preserve-3d;">
                             <!-- Front -->
-                            <div class="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-xl p-4 text-center border border-amber-600/50 flex flex-col justify-center" style="backface-visibility: hidden;">
-                                <div id="adminStatEliteRevenue" class="text-2xl font-bold text-amber-400">-</div>
+                            <div class="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-xl p-4 text-center border border-purple-600/50 flex flex-col justify-center" style="backface-visibility: hidden;">
+                                <div id="adminStatEliteRevenue" class="text-2xl font-bold text-purple-400">-</div>
                                 <div class="text-gray-400 text-sm">Elite Income</div>
                                 <div id="adminStatEliteRevenueSub" class="text-gray-500 text-xs mt-0.5">$50k/mo each</div>
                             </div>
                             <!-- Back -->
-                            <div class="absolute inset-0 bg-amber-900/40 rounded-xl p-3 border border-amber-600 flex flex-col justify-start text-xs overflow-y-auto" style="backface-visibility: hidden; transform: rotateY(180deg);">
+                            <div class="absolute inset-0 bg-purple-900/40 rounded-xl p-3 border border-purple-600 flex flex-col justify-start text-xs overflow-y-auto" style="backface-visibility: hidden; transform: rotateY(180deg);">
                                 <div id="adminStatEliteRevenueDetail" class="text-gray-300 space-y-1"></div>
                             </div>
                         </div>
@@ -1405,10 +1273,10 @@
                 
                 <!-- Total Listings Quick Stat -->
                 <div class="mb-6 flex items-center gap-4">
-                    <div onclick="navigateTo('vehicles')" class="flex-1 bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-xl p-4 border border-cyan-600/50 cursor-pointer hover:border-cyan-400 transition group">
+                    <div onclick="navigateTo('properties')" class="flex-1 bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-xl p-4 border border-cyan-600/50 cursor-pointer hover:border-cyan-400 transition group">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <span class="text-3xl">🚗</span>
+                                <span class="text-3xl">🏠</span>
                                 <div>
                                     <div class="text-gray-400 text-sm">Total Listings</div>
                                     <div class="flex items-baseline gap-2">
@@ -1426,11 +1294,8 @@
                 
                 <!-- Admin Tabs -->
                 <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
-                    <button id="adminTabUsers" onclick="switchAdminTab('users')" class="px-4 py-2 rounded-lg font-bold text-sm bg-amber-600 text-white">
+                    <button id="adminTabUsers" onclick="switchAdminTab('users')" class="px-4 py-2 rounded-lg font-bold text-sm bg-purple-600 text-white">
                         👥 All Users
-                    </button>
-                    <button id="adminTabAgents" onclick="switchAdminTab('agents')" class="px-4 py-2 rounded-lg font-bold text-sm bg-gray-700 text-gray-300 hover:bg-gray-600 relative">
-                        🏢 Agents
                     </button>
                     <button id="adminTabRequests" onclick="switchAdminTab('requests')" class="px-4 py-2 rounded-lg font-bold text-sm bg-gray-700 text-gray-300 hover:bg-gray-600 relative">
                         🔔 Requests
@@ -1454,7 +1319,7 @@
                 <div id="adminRequestsTab" class="hidden space-y-6">
                     <!-- Single Refresh Button for All Requests -->
                     <div class="flex justify-end">
-                        <button onclick="refreshAllRequests()" class="text-amber-400 hover:text-amber-300 text-sm font-bold px-4 py-2 bg-gray-700 rounded-lg flex items-center gap-2">
+                        <button onclick="refreshAllRequests()" class="text-purple-400 hover:text-purple-300 text-sm font-bold px-4 py-2 bg-gray-700 rounded-lg flex items-center gap-2">
                             🔄 Refresh All
                         </button>
                     </div>
@@ -1477,7 +1342,7 @@
                         <div class="bg-gradient-to-r from-purple-600/20 to-pink-600/20 px-5 py-3 border-b border-gray-700">
                             <h4 class="text-lg font-bold text-gray-200 flex items-center gap-2">
                                 📸 Photo Service Requests
-                                <span id="photoRequestsBadge" class="hidden bg-amber-500 text-white text-xs font-bold rounded-full px-2 py-0.5">0</span>
+                                <span id="photoRequestsBadge" class="hidden bg-purple-500 text-white text-xs font-bold rounded-full px-2 py-0.5">0</span>
                             </h4>
                         </div>
                         <div id="photoRequestsList" class="p-4 space-y-3">
@@ -1486,18 +1351,13 @@
                     </div>
                 </div>
                 
-                <!-- Agents Tab -->
-                <div id="adminAgentsTab" class="hidden space-y-4">
-                    <p class="text-gray-500 italic">Loading agents...</p>
-                </div>
-                
                 <!-- All Users Tab -->
                 <div id="adminUsersTab" class="space-y-4">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                         <h4 class="text-lg font-bold text-gray-200">Registered Users</h4>
                         <div class="flex gap-2">
                             <input type="text" id="adminUserSearch" placeholder="Search users..." onkeyup="filterAdminUsers()" class="px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white text-sm w-48">
-                            <button onclick="loadAllUsers()" class="text-amber-400 hover:text-amber-300 text-sm font-bold px-3 py-2 bg-gray-700 rounded-lg">🔄 Refresh</button>
+                            <button onclick="loadAllUsers()" class="text-purple-400 hover:text-purple-300 text-sm font-bold px-3 py-2 bg-gray-700 rounded-lg">🔄 Refresh</button>
                         </div>
                     </div>
                     <div id="allUsersList" class="space-y-3">
@@ -1545,7 +1405,7 @@
                 <div id="adminHistoryTab" class="hidden space-y-4">
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="text-lg font-bold text-gray-200">Upgrade History</h4>
-                        <button onclick="loadUpgradeHistory()" class="text-amber-400 hover:text-amber-300 text-sm font-bold">🔄 Refresh</button>
+                        <button onclick="loadUpgradeHistory()" class="text-purple-400 hover:text-purple-300 text-sm font-bold">🔄 Refresh</button>
                     </div>
                     <div id="upgradeHistoryList" class="space-y-3">
                         <p class="text-gray-500 italic">Loading history...</p>
@@ -1563,18 +1423,18 @@
                             <button onclick="exportListingsCSV()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90">📥 Export Listings CSV</button>
                         </div>
                         <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                            <h5 class="text-white font-bold mb-2">🔍 Find User by Vehicle</h5>
-                            <p class="text-gray-400 text-sm mb-3">Enter a vehicle address to find the owner</p>
-                            <input type="text" id="adminFindByVehicle" class="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white text-sm mb-2" placeholder="Vehicle title or address...">
-                            <button onclick="findUserByVehicle()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90">🔍 Find Owner</button>
+                            <h5 class="text-white font-bold mb-2">🔍 Find User by Property</h5>
+                            <p class="text-gray-400 text-sm mb-3">Enter a property address to find the owner</p>
+                            <input type="text" id="adminFindByProperty" class="w-full px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white text-sm mb-2" placeholder="Property title or address...">
+                            <button onclick="findUserByProperty()" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90">🔍 Find Owner</button>
                             <div id="adminFindResult" class="mt-2 text-sm"></div>
                         </div>
                         
                         <!-- Batch Sync Owner Profiles Tool -->
                         <div class="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-xl p-4 border border-cyan-700 md:col-span-2">
-                            <h5 class="text-cyan-300 font-bold mb-2">🔄 Sync Owner Profiles to Vehicles</h5>
+                            <h5 class="text-cyan-300 font-bold mb-2">🔄 Sync Owner Profiles to Properties</h5>
                             <p class="text-gray-400 text-sm mb-3">
-                                Batch update all vehicles with owner display names and phone numbers from user profiles. 
+                                Batch update all properties with owner display names and phone numbers from user profiles. 
                                 This fixes visibility for non-admin users who can't read the users collection.
                             </p>
                             <div id="batchSyncStatus" class="hidden mb-3 p-3 rounded-lg text-sm"></div>
@@ -1596,7 +1456,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h4 class="text-lg font-bold text-gray-200">📋 Activity Log</h4>
                         <div class="flex gap-2">
-                            <button onclick="loadActivityLog()" class="text-amber-400 hover:text-amber-300 text-sm font-bold px-3 py-2 bg-gray-700 rounded-lg">🔄 Refresh</button>
+                            <button onclick="loadActivityLog()" class="text-purple-400 hover:text-purple-300 text-sm font-bold px-3 py-2 bg-gray-700 rounded-lg">🔄 Refresh</button>
                             <button onclick="clearActivityLog()" class="text-red-400 hover:text-red-300 text-sm font-bold px-3 py-2 bg-gray-700 rounded-lg">🗑️ Clear</button>
                         </div>
                     </div>
@@ -1610,24 +1470,31 @@
             <!-- ==================== END ADMIN TAB CONTENT ==================== -->
 
             <!-- ==================== MY PROPERTIES TAB CONTENT ==================== -->
-            <div id="myVehiclesTabContent">
+            <div id="myPropertiesTabContent">
 
             <!-- Username Section -->
             <div id="profileSettingsSection" class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8 mb-8">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                     <div>
                         <h3 class="text-xl md:text-2xl font-bold text-gray-200 mb-1">Your Profile Settings</h3>
-                        <p class="text-gray-400 text-sm">This info will be shown on your vehicle listings. Your email remains private.</p>
+                        <p class="text-gray-400 text-sm">This info will be shown on your property listings. Your email remains private.</p>
                     </div>
-                    <!-- Tier Badge -->
-                    <div id="userTierBadge" class="flex items-center gap-3 bg-gray-800 px-4 py-2 rounded-xl border border-gray-600">
-                        <span id="tierIcon" class="text-2xl">🌱</span>
-                        <div>
-                            <div id="tierName" class="text-white font-bold">Starter</div>
-                            <div id="tierListings" class="text-gray-400 text-xs">0/1 Listings</div>
+                    <!-- Tier Badge + Actions -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div id="userTierBadge" class="flex items-center gap-3 bg-gray-800 px-4 py-2 rounded-xl border border-gray-600">
+                            <span id="tierIcon" class="text-2xl">🌱</span>
+                            <div>
+                                <div id="tierName" class="text-white font-bold">Starter</div>
+                                <div id="tierListings" class="text-gray-400 text-xs">0/1 Listings</div>
+                            </div>
+                            <button id="tierUpgradeBtn" onclick="openUpgradeModal('Upgrade your plan for more listings!', state.userTier || 'starter')" class="text-purple-400 hover:text-purple-300 text-xs font-bold underline ml-2">Upgrade</button>
+                            <span id="tierPendingBadge" class="hidden bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">⏳ Pending</span>
                         </div>
-                        <button id="tierUpgradeBtn" onclick="openUpgradeModal('Upgrade your plan for more listings!', state.userTier || 'starter')" class="text-amber-400 hover:text-amber-300 text-xs font-bold underline ml-2">Upgrade</button>
-                        <span id="tierPendingBadge" class="hidden bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">⏳ Pending</span>
+                        <!-- Change Password Button (hidden for admin) -->
+                        <button id="changePasswordBtn" onclick="openChangePasswordModal()" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl border border-gray-600 text-gray-300 hover:text-white transition text-sm font-medium">
+                            <span>🔐</span>
+                            <span>Password</span>
+                        </button>
                     </div>
                 </div>
                 
@@ -1652,7 +1519,7 @@
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-1">
                             <label for="ownerUsername" class="block text-gray-300 font-semibold mb-2 text-sm">Display Name</label>
-                            <input type="text" id="ownerUsername" maxlength="30" placeholder="Enter display name..." class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <input type="text" id="ownerUsername" maxlength="30" placeholder="Enter display name..." autocomplete="off" class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 transition">
                         </div>
                         <div class="flex items-end">
                             <button onclick="saveUsername()" id="saveUsernameBtn" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm">
@@ -1665,7 +1532,7 @@
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-1">
                             <label for="ownerPhone" class="block text-gray-300 font-semibold mb-2 text-sm">In-City Phone</label>
-                            <input type="tel" id="ownerPhone" maxlength="10" placeholder="Enter phone number..." oninput="this.value = this.value.replace(/\D/g, '')" class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <input type="text" id="ownerPhone" name="pp_phone_do_not_autofill" maxlength="10" placeholder="Enter phone number..." autocomplete="new-password" oninput="this.value = this.value.replace(/\D/g, '')" class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 transition">
                         </div>
                         <div class="flex items-end">
                             <button onclick="saveOwnerPhone()" id="savePhoneBtn" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm">
@@ -1696,7 +1563,7 @@
                         <button onclick="showAchievementsModal()" class="text-amber-400 hover:text-amber-300 text-sm font-bold flex items-center gap-1 transition">
                             <span>🏆</span> Achievements
                         </button>
-                        <button onclick="navigateTo('leaderboard')" class="text-amber-400 hover:text-amber-300 text-sm font-bold flex items-center gap-1 transition">
+                        <button onclick="navigateTo('leaderboard')" class="text-purple-400 hover:text-purple-300 text-sm font-bold flex items-center gap-1 transition">
                             <span>📊</span> Leaderboard
                         </button>
                     </div>
@@ -1712,7 +1579,7 @@
                     </div>
                 </div>
                 <!-- Free Premium Week Reward (shown when earned and unused) -->
-                <div id="freePremiumReward" class="hidden mt-4 bg-gradient-to-r from-purple-600/30 to-blue-600/30 rounded-xl p-4 border border-amber-500/50">
+                <div id="freePremiumReward" class="hidden mt-4 bg-gradient-to-r from-purple-600/30 to-blue-600/30 rounded-xl p-4 border border-purple-500/50">
                     <div class="flex items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">🎁</span>
@@ -1721,27 +1588,27 @@
                                 <p class="text-gray-300 text-sm">Use on any listing to boost visibility</p>
                             </div>
                         </div>
-                        <span class="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">UNUSED</span>
+                        <span class="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">UNUSED</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Row 1: Vehicle Sales Stats (PaulysAutos - No Financing) -->
+            <!-- Row 1: Rental Income by Frequency (Active Renters Only) -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4">
-                <!-- Total Sales Revenue -->
+                <!-- Daily Rentals -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
                     <div class="flip-card-inner">
-                        <div class="flip-card-front bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-amber-400">
+                        <div class="flip-card-front bg-gradient-to-br from-cyan-600 to-teal-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-cyan-500">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">Total Sales</h3>
-                                <span class="text-xl">💰</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">Daily Rentals</h3>
+                                <span class="text-xl">📅</span>
                             </div>
                             <p id="dailyIncomeDisplay" class="text-2xl md:text-3xl font-black">$0</p>
-                            <p id="dailyIncomeCount" class="text-xs opacity-70 mt-1">No sales yet</p>
+                            <p id="dailyIncomeCount" class="text-xs opacity-70 mt-1">No daily renters</p>
                         </div>
-                        <div class="flip-card-back bg-gradient-to-br from-amber-600 to-yellow-700 rounded-2xl shadow-2xl p-3 text-white border border-amber-400 overflow-y-auto">
+                        <div class="flip-card-back bg-gradient-to-br from-cyan-700 to-teal-900 rounded-2xl shadow-2xl p-3 text-white border border-cyan-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">Sales Breakdown</h3>
+                                <h3 class="text-xs font-bold">Daily Renters</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
                             <div id="dailyBreakdown" class="text-xs space-y-1"></div>
@@ -1749,20 +1616,20 @@
                     </div>
                 </div>
 
-                <!-- Active Listings -->
+                <!-- Weekly Rentals -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
                     <div class="flip-card-inner">
                         <div class="flip-card-front bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-blue-500">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">Active Listings</h3>
-                                <span class="text-xl">🚗</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">Weekly Rentals</h3>
+                                <span class="text-xl">📆</span>
                             </div>
-                            <p id="weeklyIncomeDisplay" class="text-2xl md:text-3xl font-black">0</p>
-                            <p id="weeklyIncomeCount" class="text-xs opacity-70 mt-1">Vehicles for sale</p>
+                            <p id="weeklyIncomeDisplay" class="text-2xl md:text-3xl font-black">$0</p>
+                            <p id="weeklyIncomeCount" class="text-xs opacity-70 mt-1">No weekly renters</p>
                         </div>
                         <div class="flip-card-back bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl shadow-2xl p-3 text-white border border-blue-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">My Listings</h3>
+                                <h3 class="text-xs font-bold">Weekly Renters</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
                             <div id="weeklyBreakdown" class="text-xs space-y-1"></div>
@@ -1770,20 +1637,20 @@
                     </div>
                 </div>
 
-                <!-- Pending Contracts -->
+                <!-- Biweekly Rentals -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
                     <div class="flip-card-inner">
-                        <div class="flip-card-front bg-gradient-to-br from-purple-600 to-violet-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-amber-500">
+                        <div class="flip-card-front bg-gradient-to-br from-purple-600 to-violet-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-purple-500">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">Pending Contracts</h3>
-                                <span class="text-xl">📝</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">Biweekly Rentals</h3>
+                                <span class="text-xl">📊</span>
                             </div>
-                            <p id="biweeklyIncomeDisplay" class="text-2xl md:text-3xl font-black">0</p>
-                            <p id="biweeklyIncomeCount" class="text-xs opacity-70 mt-1">Awaiting completion</p>
+                            <p id="biweeklyIncomeDisplay" class="text-2xl md:text-3xl font-black">$0</p>
+                            <p id="biweeklyIncomeCount" class="text-xs opacity-70 mt-1">No biweekly renters</p>
                         </div>
-                        <div class="flip-card-back bg-gradient-to-br from-purple-700 to-violet-900 rounded-2xl shadow-2xl p-3 text-white border border-amber-500 overflow-y-auto">
+                        <div class="flip-card-back bg-gradient-to-br from-purple-700 to-violet-900 rounded-2xl shadow-2xl p-3 text-white border border-purple-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">Sale Contracts</h3>
+                                <h3 class="text-xs font-bold">Biweekly Renters</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
                             <div id="biweeklyBreakdown" class="text-xs space-y-1"></div>
@@ -1791,20 +1658,20 @@
                     </div>
                 </div>
 
-                <!-- Sold Vehicles -->
+                <!-- Monthly Rentals -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
                     <div class="flip-card-inner">
                         <div class="flip-card-front bg-gradient-to-br from-green-600 to-emerald-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-green-500">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">Vehicles Sold</h3>
-                                <span class="text-xl">✅</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">Monthly Rentals</h3>
+                                <span class="text-xl">🗓️</span>
                             </div>
-                            <p id="monthlyIncomeDisplay" class="text-2xl md:text-3xl font-black">0</p>
-                            <p id="monthlyIncomeCount" class="text-xs opacity-70 mt-1">Completed sales</p>
+                            <p id="monthlyIncomeDisplay" class="text-2xl md:text-3xl font-black">$0</p>
+                            <p id="monthlyIncomeCount" class="text-xs opacity-70 mt-1">No monthly renters</p>
                         </div>
                         <div class="flip-card-back bg-gradient-to-br from-green-700 to-emerald-900 rounded-2xl shadow-2xl p-3 text-white border border-green-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">Sold History</h3>
+                                <h3 class="text-xs font-bold">Monthly Renters</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
                             <div id="monthlyBreakdown" class="text-xs space-y-1"></div>
@@ -1813,43 +1680,43 @@
                 </div>
             </div>
 
-            <!-- Row 2: Portfolio Stats (PaulysAutos) -->
+            <!-- Row 2: Totals & Other Income -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
-                <!-- Total Portfolio Value -->
+                <!-- Total Rental Income -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
                     <div class="flip-card-inner">
                         <div class="flip-card-front bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-amber-400">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">Portfolio Value</h3>
-                                <span class="text-xl">💎</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">Total Rental Income</h3>
+                                <span class="text-xl">💰</span>
                             </div>
-                            <p id="totalSalesIncomeDisplay" class="text-2xl md:text-3xl font-black">$0</p>
-                            <p id="totalSalesIncomeCount" class="text-xs opacity-70 mt-1">Total listing value</p>
+                            <p id="totalRentalIncomeDisplay" class="text-2xl md:text-3xl font-black">$0</p>
+                            <p id="totalRentalIncomeCount" class="text-xs opacity-70 mt-1">0 renters total</p>
                         </div>
                         <div class="flip-card-back bg-gradient-to-br from-amber-600 to-orange-700 rounded-2xl shadow-2xl p-3 text-white border border-amber-400 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">Value Breakdown</h3>
+                                <h3 class="text-xs font-bold">Income Breakdown</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
-                            <div id="totalSalesIncomeBreakdown" class="text-xs space-y-1"></div>
+                            <div id="totalRentalIncomeBreakdown" class="text-xs space-y-1"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- All Vehicles -->
+                <!-- Properties (Combined Rented + Available) -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
                     <div class="flip-card-inner">
                         <div class="flip-card-front bg-gradient-to-br from-slate-600 to-slate-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-slate-500">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">All Vehicles</h3>
-                                <span class="text-xl">🚗</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">Properties</h3>
+                                <span class="text-xl">🏠</span>
                             </div>
                             <p id="totalListingsDisplay" class="text-2xl md:text-3xl font-black">0</p>
-                            <p id="vehiclesSubtitle" class="text-xs opacity-70 mt-1">0 active • 0 sold</p>
+                            <p id="propertiesSubtitle" class="text-xs opacity-70 mt-1">0 rented • 0 available</p>
                         </div>
                         <div class="flip-card-back bg-gradient-to-br from-slate-700 to-slate-900 rounded-2xl shadow-2xl p-3 text-white border border-slate-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">All Vehicles</h3>
+                                <h3 class="text-xs font-bold">All Properties</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
                             <div id="totalListingsBreakdown" class="text-xs space-y-1"></div>
@@ -1857,20 +1724,20 @@
                     </div>
                 </div>
 
-                <!-- Premium Listings -->
-                <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Premium featured listings">
+                <!-- RTO Income -->
+                <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Rent-to-Own: Income from deposit payments and monthly RTO installments">
                     <div class="flip-card-inner">
-                        <div class="flip-card-front bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl shadow-2xl p-4 md:p-6 text-black border border-yellow-400">
+                        <div class="flip-card-front bg-gradient-to-br from-indigo-600 to-violet-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-indigo-500">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">Premium</h3>
-                                <span class="text-xl">👑</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">RTO Income</h3>
+                                <span class="text-xl" title="Rent-to-Own">📋</span>
                             </div>
-                            <p id="rtoIncomeDisplay" class="text-2xl md:text-3xl font-black">0</p>
-                            <p id="rtoIncomeCount" class="text-xs opacity-70 mt-1">Featured listings</p>
+                            <p id="rtoIncomeDisplay" class="text-2xl md:text-3xl font-black">$0</p>
+                            <p id="rtoIncomeCount" class="text-xs opacity-70 mt-1">Rent-to-Own income</p>
                         </div>
-                        <div class="flip-card-back bg-gradient-to-br from-yellow-600 to-amber-700 rounded-2xl shadow-2xl p-3 text-black border border-yellow-400 overflow-y-auto">
+                        <div class="flip-card-back bg-gradient-to-br from-indigo-700 to-violet-900 rounded-2xl shadow-2xl p-3 text-white border border-indigo-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">Premium Vehicles</h3>
+                                <h3 class="text-xs font-bold">RTO Contracts</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
                             <div id="rtoIncomeBreakdown" class="text-xs space-y-1"></div>
@@ -1878,20 +1745,20 @@
                     </div>
                 </div>
 
-                <!-- Vehicle Sales -->
+                <!-- House Sales -->
                 <div class="flip-card cursor-pointer" onclick="flipCard(this)" title="Click to see breakdown">
                     <div class="flip-card-inner">
                         <div class="flip-card-front bg-gradient-to-br from-rose-600 to-pink-800 rounded-2xl shadow-2xl p-4 md:p-6 text-white border border-rose-500">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm md:text-base font-bold opacity-90">Sales Revenue</h3>
-                                <span class="text-xl">🏆</span>
+                                <h3 class="text-sm md:text-base font-bold opacity-90">House Sales</h3>
+                                <span class="text-xl">🏡</span>
                             </div>
-                            <p id="vehicleSalesDisplay" class="text-2xl md:text-3xl font-black">$0</p>
-                            <p id="vehicleSalesCount" class="text-xs opacity-70 mt-1">From completed sales</p>
+                            <p id="houseSalesDisplay" class="text-2xl md:text-3xl font-black">$0</p>
+                            <p id="houseSalesCount" class="text-xs opacity-70 mt-1">No sales yet</p>
                         </div>
                         <div class="flip-card-back bg-gradient-to-br from-rose-700 to-pink-900 rounded-2xl shadow-2xl p-3 text-white border border-rose-500 overflow-y-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-xs font-bold">Sales History</h3>
+                                <h3 class="text-xs font-bold">Completed Sales</h3>
                                 <span class="text-xs opacity-70">← flip</span>
                             </div>
                             <div id="houseSalesBreakdown" class="text-xs space-y-1"></div>
@@ -1900,9 +1767,9 @@
                 </div>
             </div>
 
-            <div class="glass-effect rounded-2xl shadow-2xl p-6 md:p-8">
-                <div class="flex flex-wrap justify-between items-center mb-6 gap-2">
-                    <h3 class="text-2xl md:text-3xl font-bold text-gray-200">🚗 Your Vehicles</h3>
+            <div class="glass-effect rounded-2xl shadow-2xl p-4 md:p-6">
+                <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-200">🏠 Your Rented Properties</h3>
                     <div class="flex items-center gap-3">
                         <!-- Elite Reports Button -->
                         <button id="eliteReportsBtn" onclick="openReportsModal()" 
@@ -1910,22 +1777,35 @@
                             <span>📊</span> Reports
                             <span class="bg-yellow-300 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">ELITE</span>
                         </button>
-                        <span class="text-sm text-amber-400 font-medium">💡 Click any value to edit</span>
                     </div>
                 </div>
-                <div class="overflow-x-auto rounded-xl border border-gray-700">
-                    <table class="w-full text-gray-300 text-sm md:text-base" id="dashboardTable" style="border-collapse: separate; border-spacing: 0;">
-                        <thead>
-                            <tr class="bg-gray-900 text-left text-gray-200 border-b-2 border-gray-600">
-                                <th class="px-3 py-4 font-bold text-center w-12">#</th>
-                                <th class="px-4 py-4 font-bold">Vehicle</th>
-                                <th class="px-4 py-4 font-bold text-right">Price</th>
-                                <th class="px-4 py-4 font-bold text-center">Status</th>
-                                <th class="px-3 py-4 font-bold text-center w-16"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="ownerVehiclesTable"></tbody>
-                    </table>
+                
+                <!-- Rented Properties List -->
+                <div id="rentedPropertiesList" class="space-y-2">
+                    <!-- Properties rendered by JS -->
+                </div>
+                
+                <!-- No Rented Properties Message -->
+                <div id="noRentedPropertiesMsg" class="hidden text-center py-8 text-gray-400">
+                    <div class="text-3xl mb-2">✨</div>
+                    <p>No rented properties yet</p>
+                </div>
+            </div>
+            
+            <!-- Available Properties (Collapsible Accordion) -->
+            <div id="availablePropertiesSection" class="hidden glass-effect rounded-2xl shadow-2xl p-4 md:p-6 mt-6">
+                <button onclick="toggleAvailableProperties()" class="w-full flex items-center justify-between text-left">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-400">
+                        <span id="availablePropertiesIcon">▼</span> 
+                        Available Properties 
+                        <span id="availablePropertiesCount" class="text-gray-500">(0)</span>
+                    </h3>
+                    <span class="text-gray-500 text-sm">Click to collapse</span>
+                </button>
+                
+                <!-- Available Properties List (expanded by default) -->
+                <div id="availablePropertiesList" class="mt-4 space-y-2">
+                    <!-- Properties rendered by JS -->
                 </div>
             </div>
             </div>
@@ -1945,18 +1825,18 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-8">
                 <h2 class="text-4xl md:text-5xl font-black bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">🏆 Leaderboard</h2>
-                <p class="text-gray-400 mt-2">Top vehicle owners in Los Santos</p>
-                <button onclick="refreshLeaderboard()" class="mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2 mx-auto" id="leaderboardRefreshBtn">
+                <p class="text-gray-400 mt-2">Top property owners in Los Santos</p>
+                <button onclick="renderLeaderboardPage()" class="mt-4 text-amber-400 hover:text-amber-300 text-sm font-semibold flex items-center gap-2 mx-auto">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    Refresh
+                    Refresh Leaderboard
                 </button>
             </div>
             
             <!-- User's Rank Card (shown when logged in) -->
-            <div id="userRankCard" class="hidden mb-8 bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-2xl p-6 border border-amber-500/30">
+            <div id="userRankCard" class="hidden mb-8 bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-2xl p-6 border border-purple-500/30">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <div id="userRankPosition" class="text-4xl font-black text-amber-400">#-</div>
+                        <div id="userRankPosition" class="text-4xl font-black text-purple-400">#-</div>
                         <div>
                             <div id="userRankName" class="text-xl font-bold text-white">Your Name</div>
                             <div id="userRankTitle" class="text-gray-400 flex items-center gap-2">
@@ -1983,7 +1863,7 @@
             <!-- Top 10 Leaderboard -->
             <div class="bg-gray-800/50 rounded-2xl border border-gray-700 overflow-hidden">
                 <div class="bg-gradient-to-r from-amber-600/20 to-yellow-600/20 px-6 py-4 border-b border-gray-700">
-                    <h3 class="text-xl font-bold text-white">Top 10 Vehicle Owners</h3>
+                    <h3 class="text-xl font-bold text-white">Top 10 Property Owners</h3>
                 </div>
                 <div id="leaderboardList" class="divide-y divide-gray-700">
                     <div class="p-8 text-center text-gray-400">
@@ -2001,11 +1881,11 @@
                         <span class="text-amber-400 font-bold">+300 XP</span>
                     </div>
                     <div class="flex items-center justify-between text-gray-300">
-                        <span>🚗 Post a listing</span>
+                        <span>🏠 Post a listing</span>
                         <span class="text-amber-400 font-bold">+250-500 XP</span>
                     </div>
                     <div class="flex items-center justify-between text-gray-300">
-                        <span>🤝 Complete a sale</span>
+                        <span>🤝 Complete a rental</span>
                         <span class="text-amber-400 font-bold">+500-1000 XP</span>
                     </div>
                     <div class="flex items-center justify-between text-gray-300">
@@ -2018,91 +1898,121 @@
         </div>
     </section>
 
-    <!-- Vehicle Stats Page (Owner View) -->
-    <section id="vehicleStatsPage" class="hidden min-h-screen py-12 px-4 sm:px-6">
+    <!-- Property Stats Page (Owner View) -->
+    <section id="propertyStatsPage" class="hidden min-h-screen py-12 px-4 sm:px-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <!-- Navigation Header -->
             <div class="flex items-center justify-between mb-6">
-                <button onclick="backToDashboard()" class="flex items-center space-x-2 text-amber-400 hover:text-amber-300 font-semibold transition">
+                <button id="statsBackBtn" onclick="backToDashboard()" class="flex items-center space-x-2 text-purple-400 hover:text-purple-300 font-semibold transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    <span>Back to Dashboard</span>
+                    <span id="statsBackBtnText">Back to Dashboard</span>
                 </button>
-                <!-- Vehicle Navigation Counter -->
+                <!-- Property Navigation Counter -->
                 <div id="statsNavCounter" class="text-gray-400 text-sm font-medium"></div>
             </div>
             
             <!-- Left/Right Navigation Chevrons -->
             <button id="prevStatsBtn" onclick="navigateStats('prev')" 
-                class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-amber-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-amber-500"
-                title="Previous Vehicle (←)">
+                class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-purple-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-purple-500"
+                title="Previous Property (←)">
                 <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
             <button id="nextStatsBtn" onclick="navigateStats('next')" 
-                class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-amber-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-amber-500"
-                title="Next Vehicle (→)">
+                class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-purple-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-purple-500"
+                title="Next Property (→)">
                 <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
             </button>
             
-            <div id="vehicleStatsContent"></div>
+            <div id="propertyStatsContent"></div>
         </div>
     </section>
 
-    <!-- Vehicle Detail Page -->
-    <section id="vehicleDetailPage" class="hidden min-h-screen py-12 px-4 sm:px-6">
+    <!-- Property Detail Page -->
+    <section id="propertyDetailPage" class="hidden min-h-screen py-12 px-4 sm:px-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <!-- Navigation Header -->
             <div class="flex items-center justify-between mb-6">
-                <button onclick="goBack()" class="flex items-center space-x-2 text-amber-400 hover:text-amber-300 font-semibold transition">
+                <button onclick="goBack()" class="flex items-center space-x-2 text-purple-400 hover:text-purple-300 font-semibold transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    <span>Back to Vehicles</span>
+                    <span>Back to Properties</span>
                 </button>
-                <!-- Vehicle Navigation Counter -->
-                <div id="vehicleNavCounter" class="text-gray-400 text-sm font-medium"></div>
+                <!-- Property Navigation Counter -->
+                <div id="propertyNavCounter" class="text-gray-400 text-sm font-medium"></div>
             </div>
             
             <!-- Left/Right Navigation Chevrons -->
-            <button id="prevVehicleBtn" onclick="navigateVehicle('prev')" 
-                class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-amber-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-amber-500"
-                title="Previous Vehicle">
+            <button id="prevPropertyBtn" onclick="navigateProperty('prev')" 
+                class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-purple-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-purple-500"
+                title="Previous Property">
                 <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button id="nextVehicleBtn" onclick="navigateVehicle('next')" 
-                class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-amber-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-amber-500"
-                title="Next Vehicle">
+            <button id="nextPropertyBtn" onclick="navigateProperty('next')" 
+                class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-gray-900/80 hover:bg-purple-600 text-white p-3 md:p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 border border-gray-700 hover:border-purple-500"
+                title="Next Property">
                 <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
             </button>
             
-            <div id="vehicleDetailContent" class="glass-effect rounded-2xl shadow-2xl overflow-hidden"></div>
+            <div id="propertyDetailContent" class="glass-effect rounded-2xl shadow-2xl overflow-hidden"></div>
+
+            <div class="mt-12 glass-effect rounded-2xl shadow-2xl p-6 md:p-8">
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-200 mb-6">⭐ Reviews</h3>
+                <div class="mb-8 bg-gray-800 p-6 rounded-xl border border-gray-700">
+                    <h4 class="text-xl font-bold text-gray-200 mb-4">✏️ Leave a Review</h4>
+                    <form id="reviewForm" class="space-y-4">
+                        <div>
+                            <label for="reviewerName" class="block text-gray-300 font-semibold mb-2">Your Name</label>
+                            <input type="text" id="reviewerName" required maxlength="50" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 transition">
+                        </div>
+                        <div>
+                            <label for="reviewRating" class="block text-gray-300 font-semibold mb-2">Rating</label>
+                            <select id="reviewRating" required class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 transition">
+                                <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
+                                <option value="4">⭐⭐⭐⭐ (4 stars)</option>
+                                <option value="3">⭐⭐⭐ (3 stars)</option>
+                                <option value="2">⭐⭐ (2 stars)</option>
+                                <option value="1">⭐ (1 star)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="reviewText" class="block text-gray-300 font-semibold mb-2">Your Review</label>
+                            <textarea id="reviewText" rows="4" required maxlength="500" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 transition"></textarea>
+                        </div>
+                        <button type="submit" class="gradient-bg text-white px-8 py-3 rounded-xl font-semibold hover:opacity-90 transition shadow-lg">Submit Review</button>
+                    </form>
+                </div>
+                <div id="reviewsDisplay" class="space-y-4"></div>
+            </div>
         </div>
     </section>
 
-    <!-- Browse Section -->
-    <div id="browseSection">
+    <!-- Renter Section -->
+    <div id="renterSection">
+        
         <section id="home" class="gradient-bg text-white py-12 md:py-16" style="scroll-margin-top: 70px;">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-4xl md:text-5xl font-black mb-4 text-black">Browse Free. Sell Easy.</h2>
-                <p class="text-lg md:text-xl mb-6 font-light max-w-3xl mx-auto text-gray-900">Premium vehicle marketplace. Free to browse. Sign up only to list.</p>
+                <h2 class="text-4xl md:text-5xl font-black mb-4">Find Your Perfect Place.</h2>
+                <p class="text-lg md:text-xl mb-6 font-light max-w-3xl mx-auto">The city's premier property portal. Free to browse. Sign up only to list.</p>
                 <!-- Compact CTAs -->
                 <div class="flex flex-wrap justify-center gap-3">
-                    <button onclick="document.getElementById('vehicles').scrollIntoView({behavior: 'smooth'})" class="bg-gray-900 hover:bg-gray-800 text-amber-400 px-5 py-2 rounded-full font-semibold transition text-sm flex items-center gap-2 border border-amber-500">
-                        🚗 Browse Vehicles <span>↓</span>
+                    <button onclick="document.getElementById('properties').scrollIntoView({behavior: 'smooth'})" class="bg-gray-900 hover:bg-gray-800 text-purple-400 px-5 py-2 rounded-full font-semibold transition text-sm flex items-center gap-2 border border-purple-500">
+                        🏠 Browse Properties <span>↓</span>
                     </button>
-                    <button onclick="listYourVehicle()" class="bg-black/30 hover:bg-black/50 border border-gray-700 text-white px-5 py-2 rounded-full font-semibold transition text-sm flex items-center gap-2">
-                        📋 List Your Vehicle <span>→</span>
+                    <button onclick="listYourProperty()" class="bg-black/30 hover:bg-black/50 border border-gray-700 text-white px-5 py-2 rounded-full font-semibold transition text-sm flex items-center gap-2">
+                        📋 List Your Property <span>→</span>
                     </button>
                 </div>
             </div>
         </section>
 
-        <section id="vehicles" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6" style="scroll-margin-top: 80px;">
+        <section id="propertyFilters" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6" style="scroll-margin-top: 80px;">
             <div class="flex flex-col gap-3">
                 <!-- Filter Buttons - Horizontal Scrollable -->
                 <div class="relative">
@@ -2111,98 +2021,96 @@
                     
                     <!-- Scrollable button container -->
                     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="filterButtons" style="-webkit-overflow-scrolling: touch;">
-                        <!-- Vehicle Type Filters -->
-                        <button onclick="filterByType('all', this)" data-filter="all" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg gradient-bg text-white font-bold shadow-lg text-sm active">All</button>
-                        <button onclick="filterByType('car', this)" data-filter="car" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Cars</button>
-                        <button onclick="filterByType('truck', this)" data-filter="truck" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Trucks</button>
-                        <button onclick="filterByType('suv', this)" data-filter="suv" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">SUVs</button>
-                        <button onclick="filterByType('boat', this)" data-filter="boat" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Boats</button>
-                        <button onclick="filterByType('motorcycle', this)" data-filter="motorcycle" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Motorcycles</button>
-                        <button onclick="filterByType('other', this)" data-filter="other" class="type-filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Other</button>
+                        <!-- Property Type Filters -->
+                        <button onclick="filterProperties('all', this)" data-filter="all" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg gradient-bg text-white font-bold shadow-lg text-sm active">All</button>
+                        <button onclick="filterProperties('house', this)" data-filter="house" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Houses</button>
+                        <button onclick="filterProperties('apartment', this)" data-filter="apartment" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Apartments</button>
+                        <button onclick="filterProperties('condo', this)" data-filter="condo" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Condos</button>
+                        <button onclick="filterProperties('villa', this)" data-filter="villa" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Villas</button>
+                        <button onclick="filterProperties('hotel', this)" data-filter="hotel" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Hotels</button>
+                        <button onclick="filterProperties('office', this)" data-filter="office" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Offices</button>
+                        <button onclick="filterProperties('warehouse', this)" data-filter="warehouse" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Warehouses</button>
+                        <button onclick="filterProperties('hideout', this)" data-filter="hideout" class="filter-btn flex-shrink-0 px-4 py-2 rounded-lg bg-gray-700 text-gray-200 font-bold hover:shadow-lg transition shadow text-sm">Hideouts</button>
                     </div>
+                </div>
+                
+                <!-- Interior Type Filters -->
+                <div class="flex gap-2 flex-wrap">
+                    <span class="text-gray-400 text-sm font-medium self-center mr-1">Interior:</span>
+                    <button onclick="filterByInterior('all', this)" data-interior="all" class="interior-filter-btn px-3 py-1.5 rounded-lg bg-purple-600 text-white font-bold text-sm active">All</button>
+                    <button onclick="filterByInterior('Walk-in', this)" data-interior="Walk-in" class="interior-filter-btn px-3 py-1.5 rounded-lg bg-gray-700 text-gray-200 font-bold hover:bg-gray-600 transition text-sm">🚪 Walk-in</button>
+                    <button onclick="filterByInterior('Instance', this)" data-interior="Instance" class="interior-filter-btn px-3 py-1.5 rounded-lg bg-gray-700 text-gray-200 font-bold hover:bg-gray-600 transition text-sm">🌀 Instance</button>
                 </div>
                 
                 <!-- Checkboxes and Sort - compact row -->
                 <div class="flex flex-wrap gap-3 items-center">
-                    <label id="myVehiclesFilter" class="hidden items-center gap-2 text-gray-300 font-medium cursor-pointer text-sm hover:text-white transition">
-                        <input type="checkbox" id="showMyVehicles" onchange="toggleMyVehicles()" class="w-4 h-4 rounded border-2 border-amber-500 bg-gray-700 text-purple-600 focus:ring-2 focus:ring-amber-500 cursor-pointer">
-                        <span>My Vehicles</span>
+                    <label id="myPropertiesFilter" class="hidden items-center gap-2 text-gray-300 font-medium cursor-pointer text-sm hover:text-white transition">
+                        <input type="checkbox" id="showMyProperties" onchange="toggleMyProperties()" class="w-4 h-4 rounded border-2 border-purple-500 bg-gray-700 text-purple-600 focus:ring-2 focus:ring-purple-500 cursor-pointer">
+                        <span>My Properties</span>
                     </label>
                     <label class="flex items-center gap-2 text-gray-300 font-medium cursor-pointer text-sm hover:text-white transition">
-                        <input type="checkbox" id="hideUnavailable" onchange="toggleHideUnavailable()" checked class="w-4 h-4 rounded border-2 border-gray-600 bg-gray-700 text-purple-600 focus:ring-2 focus:ring-amber-500 cursor-pointer">
-                        <span>Hide Sold</span>
+                        <input type="checkbox" id="hideUnavailable" onchange="toggleHideUnavailable()" checked class="w-4 h-4 rounded border-2 border-gray-600 bg-gray-700 text-purple-600 focus:ring-2 focus:ring-purple-500 cursor-pointer">
+                        <span>Hide Unavailable</span>
                     </label>
-                    <select id="sortBy" onchange="sortVehicles()" class="px-3 py-1.5 border-2 border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 font-medium shadow text-sm">
+                    <select id="sortBy" onchange="sortProperties()" class="px-3 py-1.5 border-2 border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-purple-500 font-medium shadow text-sm">
                         <option value="">Sort By</option>
                         <option value="price-low">Price: Low to High</option>
                         <option value="price-high">Price: High to Low</option>
-                        <option value="newest">Newest First</option>
+                        <option value="bedrooms">Bedrooms</option>
+                        <option value="interior">Interior Type</option>
+                        <option value="storage">Storage Space</option>
                     </select>
                 </div>
             </div>
         </section>
 
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
-            <h3 class="text-2xl md:text-3xl font-black text-white mb-6">Featured Vehicles <span id="vehicleCount" class="text-amber-400">(0)</span></h3>
-            <div id="vehiclesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"></div>
+        <section id="properties" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6" style="scroll-margin-top: 80px;">
+            <h3 class="text-3xl md:text-4xl font-black text-white mb-8 md:mb-10">Featured Properties <span id="propertyCount" class="text-purple-400">(0)</span></h3>
+            <div id="propertiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"></div>
         </section>
 
-        <section id="about" class="py-16 md:py-20">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12 md:mb-16">
-                    <h3 class="text-4xl md:text-5xl font-black text-white mb-6">Why Choose PaulysAutos.com?</h3>
-                    <p class="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto font-medium">Simple. Fast. Premium. That's how we do business.</p>
+        <!-- Combined About & Contact Section -->
+        <section id="about" class="bg-gradient-to-br from-gray-800 to-gray-900 py-12 md:py-16 border-t border-gray-700">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Why Choose Us - Compact Row -->
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl md:text-3xl font-black text-white mb-2">Why PaulysProperties?</h3>
+                    <p class="text-gray-400 font-medium">Simple. Fast. Premium.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
-                    <div class="text-center p-6 md:p-8 glass-effect rounded-2xl shadow-lg transform hover:scale-105 transition">
-                        <div class="gradient-bg w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                            <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        </div>
-                        <h4 class="text-xl md:text-2xl font-bold mb-3 text-white">Lightning-Fast Responses</h4>
-                        <p class="text-gray-300 font-medium">Text us in city and get a reply in minutes, not days. We're always ready.</p>
+                <div class="grid grid-cols-3 gap-4 md:gap-6 mb-10">
+                    <div class="text-center p-4 glass-effect rounded-xl">
+                        <div class="text-2xl md:text-3xl mb-2">⚡</div>
+                        <h4 class="text-sm md:text-base font-bold text-white">Fast Replies</h4>
+                        <p class="text-gray-400 text-xs md:text-sm hidden md:block">Minutes, not days</p>
                     </div>
-                    <div class="text-center p-6 md:p-8 glass-effect rounded-2xl shadow-lg transform hover:scale-105 transition">
-                        <div class="gradient-bg w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                            <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        </div>
-                        <h4 class="text-xl md:text-2xl font-bold mb-3 text-white">World-Class Team</h4>
-                        <p class="text-gray-300 font-medium">Our sales and support crew treats every client like family.</p>
+                    <div class="text-center p-4 glass-effect rounded-xl">
+                        <div class="text-2xl md:text-3xl mb-2">👥</div>
+                        <h4 class="text-sm md:text-base font-bold text-white">Great Team</h4>
+                        <p class="text-gray-400 text-xs md:text-sm hidden md:block">Treat you like family</p>
                     </div>
-                    <div class="text-center p-6 md:p-8 glass-effect rounded-2xl shadow-lg transform hover:scale-105 transition">
-                        <div class="gradient-bg w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                            <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <h4 class="text-xl md:text-2xl font-bold mb-3 text-white">Unbeatable Value</h4>
-                        <p class="text-gray-300 font-medium">Premium vehicles at prices that make sense. No games, just deals.</p>
+                    <div class="text-center p-4 glass-effect rounded-xl">
+                        <div class="text-2xl md:text-3xl mb-2">💰</div>
+                        <h4 class="text-sm md:text-base font-bold text-white">Fair Prices</h4>
+                        <p class="text-gray-400 text-xs md:text-sm hidden md:block">No games, just deals</p>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <section id="contact" class="bg-gradient-to-br from-gray-900 via-black to-gray-900 py-16 md:py-20 border-t border-amber-900/30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="max-w-3xl mx-auto">
-                    <h3 class="text-4xl md:text-5xl font-black text-white mb-6 text-center">Get In Touch</h3>
-                    <p class="text-lg md:text-xl text-gray-400 text-center mb-10 md:mb-12 font-medium">Have questions? Text us in city for the fastest response!</p>
-                    <div class="bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-2xl p-6 md:p-10 border border-amber-500/30">
-                        <div class="mb-8">
-                            <label class="block text-amber-400 font-bold mb-3 text-lg">📱 Our Team's Number:</label>
-                            <div class="flex items-center gap-3">
-                                <input type="text" id="contactPhone" value="2057028233" readonly class="flex-1 px-4 md:px-5 py-3 md:py-4 border-2 border-amber-600/50 rounded-xl bg-gray-800 font-bold text-lg md:text-xl text-white">
-                                <button onclick="copyToClipboard('contactPhone', this)" class="bg-gradient-to-r from-amber-500 to-yellow-600 text-black px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-base md:text-lg">Copy</button>
-                            </div>
-                        </div>
-                        <div class="mb-8">
-                            <label class="block text-amber-400 font-bold mb-3 text-lg">💬 Your Message (edit as needed):</label>
-                            <textarea id="contactMessage" rows="4" class="w-full px-4 md:px-5 py-3 md:py-4 border-2 border-amber-600/50 rounded-xl bg-gray-800 font-medium text-white text-base md:text-lg focus:ring-2 focus:ring-amber-500 transition">Hi! I'm interested in learning more about your available vehicles. Please contact me at your earliest convenience. Thank you!</textarea>
-                            <button onclick="copyToClipboard('contactMessage', this)" class="w-full mt-4 bg-gradient-to-r from-amber-500 to-yellow-600 text-black px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-base md:text-lg">Copy Message</button>
-                        </div>
-                        <div class="bg-gradient-to-r from-gray-800 to-gray-900 p-5 md:p-6 rounded-xl text-center border border-amber-500/50">
-                            <p class="text-amber-400 font-black text-lg md:text-xl">⚡ Text in city for the fastest response!</p>
-                            <p class="text-gray-300 font-medium mt-2">Our team typically responds within minutes.</p>
-                            <p class="text-gray-500 text-sm mt-3">⏰ Please allow up to 24 hours for a response during busy periods.</p>
+                
+                <!-- Contact -->
+                <div id="contact" class="max-w-lg mx-auto glass-effect rounded-2xl p-5 md:p-6">
+                    <h4 class="text-xl font-bold text-white mb-4 text-center">📱 Get In Touch</h4>
+                    <div class="mb-4">
+                        <label class="block text-gray-300 font-bold mb-2 text-sm">Our Number:</label>
+                        <div class="flex items-center gap-3">
+                            <input type="text" id="contactPhone" value="2057028233" readonly class="flex-1 px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 font-bold text-lg text-white">
+                            <button onclick="copyToClipboard('contactPhone', this)" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg">Copy</button>
                         </div>
                     </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-300 font-bold mb-2 text-sm">Your Message:</label>
+                        <textarea id="contactMessage" rows="3" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 font-medium text-white text-sm focus:ring-2 focus:ring-purple-500 transition">Hi! I'm interested in learning more about your available properties. Please contact me at your earliest convenience. Thank you!</textarea>
+                        <button onclick="copyToClipboard('contactMessage', this)" class="w-full mt-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm">Copy Message</button>
+                    </div>
+                    <p class="text-center text-gray-400 text-xs">Text us in city • We typically respond within minutes</p>
                 </div>
             </div>
         </section>
@@ -2212,28 +2120,24 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
                 <div>
-                    <h4 class="text-xl md:text-2xl font-black mb-5 bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">PaulysAutos.com</h4>
-                    <p class="text-gray-400 font-medium mb-6">Your trusted partner in finding the perfect vehicle.</p>
+                    <h4 class="text-xl md:text-2xl font-black mb-5 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">PaulysProperties.com</h4>
+                    <p class="text-gray-400 font-medium mb-6">Your trusted partner in finding the perfect property.</p>
                     <div onclick="goHome()" class="cursor-pointer relative w-24 h-24 md:w-28 md:h-28" role="button" tabindex="0" aria-label="Go to home">
                         <svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-lg" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <linearGradient id="logoGradientFooter" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#D4AF37;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#B8960C;stop-opacity:1" />
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
                                 </linearGradient>
                             </defs>
-                            <!-- Rounded square base - black background -->
-                            <rect x="10" y="10" width="100" height="100" rx="20" fill="#1a1a1a" stroke="url(#logoGradientFooter)" stroke-width="3"/>
-                            <!-- Car icon in gold -->
-                            <path d="M30 70 L35 55 L45 45 L75 45 L85 55 L90 70 L90 80 L30 80 Z" fill="url(#logoGradientFooter)" />
-                            <!-- Windshield -->
-                            <path d="M42 55 L50 47 L70 47 L78 55 Z" fill="#1a1a1a" />
-                            <!-- Wheels -->
-                            <circle cx="42" cy="80" r="10" fill="#333" stroke="url(#logoGradientFooter)" stroke-width="2"/>
-                            <circle cx="78" cy="80" r="10" fill="#333" stroke="url(#logoGradientFooter)" stroke-width="2"/>
-                            <!-- Wheel centers -->
-                            <circle cx="42" cy="80" r="4" fill="url(#logoGradientFooter)"/>
-                            <circle cx="78" cy="80" r="4" fill="url(#logoGradientFooter)"/>
+                            <!-- Rounded square base -->
+                            <rect x="10" y="10" width="100" height="100" rx="20" fill="url(#logoGradientFooter)" />
+                            <!-- House icon in white -->
+                            <path d="M30 55 L60 25 L90 55 L90 100 L72 100 L72 75 L48 75 L48 100 L30 100 Z" fill="white" />
+                            <!-- Door -->
+                            <rect x="54" y="85" width="12" height="15" fill="url(#logoGradientFooter)" />
+                            <!-- Window -->
+                            <rect x="68" y="60" width="12" height="12" rx="2" fill="url(#logoGradientFooter)" />
                         </svg>
                     </div>
                 </div>
@@ -2241,9 +2145,9 @@
                     <h4 class="text-xl md:text-2xl font-black mb-5">Quick Links</h4>
                     <ul class="space-y-3">
                         <li><a onclick="navigateTo('home')" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Home</a></li>
-                        <li><a onclick="navigateTo('vehicles')" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Vehicles</a></li>
+                        <li><a onclick="navigateTo('properties')" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Properties</a></li>
                         <li><a onclick="navigateTo('leaderboard')" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Leaderboard</a></li>
-                        <li><a onclick="openServicesModal()" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Services</a></li>
+                        <li><a onclick="openPhotoServicesModal()" class="text-gray-400 hover:text-white cursor-pointer transition font-medium" role="button" tabindex="0">Services</a></li>
                     </ul>
                 </div>
                 <div>
@@ -2261,7 +2165,7 @@
                             <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
                             <span>2057028233</span>
                         </li>
-                        <li class="flex items-center space-x-3 mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg">
+                        <li class="flex items-center space-x-3 mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 transition" onclick="openModal('contactModal')">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
                             <span class="font-bold">Text in city for fastest response!</span>
                         </li>
@@ -2269,12 +2173,13 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-10 pt-8 text-center text-gray-400 font-medium">
-                <p>&copy; <span id="footerYear">2025</span> PaulysAutos.com. All rights reserved.</p>
+                <p>&copy; <span id="footerYear">2025</span> PaulysProperties.com. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <!-- JavaScript Files -->
+    <!-- JavaScript Files - Modular Architecture -->
+    <!-- Load order is critical - dependencies must load before dependents -->
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
     <script src="js/state.js"></script>
@@ -2282,10 +2187,9 @@
     <script src="js/user-preferences.js"></script>
     <script src="js/notification-manager.js"></script>
     <script src="js/gamification.js"></script>
+    <script src="js/agent-management.js"></script>
     <script src="js/ui-leaderboard.js"></script>
     <script src="js/components.js"></script>
-    
-    <!-- UI Modules (split from ui.js for maintainability) -->
     <script src="js/ui-core.js"></script>
     <script src="js/ui-navigation.js"></script>
     <script src="js/ui-profile.js"></script>
@@ -2293,12 +2197,10 @@
     <script src="js/ui-tier-upgrade.js"></script>
     <script src="js/ui-admin.js"></script>
     <script src="js/ui-admin-users.js"></script>
-    <script src="js/ui-vehicle-management.js"></script>
-    <!-- ui-rent-notifications.js removed - not needed for vehicle marketplace -->
+    <script src="js/ui-property-management.js"></script>
+    <script src="js/ui-rent-notifications.js"></script>
     <script src="js/ui-reports.js"></script>
     <script src="js/ui-sales.js"></script>
-    <script src="js/agent-management.js"></script>
-    
     <script src="js/filters.js"></script>
     <script src="js/app.js"></script>
 
@@ -2311,7 +2213,7 @@
                         📊 Portfolio Reports
                         <span class="bg-gradient-to-r from-yellow-500 to-amber-600 text-gray-900 text-xs px-2 py-1 rounded-full font-bold">👑 ELITE</span>
                     </h2>
-                    <p class="text-gray-400 mt-2">Analyze your sales performance</p>
+                    <p class="text-gray-400 mt-2">Analyze your rental portfolio performance</p>
                 </div>
                 <button onclick="closeModal('reportsModal')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
             </div>
@@ -2325,7 +2227,7 @@
                     💰 Income Analysis
                 </button>
                 <button onclick="switchReportTab('occupancy')" id="reportTab-occupancy" class="report-tab px-4 py-2 rounded-lg font-bold text-sm transition bg-gray-700 text-gray-300 hover:bg-gray-600">
-                    🚗 Occupancy
+                    🏠 Occupancy
                 </button>
                 <button onclick="switchReportTab('payments')" id="reportTab-payments" class="report-tab px-4 py-2 rounded-lg font-bold text-sm transition bg-gray-700 text-gray-300 hover:bg-gray-600">
                     📅 Payment History

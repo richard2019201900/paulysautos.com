@@ -13,10 +13,10 @@
  * - Activity log
  * - Admin stats display
  * - Admin user list rendering
- * - User vehicles expansion
+ * - User properties expansion
  * - User filtering
  * 
- * DEPENDENCIES: TierService, VehicleDataService, UserPreferencesService
+ * DEPENDENCIES: TierService, PropertyDataService, UserPreferencesService
  * ============================================================================
  */
 
@@ -120,9 +120,9 @@ window.loadUpgradeRequests = async function() {
         
         container.innerHTML = requests.map(req => {
             const currentTierData = TIERS[req.currentTier] || TIERS.starter;
-            const requestedTierData = TIERS[req.requestedTier] || TIERS.pro;
+            const requestedTierData = TIERS[req.requestedTier] || TIERS.elite;  // Default to Elite (Pro removed)
             const date = req.createdAt?.toDate ? req.createdAt.toDate().toLocaleString() : 'Unknown';
-            const price = req.requestedTier === 'pro' ? '$25,000' : '$50,000';
+            const price = '$25,000';  // Elite is $25k/month
             
             return `
                 <div class="bg-gray-800 rounded-xl p-4 border border-orange-600/50">
@@ -302,8 +302,8 @@ window.loadPhotoRequests = async function() {
                                     <a href="tel:${escapeHtml(req.phone || '')}" class="text-cyan-400 hover:underline">${escapeHtml(req.phone || 'N/A')}</a>
                                 </p>
                                 <p class="text-gray-400">
-                                    <span class="text-gray-500">Vehicle:</span> 
-                                    <span class="text-white">${escapeHtml(req.vehicleName || req.vehicle || 'Not specified')}</span>
+                                    <span class="text-gray-500">Property:</span> 
+                                    <span class="text-white">${escapeHtml(req.propertyName || req.property || 'Not specified')}</span>
                                 </p>
                                 ${req.message ? `
                                     <div class="mt-2 bg-gray-900/50 rounded-lg p-3 border border-gray-700">
@@ -383,8 +383,6 @@ window.markPhotoRequestReviewed = async function(requestId) {
  * Delete a photo request
  */
 window.deletePhotoRequest = async function(requestId) {
-    if (!requireAdmin('deletePhotoRequest')) return;
-    
     if (!confirm('Are you sure you want to delete this photo request?')) return;
     
     try {
@@ -414,16 +412,13 @@ window.deletePhotoRequest = async function(requestId) {
 
 // Approve upgrade request - show modal with trial option
 window.approveUpgradeRequest = async function(requestId, userEmail, newTier, currentTier) {
-    if (!requireAdmin('approveUpgradeRequest')) return;
-    
     const tierData = TIERS[newTier];
-    const price = newTier === 'pro' ? '$25,000' : '$50,000';
+    const price = '$25,000';  // Elite is $25k/month
     
-    // Check if this is a Pro → Elite upgrade (prorated eligible)
-    const isProToElite = currentTier === 'pro' && newTier === 'elite';
-    const proratedPrice = '$25,000'; // Difference between Elite ($50k) and Pro ($25k)
+    // No more prorated upgrades (Pro tier removed)
+    const isProToElite = false;
     
-    // Show approval modal with trial and prorated options
+    // Show approval modal with trial option
     const modalHTML = `
         <div id="approveModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
             <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-green-700">
@@ -432,8 +427,8 @@ window.approveUpgradeRequest = async function(requestId, userEmail, newTier, cur
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
                     <p class="text-gray-300 mb-2"><strong>User:</strong> ${userEmail}</p>
                     <p class="text-gray-300 mb-2"><strong>Current Tier:</strong> <span class="text-gray-400">${TIERS[currentTier]?.name || currentTier}</span></p>
-                    <p class="text-gray-300"><strong>Requested Tier:</strong> <span class="${newTier === 'pro' ? 'text-purple-400' : 'text-yellow-400'} font-bold">${tierData?.icon || '⭐'} ${tierData?.name || newTier}</span></p>
-                    <p class="text-gray-300"><strong>Standard Price:</strong> ${price}/month</p>
+                    <p class="text-gray-300"><strong>Requested Tier:</strong> <span class="text-yellow-400 font-bold">${tierData?.icon || '👑'} ${tierData?.name || newTier}</span></p>
+                    <p class="text-gray-300"><strong>Price:</strong> ${price}/month</p>
                 </div>
                 
                 ${isProToElite ? `
@@ -559,12 +554,10 @@ window.confirmApproveRequest = async function(requestId, userEmail, newTier, cur
     const paymentNote = $('approveNotes')?.value || '';
     const tierData = TIERS[newTier];
     
-    // Calculate actual subscription amount
-    let subscriptionAmount = newTier === 'pro' ? 25000 : 50000; // Standard prices
+    // Calculate actual subscription amount - Elite is $25k/month
+    let subscriptionAmount = 25000;
     if (isTrial) {
         subscriptionAmount = 0;
-    } else if (isProrated && currentTier === 'pro' && newTier === 'elite') {
-        subscriptionAmount = 25000; // Only the difference
     }
     
     // Show loading state
@@ -669,8 +662,6 @@ window.confirmApproveRequest = async function(requestId, userEmail, newTier, cur
 
 // Deny upgrade request
 window.denyUpgradeRequest = async function(requestId, userEmail) {
-    if (!requireAdmin('denyUpgradeRequest')) return;
-    
     const reason = prompt(`Denying request from ${userEmail}\n\nReason (optional):`);
     if (reason === null) return;
     
@@ -816,7 +807,7 @@ window.processRequestSnapshot = function(snapshot) {
     updateRequestsBadge(count);
     
     // Only refresh user list if pending requests have actually changed
-    // This prevents collapsing open vehicle lists during polling
+    // This prevents collapsing open property lists during polling
     if (hasChanged && window.adminUsersData && window.adminUsersData.length > 0) {
         const searchTerm = ($('adminUserSearch')?.value || '').toLowerCase();
         const filtered = searchTerm 
@@ -1085,13 +1076,10 @@ window.startAdminUsersListener = function() {
             
             // Show notifications for MISSED users (created while away or pending from last session)
             if (isFirstSnapshot && missedUsers.length > 0) {
-                // Skip if NotificationManager is handling notifications (prevents duplicates)
-                if (!window.NotificationManager?.state?.initialized) {
-                    // Show notification for each missed user (no flash for these)
-                    missedUsers.forEach(user => {
-                        showNewUserNotification(user, true); // true = missed (not real-time)
-                    });
-                }
+                // Show notification for each missed user (no flash for these)
+                missedUsers.forEach(user => {
+                    showNewUserNotification(user, true); // true = missed (not real-time)
+                });
             }
             
             // Show notifications for REAL-TIME new users
@@ -1099,13 +1087,10 @@ window.startAdminUsersListener = function() {
                 // Flash screen for real-time only
                 flashScreen();
                 
-                // Skip if NotificationManager is handling notifications (prevents duplicates)
-                if (!window.NotificationManager?.state?.initialized) {
-                    // Show notification for each new user
-                    newUsers.forEach(user => {
-                        showNewUserNotification(user, false); // false = real-time
-                    });
-                }
+                // Show notification for each new user
+                newUsers.forEach(user => {
+                    showNewUserNotification(user, false); // false = real-time
+                });
                 
                 // Refresh the user list and stats
                 const container = $('allUsersList');
@@ -1151,15 +1136,15 @@ window.startAdminUsersListener = function() {
         });
 };
 
-// Real-time listener for vehicles - detects new listings AND updates admin panel data
+// Real-time listener for properties - detects new listings AND updates admin panel data
 window.startAdminPropertiesListener = function() {
     if (!TierService.isMasterAdmin(auth.currentUser?.email)) return;
-    // The actual vehicle data is stored in settings/properties document, not a 'vehicles' collection
+    // The actual property data is stored in settings/properties document, not a 'properties' collection
     // So we just need to call the settings listener
     startSettingsPropertiesListener();
 };
 
-// Real-time listener for settings/properties document - this is where user-created vehicles are stored
+// Real-time listener for settings/properties document - this is where user-created properties are stored
 window.startSettingsPropertiesListener = function() {
     // Always unsubscribe existing listener first (prevents orphaned listeners)
     if (window.settingsPropertiesUnsubscribe) {
@@ -1210,7 +1195,7 @@ window.startSettingsPropertiesListener = function() {
                 
                 // Only skip if prop is completely invalid - allow empty images arrays
                 if (!prop || !prop.title) {
-                    return; // Skip invalid vehicles (must have at least a title)
+                    return; // Skip invalid properties (must have at least a title)
                 }
                 
                 prop.id = propId;
@@ -1226,21 +1211,21 @@ window.startSettingsPropertiesListener = function() {
                     }
                 }
                 
-                // Check if this is a NEW vehicle (not seen in any previous snapshot)
+                // Check if this is a NEW property (not seen in any previous snapshot)
                 const isNewToUs = !window.seenPropertyIds.has(propId);
                 
                 if (isNewToUs) {
-                    // Add to local vehicles array if not already there
-                    const existingIndex = vehicles.findIndex(p => p.id === propId);
+                    // Add to local properties array if not already there
+                    const existingIndex = properties.findIndex(p => p.id === propId);
                     if (existingIndex === -1) {
-                        vehicles.push(prop);
+                        properties.push(prop);
                         
                         // Set up owner mapping
                         if (prop.ownerEmail) {
                             const email = prop.ownerEmail.toLowerCase();
-                            if (!ownerVehicleMap[email]) ownerVehicleMap[email] = [];
-                            if (!ownerVehicleMap[email].includes(propId)) ownerVehicleMap[email].push(propId);
-                            vehicleOwnerEmail[propId] = email;
+                            if (!ownerPropertyMap[email]) ownerPropertyMap[email] = [];
+                            if (!ownerPropertyMap[email].includes(propId)) ownerPropertyMap[email].push(propId);
+                            propertyOwnerEmail[propId] = email;
                         }
                         
                         // Set default availability
@@ -1272,12 +1257,12 @@ window.startSettingsPropertiesListener = function() {
                     }
                 }
                 
-                // Mark this vehicle ID as seen
+                // Mark this property ID as seen
                 window.seenPropertyIds.add(propId);
             });
             
-            // Update filtered vehicles
-            state.filteredVehicles = [...vehicles];
+            // Update filtered properties
+            state.filteredProperties = [...properties];
             
             // Save pending listing notifications to Firestore via UserPreferencesService
             if (window.UserPreferencesService) {
@@ -1289,12 +1274,9 @@ window.startSettingsPropertiesListener = function() {
             
             // Show notifications for MISSED listings (on first load only)
             if (isFirstSnapshot && missedListings.length > 0) {
-                // Skip if NotificationManager is handling notifications (prevents duplicates)
-                if (!window.NotificationManager?.state?.initialized) {
-                    missedListings.forEach(listing => {
-                        showNewListingNotification(listing, true);
-                    });
-                }
+                missedListings.forEach(listing => {
+                    showNewListingNotification(listing, true);
+                });
                 updateNotificationBadge();
             }
             
@@ -1310,14 +1292,11 @@ window.startSettingsPropertiesListener = function() {
                     // Flash screen green!
                     flashScreen('green');
                     
-                    // Skip if NotificationManager is handling notifications (prevents duplicates)
-                    if (!window.NotificationManager?.state?.initialized) {
-                        // Show notification for each
-                        otherUsersListings.forEach(listing => {
-                            showNewListingNotification(listing, false);
-                            logAdminActivity('new_listing', listing);
-                        });
-                    }
+                    // Show notification for each
+                    otherUsersListings.forEach(listing => {
+                        showNewListingNotification(listing, false);
+                        logAdminActivity('new_listing', listing);
+                    });
                     
                     // Refresh admin panel
                     if (window.adminUsersData && window.adminUsersData.length > 0) {
@@ -1426,7 +1405,7 @@ window.showNewListingNotification = function(listing, isMissed = false) {
                 <span class="text-3xl">${icon}</span>
                 <div class="flex-1">
                     <div class="text-white font-bold text-lg">${titleText}</div>
-                    <div class="text-white/90">${listing.title || 'New Vehicle'}</div>
+                    <div class="text-white/90">${listing.title || 'New Property'}</div>
                     <div class="text-white/70 text-sm">by ${ownerName}</div>
                     ${premiumBadge}
                     <div class="text-white/60 text-xs mt-1">${timeDisplay}</div>
@@ -1489,9 +1468,9 @@ window.handleListingNotificationClick = async function(ownerEmail, listingId) {
         }, 4000);
     } else {
         console.warn('[Notification] User card not found for email:', ownerEmail);
-        // Fallback: open vehicle stats
-        if (typeof viewVehicleStats === 'function') {
-            viewVehicleStats(listingId);
+        // Fallback: open property stats
+        if (typeof viewPropertyStats === 'function') {
+            viewPropertyStats(listingId);
         }
     }
 };
@@ -1561,7 +1540,7 @@ window.loadActivityLog = function() {
                 icon = '🏠';
                 bgColor = 'from-green-900/50 to-emerald-900/50 border-green-600/30';
                 title = 'New Listing Posted';
-                description = `${entry.data.title || 'New Vehicle'} listed by ${entry.data.ownerEmail?.split('@')[0] || 'Unknown'}`;
+                description = `${entry.data.title || 'New Property'} listed by ${entry.data.ownerEmail?.split('@')[0] || 'Unknown'}`;
                 break;
             case 'upgrade':
                 icon = '⬆️';
@@ -1587,10 +1566,10 @@ window.loadActivityLog = function() {
                 icon = '🗑️';
                 bgColor = 'from-red-900/50 to-gray-900/50 border-red-600/30';
                 title = 'User Deleted';
-                const propInfo = entry.data.vehiclesDeleted > 0 
-                    ? ` (${entry.data.vehiclesDeleted} vehicles deleted)` 
-                    : entry.data.vehiclesOrphaned > 0 
-                        ? ` (${entry.data.vehiclesOrphaned} vehicles orphaned)` 
+                const propInfo = entry.data.propertiesDeleted > 0 
+                    ? ` (${entry.data.propertiesDeleted} properties deleted)` 
+                    : entry.data.propertiesOrphaned > 0 
+                        ? ` (${entry.data.propertiesOrphaned} properties orphaned)` 
                         : '';
                 description = `${entry.data.email?.split('@')[0] || 'User'} account removed${propInfo}`;
                 break;
@@ -1772,7 +1751,7 @@ window.handleNewUserNotificationClick = async function(userId) {
  * 
  * @param {Object} options
  * @param {string} options.targetSelector - CSS selector for target element
- * @param {string} options.tabName - Dashboard tab to switch to (e.g., 'admin', 'myVehicles')
+ * @param {string} options.tabName - Dashboard tab to switch to (e.g., 'admin', 'myProperties')
  * @param {number} options.maxWaitMs - Maximum time to wait for element (default: 5000)
  * @param {string} options.highlightColor - Border highlight color
  * @param {string} options.glowColor - Glow effect color
@@ -1781,7 +1760,7 @@ window.handleNewUserNotificationClick = async function(userId) {
 window.scrollToAndHighlightElement = async function(options) {
     const {
         targetSelector,
-        tabName = 'myVehicles',
+        tabName = 'myProperties',
         maxWaitMs = 5000,
         highlightColor = 'rgba(239, 68, 68, 0.7)',
         glowColor = 'rgba(239, 68, 68, 0.4)',
@@ -1950,11 +1929,6 @@ window.showNewPhotoNotifications = function(event) {
 
 // Re-render all pending notifications that might not be showing
 window.reRenderPendingNotifications = function() {
-    // Skip if NotificationManager is handling notifications (prevents duplicates and re-appearing)
-    if (window.NotificationManager?.state?.initialized) {
-        return;
-    }
-    
     const stack = $('adminNotificationsStack');
     if (!stack) return;
     // Go through all pending notifications and re-render any that aren't showing
@@ -1978,7 +1952,7 @@ window.reRenderPendingNotifications = function() {
             }
         } else if (notificationId.startsWith('new-listing-')) {
             const listingId = parseInt(notificationId.replace('new-listing-', ''));
-            const listing = vehicles.find(p => p.id === listingId);
+            const listing = properties.find(p => p.id === listingId);
             if (listing) {
                 showNewListingNotification(listing, true);
             }
@@ -1994,7 +1968,7 @@ window.reRenderPendingNotifications = function() {
 };
 
 // Show a notification for a new premium activation
-window.showNewPremiumNotification = function(vehicle, ownerEmail, isMissed = false) {
+window.showNewPremiumNotification = function(property, ownerEmail, isMissed = false) {
     const stack = $('adminNotificationsStack');
     if (!stack) {
         return;
@@ -2002,7 +1976,7 @@ window.showNewPremiumNotification = function(vehicle, ownerEmail, isMissed = fal
     
     stack.classList.remove('hidden');
     
-    const notificationId = 'new-premium-' + vehicle.id + '-' + Date.now();
+    const notificationId = 'new-premium-' + property.id + '-' + Date.now();
     
     // Don't add if already dismissed
     if (window.dismissedAdminNotifications.has(notificationId)) return;
@@ -2013,14 +1987,14 @@ window.showNewPremiumNotification = function(vehicle, ownerEmail, isMissed = fal
     let timeDisplay;
     let activatedDate = null;
     
-    if (vehicle.premiumActivatedAt?.toDate) {
-        activatedDate = vehicle.premiumActivatedAt.toDate();
-    } else if (vehicle.premiumActivatedAt) {
-        activatedDate = new Date(vehicle.premiumActivatedAt);
-    } else if (vehicle.createdAt?.toDate) {
-        activatedDate = vehicle.createdAt.toDate();
-    } else if (vehicle.createdAt) {
-        activatedDate = new Date(vehicle.createdAt);
+    if (property.premiumActivatedAt?.toDate) {
+        activatedDate = property.premiumActivatedAt.toDate();
+    } else if (property.premiumActivatedAt) {
+        activatedDate = new Date(property.premiumActivatedAt);
+    } else if (property.createdAt?.toDate) {
+        activatedDate = property.createdAt.toDate();
+    } else if (property.createdAt) {
+        activatedDate = new Date(property.createdAt);
     }
     
     if (activatedDate && !isNaN(activatedDate.getTime())) {
@@ -2049,7 +2023,7 @@ window.showNewPremiumNotification = function(vehicle, ownerEmail, isMissed = fal
                 <span class="text-3xl">👑</span>
                 <div class="flex-1">
                     <div class="text-white font-bold text-lg">${titleText}</div>
-                    <div class="text-white/90 font-semibold">${vehicle.title || 'Vehicle'}</div>
+                    <div class="text-white/90 font-semibold">${property.title || 'Property'}</div>
                     <div class="text-white/70 text-sm">by ${ownerName} • $10k/week fee</div>
                     <div class="text-white/50 text-xs mt-1">${timeDisplay}</div>
                 </div>
@@ -2115,7 +2089,7 @@ window.renderAdminNotificationStack = function(notifications, hasNew = false) {
                 bgGradient = 'from-amber-600 to-yellow-500';
                 borderColor = 'border-amber-400';
                 title = 'Premium Listing Activated!';
-                message = n.message || `${n.vehicleTitle || 'Vehicle'} enabled premium - collect $10k/week`;
+                message = n.message || `${n.propertyTitle || 'Property'} enabled premium - collect $10k/week`;
                 // Add to pending premium notifications for badge count
                 if (!window.pendingAdminNotifications.has('new-premium-' + n.id)) {
                     window.pendingAdminNotifications.add('new-premium-' + n.id);
@@ -2232,21 +2206,20 @@ window.updateClearAllButton = function() {
 
 window.updateAdminStats = async function(users) {
     const totalUsers = users.length;
+    // Pro tier removed - but keep filter for any legacy pro users during migration
     const proUsers = users.filter(u => u.tier === 'pro');
     const eliteUsers = users.filter(u => u.tier === 'elite');
     // Exclude master admin from starter count
     const starterUsers = users.filter(u => !TierService.isMasterAdmin(u.email) && (u.tier === 'starter' || !u.tier));
     const adminUsers = users.filter(u => TierService.isMasterAdmin(u.email));
     
-    // Separate trial users from paid users
-    const proTrialUsers = proUsers.filter(u => u.isFreeTrial === true);
-    const proPaidUsers = proUsers.filter(u => u.isFreeTrial !== true);
+    // Separate trial users from paid users (Elite only now)
     const eliteTrialUsers = eliteUsers.filter(u => u.isFreeTrial === true);
     const elitePaidUsers = eliteUsers.filter(u => u.isFreeTrial !== true);
     
     // Refresh availability data from Firestore for accuracy
     try {
-        const availDoc = await db.collection('settings').doc('vehicleAvailability').get();
+        const availDoc = await db.collection('settings').doc('propertyAvailability').get();
         if (availDoc.exists) {
             const availData = availDoc.data();
             Object.keys(availData).forEach(key => {
@@ -2260,23 +2233,13 @@ window.updateAdminStats = async function(users) {
         // Silently handle error
     }
     
-    // Calculate PAID revenue only (excluding trials)
-    // Use actual subscriptionAmount when available (for prorated upgrades)
-    let proRevenue = 0;
+    // Calculate PAID revenue only (Elite is $25k/month now)
     let eliteRevenue = 0;
-    let proratedCount = 0;
-    
-    proPaidUsers.forEach(u => {
-        // Use stored subscriptionAmount if available, otherwise default
-        const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 25000;
-        proRevenue += amount;
-    });
     
     elitePaidUsers.forEach(u => {
-        // Use stored subscriptionAmount if available, otherwise default
-        const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 50000;
+        // Use stored subscriptionAmount if available, otherwise default to $25k
+        const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 25000;
         eliteRevenue += amount;
-        if (u.isProratedUpgrade) proratedCount++;
     });
     
     // Calculate Premium Ad Fees (weekly fees from premium listings)
@@ -2288,12 +2251,12 @@ window.updateAdminStats = async function(users) {
     let premiumTrialCount = 0;
     const premiumFeePerWeek = 10000; // $10k/week per premium listing
     
-    // Check each vehicle for premium status
-    vehicles.forEach(p => {
-        const isPremium = VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false);
+    // Check each property for premium status
+    properties.forEach(p => {
+        const isPremium = PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false);
         if (isPremium) {
             premiumListingsCount++;
-            const isPremiumTrial = VehicleDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
+            const isPremiumTrial = PropertyDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
             if (isPremiumTrial) {
                 premiumTrialCount++;
             } else {
@@ -2306,9 +2269,9 @@ window.updateAdminStats = async function(users) {
     // Show actual weekly premium revenue (not multiplied - actuals only)
     const premiumWeeklyRevenue = premiumFeeTotal;
     
-    // Total revenue is monthly subscriptions + weekly premium (not multiplied)
+    // Total revenue is Elite subscriptions + weekly premium (Pro tier removed)
     // This represents: confirmed recurring revenue from subs + current weekly premium fees
-    const totalRevenue = proRevenue + eliteRevenue + premiumWeeklyRevenue;
+    const totalRevenue = eliteRevenue + premiumWeeklyRevenue;
     
     // Helper function to get user listing count - uses OwnershipService for consistency
     const getUserListings = (user) => {
@@ -2333,27 +2296,29 @@ window.updateAdminStats = async function(users) {
         `;
     }
     
-    // Pro Users Tile
+    // Pro Users Tile - RETIRED (show 0 or legacy count)
     const statPro = $('adminStatPro');
     const statProBreakdown = $('adminStatProBreakdown');
     if (statPro) statPro.textContent = proUsers.length;
     if (statProBreakdown) {
         if (proUsers.length > 0) {
-            statProBreakdown.textContent = `(${proPaidUsers.length} paid, ${proTrialUsers.length} trial)`;
+            statProBreakdown.textContent = '(legacy - needs migration)';
         } else {
-            statProBreakdown.textContent = '';
+            statProBreakdown.textContent = '(tier retired)';
         }
     }
     
     const proDetail = $('adminStatProDetail');
     if (proDetail) {
-        const allProUsersList = proUsers.map(u => {
-            const listings = getUserListings(u);
-            const isTrial = u.isFreeTrial === true;
-            const trialTag = isTrial ? '<span class="text-cyan-400">🎁</span>' : '<span class="text-green-400">💰</span>';
-            return `<div class="truncate">${trialTag} ${u.username || u.email.split('@')[0]} <span class="text-gray-500">${listings}/3</span></div>`;
-        }).join('');
-        proDetail.innerHTML = allProUsersList || '<div class="text-gray-500">No Pro users</div>';
+        if (proUsers.length > 0) {
+            const allProUsersList = proUsers.map(u => {
+                const listings = getUserListings(u);
+                return `<div class="truncate text-orange-400">⚠️ ${u.username || u.email.split('@')[0]} <span class="text-gray-500">${listings}/3</span></div>`;
+            }).join('');
+            proDetail.innerHTML = `<div class="text-orange-400 mb-1">Legacy users needing migration:</div>${allProUsersList}`;
+        } else {
+            proDetail.innerHTML = '<div class="text-gray-500">Pro tier has been retired</div><div class="text-gray-500 text-xs">All users migrated to Starter/Elite</div>';
+        }
     }
     
     // Elite Users Tile
@@ -2388,41 +2353,34 @@ window.updateAdminStats = async function(users) {
         usersDetail.innerHTML = `
             <div>👑 Owner/Admin: ${adminUsers.length}</div>
             <div>🌱 Starter: ${starterUsers.length}</div>
-            <div>⭐ Pro: ${proUsers.length} ${proTrialUsers.length > 0 ? `<span class="text-cyan-400">(${proTrialUsers.length} trial)</span>` : ''}</div>
             <div>👑 Elite: ${eliteUsers.length} ${eliteTrialUsers.length > 0 ? `<span class="text-cyan-400">(${eliteTrialUsers.length} trial)</span>` : ''}</div>
+            ${proUsers.length > 0 ? `<div class="text-orange-400">⚠️ Legacy Pro: ${proUsers.length}</div>` : ''}
         `;
     }
     
     // ==================== ROW 2: REVENUE ====================
     
-    // Pro Revenue Tile
+    // Pro Revenue Tile - REMOVED (Pro tier no longer exists)
+    // Hide the Pro revenue tile if it exists
     const statProRevenue = $('adminStatProRevenue');
     const statProRevenueSub = $('adminStatProRevenueSub');
-    if (statProRevenue) statProRevenue.textContent = `$${(proRevenue / 1000).toFixed(0)}k`;
-    if (statProRevenueSub) statProRevenueSub.textContent = `${proPaidUsers.length} paid × $25k`;
+    if (statProRevenue) statProRevenue.textContent = '$0k';
+    if (statProRevenueSub) statProRevenueSub.textContent = 'Pro tier removed';
     
     const proRevenueDetail = $('adminStatProRevenueDetail');
     if (proRevenueDetail) {
-        const paidList = proPaidUsers.map(u => 
-            `<div class="truncate">💰 ${u.username || u.email.split('@')[0]} - $25k</div>`
-        ).join('');
         proRevenueDetail.innerHTML = `
-            <div class="mb-1 text-yellow-400 font-bold">$${proRevenue.toLocaleString()}/mo</div>
-            ${paidList || '<div class="text-gray-500">No paid Pro users</div>'}
-            ${proTrialUsers.length > 0 ? `<div class="text-cyan-400 mt-1">🎁 ${proTrialUsers.length} on free trial</div>` : ''}
+            <div class="text-gray-500">Pro tier has been retired</div>
+            <div class="text-gray-500 text-xs mt-1">All Pro users migrated to Starter</div>
         `;
     }
     
-    // Elite Revenue Tile
+    // Elite Revenue Tile (now $25k/month)
     const statEliteRevenue = $('adminStatEliteRevenue');
     const statEliteRevenueSub = $('adminStatEliteRevenueSub');
     if (statEliteRevenue) statEliteRevenue.textContent = `$${(eliteRevenue / 1000).toFixed(0)}k`;
     if (statEliteRevenueSub) {
-        if (proratedCount > 0) {
-            statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid (${proratedCount} prorated)`;
-        } else {
-            statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid × $50k`;
-        }
+        statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid × $25k`;
     }
     
     const eliteRevenueDetail = $('adminStatEliteRevenueDetail');
@@ -2454,11 +2412,11 @@ window.updateAdminStats = async function(users) {
     const premiumDetail = $('adminStatPremiumDetail');
     if (premiumDetail) {
         // Get list of premium listings
-        const premiumListings = vehicles.filter(p => 
-            VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false)
+        const premiumListings = properties.filter(p => 
+            PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false)
         );
         const premiumList = premiumListings.slice(0, 4).map(p => {
-            const isTrial = VehicleDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
+            const isTrial = PropertyDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
             const icon = isTrial ? '🎁' : '💰';
             return `<div class="truncate">${icon} ${p.title}</div>`;
         }).join('');
@@ -2476,17 +2434,16 @@ window.updateAdminStats = async function(users) {
     const statTotalRevenueSub = $('adminStatTotalRevenueSub');
     if (statTotalRevenue) statTotalRevenue.textContent = `$${(totalRevenue / 1000).toFixed(0)}k`;
     if (statTotalRevenueSub) {
-        const totalTrials = proTrialUsers.length + eliteTrialUsers.length;
+        const totalTrials = eliteTrialUsers.length;  // Only Elite has trials now
         statTotalRevenueSub.textContent = totalTrials > 0 ? `${totalTrials} on free trial` : 'Current revenue';
     }
     
     const totalRevenueDetail = $('adminStatTotalRevenueDetail');
     if (totalRevenueDetail) {
-        const totalTrials = proTrialUsers.length + eliteTrialUsers.length;
+        const totalTrials = eliteTrialUsers.length;  // Only Elite has trials now
         totalRevenueDetail.innerHTML = `
             <div class="text-green-400 font-bold mb-2">$${totalRevenue.toLocaleString()}</div>
             <div class="space-y-1 text-xs">
-                <div>⭐ Pro: $${proRevenue.toLocaleString()}/mo</div>
                 <div>👑 Elite: $${eliteRevenue.toLocaleString()}/mo</div>
                 <div>🏆 Premium: $${premiumWeeklyRevenue.toLocaleString()}/wk</div>
             </div>
@@ -2495,9 +2452,9 @@ window.updateAdminStats = async function(users) {
     }
     
     // ==================== TOTAL LISTINGS STAT ====================
-    const totalListings = vehicles.length;
-    const availableListings = vehicles.filter(p => state.availability[p.id] !== false).length;
-    const soldListings = totalListings - availableListings;
+    const totalListings = properties.length;
+    const availableListings = properties.filter(p => state.availability[p.id] !== false).length;
+    const rentedListings = totalListings - availableListings;
     
     const statListings = $('adminStatListings');
     const statListingsAvailable = $('adminStatListingsAvailable');
@@ -2506,7 +2463,7 @@ window.updateAdminStats = async function(users) {
         statListings.textContent = totalListings;
     }
     if (statListingsAvailable) {
-        statListingsAvailable.textContent = `(${availableListings} available, ${soldListings} sold)`;
+        statListingsAvailable.textContent = `(${availableListings} available, ${rentedListings} rented)`;
     }
 };
 
@@ -2572,9 +2529,6 @@ window.loadAllUsers = async function() {
         // Check for subscription alerts
         checkSubscriptionAlerts();
         
-        // Render subscription alerts panel
-        renderSubscriptionAlertsPanel();
-        
     } catch (error) {
         console.error('Error loading users:', error);
         container.innerHTML = '<p class="text-red-400">Error loading users.</p>';
@@ -2589,13 +2543,14 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
     const pending = pendingRequests || window.adminPendingRequests || [];
     const pendingEmails = pending.map(r => r.userEmail?.toLowerCase());
     
-    // Sort users into tier groups
-    const tierOrder = { 'owner': 0, 'elite': 1, 'pro': 2, 'starter': 3 };
+    // Sort users into tier groups (Pro tier removed)
+    const tierOrder = { 'owner': 0, 'elite': 1, 'starter': 2 };
     const sortedUsers = [...users].sort((a, b) => {
         const aIsAdmin = TierService.isMasterAdmin(a.email);
         const bIsAdmin = TierService.isMasterAdmin(b.email);
-        const aTier = aIsAdmin ? 'owner' : (a.tier || 'starter');
-        const bTier = bIsAdmin ? 'owner' : (b.tier || 'starter');
+        // Treat legacy pro users as starter
+        const aTier = aIsAdmin ? 'owner' : (a.tier === 'elite' ? 'elite' : 'starter');
+        const bTier = bIsAdmin ? 'owner' : (b.tier === 'elite' ? 'elite' : 'starter');
         
         // First sort by tier
         if (tierOrder[aTier] !== tierOrder[bTier]) {
@@ -2605,12 +2560,11 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
         return (a.username || a.email).localeCompare(b.username || b.email);
     });
     
-    // Group users by tier
+    // Group users by tier (Pro merged into Starter for display)
     const groups = {
         owner: sortedUsers.filter(u => TierService.isMasterAdmin(u.email)),
         elite: sortedUsers.filter(u => !TierService.isMasterAdmin(u.email) && u.tier === 'elite'),
-        pro: sortedUsers.filter(u => !TierService.isMasterAdmin(u.email) && u.tier === 'pro'),
-        starter: sortedUsers.filter(u => !TierService.isMasterAdmin(u.email) && (!u.tier || u.tier === 'starter'))
+        starter: sortedUsers.filter(u => !TierService.isMasterAdmin(u.email) && (!u.tier || u.tier === 'starter' || u.tier === 'pro'))
     };
     
     // Render function for individual user card
@@ -2623,23 +2577,13 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             ? { icon: '👑', name: 'Owner', bgColor: 'bg-red-600', maxListings: Infinity }
             : (TIERS[user.tier] || TIERS.starter);
         
-        // CRITICAL: Use OwnershipService for consistent vehicle ownership
-        const userVehicles = OwnershipService.getVehiclesForOwner(user.email);
-        const listingCount = userVehicles.length;
+        // CRITICAL: Use OwnershipService for consistent property ownership
+        const userProperties = OwnershipService.getPropertiesForOwner(user.email);
+        const listingCount = userProperties.length;
         const maxListings = (isUserMasterAdmin || tierData.maxListings === Infinity) ? '∞' : tierData.maxListings;
         const escapedEmail = user.email.replace(/'/g, "\\'");
         const escapedId = user.id;
-        // NEVER use username - prefer displayName, then firstName+lastName, then email prefix
-        let displayName;
-        if (user.displayName) {
-            displayName = user.displayName;
-        } else if (user.firstName && user.lastName) {
-            displayName = user.firstName + ' ' + user.lastName;
-        } else if (user.firstName) {
-            displayName = user.firstName;
-        } else {
-            displayName = user.email.split('@')[0];
-        }
+        const displayName = user.username || user.email.split('@')[0];
         
         // Format activity times
         const lastLogin = user.lastLogin?.toDate 
@@ -2654,21 +2598,21 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             ? user.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             : 'Unknown';
         
-        // Calculate vehicle type breakdown
+        // Calculate property type breakdown
         const propTypeBreakdown = {};
         const interiorBreakdown = { 'Walk-in': 0, 'Instance': 0 };
-        userVehicles.forEach(p => {
+        userProperties.forEach(p => {
             const pType = p.type || 'unknown';
             propTypeBreakdown[pType] = (propTypeBreakdown[pType] || 0) + 1;
             if (p.interiorType === 'Walk-in') interiorBreakdown['Walk-in']++;
             else if (p.interiorType === 'Instance') interiorBreakdown['Instance']++;
         });
         
-        // Format vehicle type breakdown for display (clickable)
+        // Format property type breakdown for display (clickable)
         let propBreakdownHTML = '';
         const typeIcons = { house: '🏠', apartment: '🏢', condo: '🏨', villa: '🏡', hotel: '🏩', office: '🏢', warehouse: '🏭', hideout: '🏚️' };
         
-        if (userVehicles.length > 0) {
+        if (userProperties.length > 0) {
             const typeEntries = Object.entries(propTypeBreakdown)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 3) // Show top 3
@@ -2679,7 +2623,7 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                 })
                 .join(' <span class="text-gray-600">•</span> ');
             
-            const walkinPct = Math.round((interiorBreakdown['Walk-in'] / userVehicles.length) * 100);
+            const walkinPct = Math.round((interiorBreakdown['Walk-in'] / userProperties.length) * 100);
             const instancePct = 100 - walkinPct;
             
             propBreakdownHTML = `
@@ -2692,43 +2636,43 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             `;
         }
         
-        const vehiclesHTML = userVehicles.length > 0 
-            ? userVehicles.map((p, index) => {
-                const title = p.title || p.name || 'Unnamed Vehicle';
+        const propertiesHTML = userProperties.length > 0 
+            ? userProperties.map((p, index) => {
+                const title = p.title || p.name || 'Unnamed Property';
                 const isAvailable = state.availability[p.id] !== false;
                 const typeIcon = typeIcons[p.type] || '🏠';
                 const interiorIcon = p.interiorType === 'Walk-in' ? '🚶' : '🌀';
-                // Check premium status from vehicle data (real-time synced from Firestore)
-                const isPremium = VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false);
+                // Check premium status from property data (real-time synced from Firestore)
+                const isPremium = PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false);
                 const premiumIndicator = isPremium ? '<span class="text-amber-400" title="Premium Listing - $10k/week">👑</span>' : '';
                 return `
-                    <div class="flex items-center justify-between py-1.5 border-b border-gray-700/50 last:border-0 user-vehicle-item transition-all duration-300" data-type="${p.type || ''}" data-interior="${p.interiorType || ''}" data-vehicleid="${p.id}">
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-700/50 last:border-0 user-property-item transition-all duration-300" data-type="${p.type || ''}" data-interior="${p.interiorType || ''}" data-propertyid="${p.id}">
                         <span class="text-gray-300 text-xs flex items-center gap-1">
                             <span class="text-gray-500">${index + 1}.</span>
                             <span title="${(p.type || 'unknown').charAt(0).toUpperCase() + (p.type || 'unknown').slice(1)}">${typeIcon}</span>
                             <span title="${p.interiorType || 'Unknown'}" class="text-gray-600">${interiorIcon}</span>
                             ${premiumIndicator}
-                            <a onclick="viewVehicleStats(${p.id})" class="hover:text-cyan-400 cursor-pointer hover:underline transition">${title}</a>
+                            <a onclick="viewPropertyStats(${p.id})" class="hover:text-cyan-400 cursor-pointer hover:underline transition">${title}</a>
                         </span>
                         <span class="text-xs ${isAvailable ? 'text-green-400' : 'text-red-400'}">${isAvailable ? '🟢' : '🔴'}</span>
                     </div>
                 `;
             }).join('')
-            : '<p class="text-gray-500 text-xs italic">No vehicles listed</p>';
+            : '<p class="text-gray-500 text-xs italic">No properties listed</p>';
         
         // Build premium listings tracking section
         let premiumTrackingHTML = '';
-        const premiumListings = userVehicles.filter(p => {
-            const isPremium = VehicleDataService.getValue(p.id, 'isPremium', p.isPremium || false);
-            const isPremiumTrial = VehicleDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
+        const premiumListings = userProperties.filter(p => {
+            const isPremium = PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false);
+            const isPremiumTrial = PropertyDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
             return isPremium && !isPremiumTrial;
         });
         
         if (premiumListings.length > 0) {
             const premiumItems = premiumListings.map(p => {
-                const title = p.title || p.name || 'Vehicle';
-                const premiumLastPayment = VehicleDataService.getValue(p.id, 'premiumLastPayment', p.premiumLastPayment || '');
-                const weeklyFee = VehicleDataService.getValue(p.id, 'premiumWeeklyFee', p.premiumWeeklyFee || 10000);
+                const title = p.title || p.name || 'Property';
+                const premiumLastPayment = PropertyDataService.getValue(p.id, 'premiumLastPayment', p.premiumLastPayment || '');
+                const weeklyFee = PropertyDataService.getValue(p.id, 'premiumWeeklyFee', p.premiumWeeklyFee || 10000);
                 
                 let lastPaidDisplay = 'Never';
                 let nextDueDisplay = 'Not set';
@@ -2834,15 +2778,15 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             </span>
         ` : '';
         
-        // Subscription tracking HTML for Pro/Elite
+        // Subscription tracking HTML for Elite only (Pro tier removed, Starter is free)
         let subscriptionHTML = '';
-        if (!isUserMasterAdmin && (user.tier === 'pro' || user.tier === 'elite')) {
+        if (!isUserMasterAdmin && user.tier === 'elite') {
             const subLastPaid = user.subscriptionLastPaid || '';
-            // Use actual subscription amount if set (for prorated upgrades), otherwise default
-            const defaultPrice = user.tier === 'pro' ? 25000 : 50000;
+            // Elite is now $25k/month
+            const defaultPrice = 25000;
             const actualAmount = user.subscriptionAmount !== undefined ? user.subscriptionAmount : defaultPrice;
             const tierPrice = '$' + actualAmount.toLocaleString();
-            const tierName = user.tier === 'pro' ? 'Pro ⭐' : 'Elite 👑';
+            const tierName = 'Elite 👑';
             const isFreeTrial = user.isFreeTrial === true;
             const trialEndDate = user.trialEndDate || '';
             const isProratedUpgrade = user.isProratedUpgrade === true;
@@ -2981,24 +2925,30 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             `;
         }
         
-        // Build action buttons based on current tier
+        // Build action buttons based on current tier (Pro tier removed - only Starter and Elite)
         let actionButtonsHTML = '';
         if (!isUserMasterAdmin) {
             const buttons = [];
             
-            if (user.tier === 'starter' || user.tier === 'pro') {
-                // Starter (or legacy Pro) can upgrade to Elite
-                buttons.push(`<button onclick="adminUpgradeUser('${escapedEmail}', 'elite', '${user.tier}')" 
-                    class="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
+            if (user.tier === 'starter' || user.tier === 'pro' || !user.tier) {
+                // Starter (or legacy Pro) can upgrade to Elite only
+                buttons.push(`<button onclick="adminUpgradeUser('${escapedEmail}', 'elite', '${user.tier || 'starter'}')" 
+                    class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
                     👑 Upgrade to Elite
                 </button>`);
             } else if (user.tier === 'elite') {
-                // Elite can downgrade to Starter
+                // Elite can only downgrade to Starter
                 buttons.push(`<button onclick="adminDowngradeUser('${escapedEmail}', '${user.tier}', 'starter')" 
                     class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
                     🌱 Downgrade to Starter
                 </button>`);
             }
+            
+            // Reset Password button
+            buttons.push(`<button onclick="openResetPasswordModal('${escapedEmail}', '${displayName.replace(/'/g, "\\'")}')" 
+                class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2 rounded-lg font-bold text-xs hover:opacity-90 transition">
+                🔑 Reset Password
+            </button>`);
             
             // Delete button for all
             buttons.push(`<button onclick="adminDeleteUser('${escapedId}', '${escapedEmail}')" 
@@ -3023,15 +2973,13 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                             <span class="text-xl">${tierData.icon}</span>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span id="displayName_${escapedId}" class="text-white font-bold">${displayName}</span>
-                                    <button onclick="event.stopPropagation(); adminEditDisplayName('${escapedId}', '${escapedEmail}', '${displayName.replace(/'/g, "\\\\'")}')" 
-                                            class="text-gray-500 hover:text-cyan-400 text-xs transition" title="Edit display name">✏️</button>
+                                    <span class="text-white font-bold">${displayName}</span>
                                     ${pendingBadge}
                                 </div>
                                 <div class="text-gray-500 text-xs truncate">${user.email}</div>
                             </div>
                         </div>
-                        <!-- Row 2: Tier badge, Phone, Listings, Vehicles toggle -->
+                        <!-- Row 2: Tier badge, Phone, Listings, Properties toggle -->
                         <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
                             <span class="px-2 py-0.5 rounded ${tierData.bgColor} text-white font-bold">${tierData.name}</span>
                             ${user.managedServicesInterest ? `<span class="px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold flex items-center gap-1 animate-pulse" title="Interested in Managed Services">
@@ -3044,7 +2992,7 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                             </span>` : ''}
                             <span class="text-gray-400">${listingCount}/${maxListings} listings</span>
                             <button onclick="toggleUserProperties('${escapedId}')" class="text-cyan-400 hover:underline flex items-center gap-1">
-                                <span id="propToggle_${escapedId}">▶</span> Vehicles (${listingCount})
+                                <span id="propToggle_${escapedId}">▶</span> Properties (${listingCount})
                             </button>
                         </div>
                         <!-- Row 3: Activity Info (compact) -->
@@ -3057,15 +3005,15 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                                 <span class="text-gray-500">🕐 Last Login:</span> 
                                 <span class="text-gray-300">${lastLogin}</span>
                             </div>
-                            <div title="Last vehicle posted">
+                            <div title="Last property posted">
                                 <span class="text-gray-500">🏠 Last Post:</span> 
                                 <span class="text-gray-300">${lastPropertyPost}</span>
                             </div>
                         </div>
                         ${propBreakdownHTML}
-                        <!-- Vehicles List -->
+                        <!-- Properties List -->
                         <div id="propList_${escapedId}" class="hidden mt-2 bg-gray-900/50 rounded-lg p-2 max-h-32 overflow-y-auto">
-                            ${vehiclesHTML}
+                            ${propertiesHTML}
                         </div>
                         ${subscriptionHTML}
                         ${premiumTrackingHTML}
@@ -3079,24 +3027,8 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
     // Render grouped sections
     let html = '';
     
-    // VIP Leads section - Users interested in managed services (at the top!)
-    const vipLeads = sortedUsers.filter(u => u.managedServicesInterest === true && !TierService.isMasterAdmin(u.email));
-    if (vipLeads.length > 0) {
-        html += `
-            <div class="mb-6 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-xl p-4 border border-purple-500/50">
-                <div class="flex items-center gap-2 mb-3 pb-2 border-b border-purple-500/50 cursor-pointer hover:opacity-80 transition" onclick="toggleUserGroup('vipLeadsGroup')">
-                    <span id="vipLeadsGroupToggle" class="text-gray-400 transition">▼</span>
-                    <span class="text-xl">🚀</span>
-                    <h5 class="text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text font-black">VIP LEADS - Managed Services Interest</h5>
-                    <span class="text-purple-300 text-sm font-bold">(${vipLeads.length})</span>
-                    <span class="ml-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] px-2 py-1 rounded-full font-bold animate-pulse">💰 HIGH VALUE</span>
-                </div>
-                <div id="vipLeadsGroup" class="space-y-3">
-                    ${vipLeads.map(renderUserCard).join('')}
-                </div>
-            </div>
-        `;
-    }
+    // VIP Leads section - REMOVED per user request
+    // (managedServicesInterest feature has been deprecated)
     
     // Owner/Admin section (expanded by default)
     if (groups.owner.length > 0) {
@@ -3212,7 +3144,7 @@ window.toggleUserGroup = function(groupId) {
     }
 };
 
-// Filter user vehicles by type (House, Apartment, etc.)
+// Filter user properties by type (House, Apartment, etc.)
 window.filterUserPropertiesByType = function(userId, type) {
     const list = $('propList_' + userId);
     if (!list) return;
@@ -3222,8 +3154,8 @@ window.filterUserPropertiesByType = function(userId, type) {
     const toggle = $('propToggle_' + userId);
     if (toggle) toggle.textContent = '▼';
     
-    // Get all vehicle items
-    const items = list.querySelectorAll('.user-vehicle-item');
+    // Get all property items
+    const items = list.querySelectorAll('.user-property-item');
     let visibleCount = 0;
     
     items.forEach(item => {
@@ -3245,13 +3177,13 @@ window.filterUserPropertiesByType = function(userId, type) {
     if (!list.querySelector('.show-all-btn')) {
         const showAllBtn = document.createElement('button');
         showAllBtn.className = 'show-all-btn mt-2 text-xs text-cyan-400 hover:text-cyan-300 underline cursor-pointer';
-        showAllBtn.textContent = '↩ Show All Vehicles';
+        showAllBtn.textContent = '↩ Show All Properties';
         showAllBtn.onclick = () => resetUserPropertiesFilter(userId);
         list.appendChild(showAllBtn);
     }
 };
 
-// Filter user vehicles by interior type (Walk-in, Instance)
+// Filter user properties by interior type (Walk-in, Instance)
 window.filterUserPropertiesByInterior = function(userId, interiorType) {
     const list = $('propList_' + userId);
     if (!list) return;
@@ -3261,8 +3193,8 @@ window.filterUserPropertiesByInterior = function(userId, interiorType) {
     const toggle = $('propToggle_' + userId);
     if (toggle) toggle.textContent = '▼';
     
-    // Get all vehicle items
-    const items = list.querySelectorAll('.user-vehicle-item');
+    // Get all property items
+    const items = list.querySelectorAll('.user-property-item');
     let visibleCount = 0;
     
     items.forEach(item => {
@@ -3277,24 +3209,24 @@ window.filterUserPropertiesByInterior = function(userId, interiorType) {
     });
     
     const icon = interiorType === 'Walk-in' ? '🚶' : '🌀';
-    showToast(`${icon} Showing ${visibleCount} ${interiorType} vehicles - Click "Show All" to reset`, 'info');
+    showToast(`${icon} Showing ${visibleCount} ${interiorType} properties - Click "Show All" to reset`, 'info');
     
     // Add a "Show All" button if not already present
     if (!list.querySelector('.show-all-btn')) {
         const showAllBtn = document.createElement('button');
         showAllBtn.className = 'show-all-btn mt-2 text-xs text-cyan-400 hover:text-cyan-300 underline cursor-pointer';
-        showAllBtn.textContent = '↩ Show All Vehicles';
+        showAllBtn.textContent = '↩ Show All Properties';
         showAllBtn.onclick = () => resetUserPropertiesFilter(userId);
         list.appendChild(showAllBtn);
     }
 };
 
-// Reset user vehicles filter
+// Reset user properties filter
 window.resetUserPropertiesFilter = function(userId) {
     const list = $('propList_' + userId);
     if (!list) return;
     
-    const items = list.querySelectorAll('.user-vehicle-item');
+    const items = list.querySelectorAll('.user-property-item');
     items.forEach(item => {
         item.style.display = '';
         item.style.background = '';
@@ -3304,7 +3236,7 @@ window.resetUserPropertiesFilter = function(userId) {
     const showAllBtn = list.querySelector('.show-all-btn');
     if (showAllBtn) showAllBtn.remove();
     
-    showToast('Showing all vehicles', 'info');
+    showToast('Showing all properties', 'info');
 };
 
 window.filterAdminUsers = function() {
@@ -3316,6 +3248,8 @@ window.filterAdminUsers = function() {
     renderAdminUsersList(filtered);
 };
 
+
+// ==================== SUBSCRIPTION COLLECTION ALERTS ====================
 /**
  * Render subscription collection alerts panel
  * Shows Pro and Elite users whose subscriptions are due for payment
@@ -3331,7 +3265,6 @@ window.renderSubscriptionAlertsPanel = async function() {
     // Only show for master admin
     if (!TierService.isMasterAdmin(auth?.currentUser?.email)) {
         panel.classList.add('hidden');
-        window.subscriptionAlertCount = 0;
         return;
     }
     
@@ -3347,54 +3280,52 @@ window.renderSubscriptionAlertsPanel = async function() {
         const overdue = [];
         const dueToday = [];
         const dueTomorrow = [];
+        const neverPaid = [];
         
         usersSnapshot.forEach(doc => {
             const user = doc.data();
-            if (!user.tier || user.tier === 'starter' || user.tier === 'owner') return;
-            if (user.isTrial) return; // Skip trial users
-            if (TierService.isMasterAdmin(user.email)) return; // Skip admin
             
-            // Check subscriptionLastPaid to calculate due date (monthly subscriptions)
+            // Only Elite users have subscriptions now (Starter is free, Pro removed)
+            if (user.tier !== 'elite') return;
+            if (TierService.isMasterAdmin(user.email)) return;
+            if (user.isTrial || user.isFreeTrial) return; // Skip trial users
+            
+            // Use subscriptionLastPaid + 30 days as the canonical due date calculation
+            // This matches what's shown on user cards
             let dueDate = null;
             
             if (user.subscriptionLastPaid) {
-                // Parse date (format: YYYY-MM-DD)
+                // Parse the date string (format: YYYY-MM-DD)
                 const [year, month, day] = user.subscriptionLastPaid.split('-').map(Number);
                 const lastPaid = new Date(year, month - 1, day);
                 dueDate = new Date(lastPaid);
                 dueDate.setDate(dueDate.getDate() + 30); // Monthly subscription
-            } else if (user.tierChangeDate) {
-                // Fallback to tier change date
-                let changeDate;
-                if (user.tierChangeDate.toDate) {
-                    changeDate = user.tierChangeDate.toDate();
-                } else if (typeof user.tierChangeDate === 'string') {
-                    changeDate = new Date(user.tierChangeDate);
-                }
-                
-                if (changeDate) {
-                    dueDate = new Date(changeDate);
-                    while (dueDate < today) {
-                        dueDate.setDate(dueDate.getDate() + 30);
-                    }
-                }
+            } else {
+                // Never paid - add to neverPaid list
+                neverPaid.push({
+                    odId: doc.id,
+                    email: user.email,
+                    username: user.username || user.email.split('@')[0],
+                    tier: user.tier,
+                    amount: 25000,
+                    daysUntilDue: null
+                });
+                return;
             }
             
-            if (!dueDate || isNaN(dueDate.getTime())) return;
+            if (!dueDate || isNaN(dueDate.getTime())) {
+                return;
+            }
             
             const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
             const daysUntilDue = Math.floor((dueDateOnly - today) / (1000 * 60 * 60 * 24));
-            
-            // Use actual subscription amount if set, otherwise default
-            const defaultAmount = user.tier === 'elite' ? 50000 : 25000;
-            const actualAmount = user.subscriptionAmount !== undefined ? user.subscriptionAmount : defaultAmount;
             
             const subInfo = {
                 odId: doc.id,
                 email: user.email,
                 username: user.username || user.email.split('@')[0],
                 tier: user.tier,
-                amount: actualAmount,
+                amount: 25000, // Elite is $25k/month
                 dueDate: dueDate,
                 dueDateFormatted: dueDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
                 daysUntilDue: daysUntilDue
@@ -3409,23 +3340,16 @@ window.renderSubscriptionAlertsPanel = async function() {
             }
         });
         
-        const total = overdue.length + dueToday.length + dueTomorrow.length;
-        
-        // Set global count for notification badges
-        window.subscriptionAlertCount = total;
+        const total = overdue.length + dueToday.length + dueTomorrow.length + neverPaid.length;
         
         if (total === 0) {
             panel.classList.add('hidden');
-            // Refresh badges to clear subscription count
-            if (typeof NotificationManager !== 'undefined' && NotificationManager.refreshBadges) {
-                NotificationManager.refreshBadges();
-            }
             return;
         }
         
         panel.classList.remove('hidden');
         
-        const isUrgent = overdue.length > 0;
+        const isUrgent = overdue.length > 0 || neverPaid.length > 0;
         const isWarning = dueToday.length > 0;
         
         const borderColor = isUrgent ? 'border-red-500/70' : isWarning ? 'border-orange-500/70' : 'border-cyan-500/70';
@@ -3434,7 +3358,7 @@ window.renderSubscriptionAlertsPanel = async function() {
         
         let html = `
             <div class="glass-effect rounded-2xl shadow-2xl overflow-hidden border-2 ${borderColor}">
-                <div class="bg-gradient-to-r ${headerGradient} px-6 py-4">
+                <div class="bg-gradient-to-r ${headerGradient} px-6 py-4 cursor-pointer" onclick="toggleSubscriptionPanel()">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">${headerIcon}</span>
@@ -3443,15 +3367,29 @@ window.renderSubscriptionAlertsPanel = async function() {
                                 <p class="text-white/80 text-sm">${total} subscription${total !== 1 ? 's' : ''} need${total === 1 ? 's' : ''} attention</p>
                             </div>
                         </div>
-                        <button onclick="toggleSubscriptionPanel()" id="subscriptionPanelToggle" class="text-white/80 hover:text-white transition">
+                        <div id="subscriptionPanelToggle" class="text-white/80 hover:text-white transition">
                             <svg class="w-6 h-6 transform transition-transform" id="subscriptionPanelArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
-                        </button>
+                        </div>
                     </div>
                 </div>
                 <div id="subscriptionPanelContent" class="p-4 space-y-4">
         `;
+        
+        // Never paid section (highest priority)
+        if (neverPaid.length > 0) {
+            html += `
+                <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/50">
+                    <h4 class="text-red-400 font-bold mb-3 flex items-center gap-2">
+                        <span>🚨</span> NEVER PAID (${neverPaid.length})
+                    </h4>
+                    <div class="space-y-2">
+                        ${neverPaid.map(sub => renderSubscriptionItem(sub, 'never')).join('')}
+                    </div>
+                </div>
+            `;
+        }
         
         if (overdue.length > 0) {
             html += `
@@ -3499,7 +3437,10 @@ window.renderSubscriptionAlertsPanel = async function() {
         
         panel.innerHTML = html;
         
-        // Refresh notification badges
+        // Set global subscription alert count for notification badges
+        window.subscriptionAlertCount = total;
+        
+        // Only refresh badges, NOT panels (to avoid infinite loop)
         if (typeof NotificationManager !== 'undefined' && NotificationManager.refreshBadges) {
             NotificationManager.refreshBadges();
         }
@@ -3513,15 +3454,17 @@ window.renderSubscriptionAlertsPanel = async function() {
 
 function renderSubscriptionItem(sub, urgency) {
     const statusColors = {
+        never: 'text-red-300',
         overdue: 'text-red-300',
         today: 'text-orange-300',
-        tomorrow: 'text-cyan-300'
+        tomorrow: 'text-yellow-300'
     };
     
     const borderColors = {
+        never: 'border-l-red-500',
         overdue: 'border-l-red-500',
         today: 'border-l-orange-500',
-        tomorrow: 'border-l-cyan-500'
+        tomorrow: 'border-l-yellow-500'
     };
     
     const tierIcon = sub.tier === 'elite' ? '👑' : '⭐';
@@ -3530,7 +3473,12 @@ function renderSubscriptionItem(sub, urgency) {
     
     // Generate reminder message
     let reminderMsg = '';
-    if (sub.daysUntilDue === 1) {
+    let dueDisplay = sub.dueDateFormatted || 'Never paid';
+    
+    if (urgency === 'never' || sub.daysUntilDue === null) {
+        reminderMsg = `Hey ${sub.username}! 👋 Welcome to ${tierLabel}! We haven't received your first subscription payment yet. 💰 $${sub.amount.toLocaleString()} for the ${tierLabel} plan. Let me know when you're ready to meet up!`;
+        dueDisplay = 'Never paid';
+    } else if (sub.daysUntilDue === 1) {
         reminderMsg = `Hey ${sub.username}! 👋 Just a friendly reminder that your ${tierLabel} subscription payment of $${sub.amount.toLocaleString()} is due tomorrow (${sub.dueDateFormatted}). Let me know if you have any questions!`;
     } else if (sub.daysUntilDue === 0) {
         reminderMsg = `Hey ${sub.username}! 👋 Just a friendly reminder that your ${tierLabel} subscription payment of $${sub.amount.toLocaleString()} is due today (${sub.dueDateFormatted}). Let me know if you have any questions!`;
@@ -3543,7 +3491,7 @@ function renderSubscriptionItem(sub, urgency) {
     const escapedEmail = sub.email.replace(/'/g, "\\'");
     
     return `
-        <div class="bg-gray-800/50 rounded-lg border border-gray-700 border-l-4 ${borderColors[urgency]} p-3 flex items-center justify-between gap-3 hover:bg-gray-700/50 transition cursor-pointer" onclick="goToAdminUserByEmail('${escapedEmail}')">
+        <div class="bg-gray-800/50 rounded-lg border border-gray-700 border-l-4 ${borderColors[urgency] || 'border-l-gray-500'} p-3 flex items-center justify-between gap-3 hover:bg-gray-700/50 transition cursor-pointer" onclick="goToAdminUserByEmail('${escapedEmail}')">
             <div class="flex-1 min-w-0">
                 <div class="text-white font-medium truncate flex items-center gap-2">
                     <span class="${tierColor}">${tierIcon}</span>
@@ -3551,7 +3499,7 @@ function renderSubscriptionItem(sub, urgency) {
                     <span class="text-xs ${tierColor} font-bold uppercase">${tierLabel}</span>
                 </div>
                 <div class="text-gray-400 text-sm">${sub.email}</div>
-                <div class="${statusColors[urgency]} text-xs">Due: ${sub.dueDateFormatted}</div>
+                <div class="${statusColors[urgency] || 'text-gray-400'} text-xs">Due: ${dueDisplay}</div>
             </div>
             <div class="text-right">
                 <div class="text-white font-bold">$${sub.amount.toLocaleString()}</div>
@@ -3569,26 +3517,33 @@ function renderSubscriptionItem(sub, urgency) {
  * Navigate to admin panel and highlight a user by email
  */
 window.goToAdminUserByEmail = function(email) {
-    
-    // Switch to admin panel tab
+    // Switch to admin panel tab (use 'admin' not 'adminPanel')
     if (typeof switchDashboardTab === 'function') {
         switchDashboardTab('admin');
+    } else {
+        console.error('[goToAdminUserByEmail] switchDashboardTab function not found');
     }
     
     // Wait for admin panel to render, then search for and highlight the user
     setTimeout(function() {
         const searchInput = $('adminUserSearch');
+        
         if (searchInput) {
             searchInput.value = email;
+            // Trigger the search
             if (typeof filterAdminUsers === 'function') {
                 filterAdminUsers();
             }
             
+            // Scroll to users section and highlight
             setTimeout(function() {
+                // Find and highlight the user card using data-email attribute
                 const userCard = document.querySelector(`.admin-user-card[data-email="${email}"]`);
+                
                 if (userCard) {
                     userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     userCard.classList.add('ring-2', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-gray-900');
+                    // Remove highlight after 3 seconds
                     setTimeout(() => {
                         userCard.classList.remove('ring-2', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-gray-900');
                     }, 3000);
@@ -3616,3 +3571,461 @@ window.copySubscriptionReminder = function(message) {
     });
 };
 
+// Event delegation handler for subscription panel clicks
+window.handleSubscriptionPanelClick = function(event) {
+    // Check if clicked on the header area (gradient background)
+    const header = event.target.closest('.bg-gradient-to-r');
+    if (header) {
+        toggleSubscriptionPanel();
+        return;
+    }
+    
+    // Check if clicked on copy button
+    if (event.target.closest('button') && event.target.textContent.includes('Copy')) {
+        // The button's own onclick should handle this
+        return;
+    }
+    
+    // Check if clicked on a subscription item row (has cursor-pointer)
+    const subItem = event.target.closest('.cursor-pointer');
+    if (subItem && subItem.getAttribute('onclick')?.includes('goToAdminUserByEmail')) {
+        // Extract email from onclick
+        const match = subItem.getAttribute('onclick')?.match(/goToAdminUserByEmail\('([^']+)'\)/);
+        if (match) {
+            goToAdminUserByEmail(match[1]);
+        }
+    }
+};
+
+// ============================================================
+// PREMIUM LISTING ALERTS PANEL
+// ============================================================
+
+/**
+ * Render premium listing collection alerts panel
+ * Shows all premium listings with overdue/due weekly fees
+ */
+window.renderPremiumAlertsPanel = async function() {
+    const panel = $('premiumNotificationsPanel');
+    if (!panel) {
+        return;
+    }
+    
+    // Only show for master admin
+    if (!TierService.isMasterAdmin(auth?.currentUser?.email)) {
+        panel.classList.add('hidden');
+        return;
+    }
+    
+    try {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        const overdue = [];
+        const dueToday = [];
+        const dueTomorrow = [];
+        const neverPaid = [];
+        
+        // Get all premium listings from the global properties array
+        const premiumListings = (typeof properties !== 'undefined' && Array.isArray(properties))
+            ? properties.filter(p => {
+                const isPremium = PropertyDataService.getValue(p.id, 'isPremium', p.isPremium || false);
+                const isPremiumTrial = PropertyDataService.getValue(p.id, 'isPremiumTrial', p.isPremiumTrial || false);
+                return isPremium && !isPremiumTrial;
+            })
+            : [];
+        
+        premiumListings.forEach(p => {
+            const title = p.title || p.name || 'Property ' + p.id;
+            const premiumLastPayment = PropertyDataService.getValue(p.id, 'premiumLastPayment', p.premiumLastPayment || '');
+            const weeklyFee = PropertyDataService.getValue(p.id, 'premiumWeeklyFee', p.premiumWeeklyFee || 10000);
+            const ownerEmail = (p.ownerEmail || '').toLowerCase();
+            
+            // Get owner name
+            const ownerUser = window.adminUsersData?.find(u => u.email?.toLowerCase() === ownerEmail);
+            const ownerName = ownerUser?.username || ownerEmail.split('@')[0] || 'Unknown';
+            
+            let dueDate = null;
+            let daysUntilDue = null;
+            
+            if (premiumLastPayment) {
+                const [year, month, day] = premiumLastPayment.split('-').map(Number);
+                const lastDate = new Date(year, month - 1, day);
+                dueDate = new Date(lastDate);
+                dueDate.setDate(dueDate.getDate() + 7); // Weekly premium
+                
+                dueDate.setHours(0, 0, 0, 0);
+                daysUntilDue = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
+            }
+            
+            const premiumInfo = {
+                propertyId: p.id,
+                title: title,
+                ownerEmail: ownerEmail,
+                ownerName: ownerName,
+                amount: weeklyFee,
+                dueDate: dueDate,
+                dueDateFormatted: dueDate ? dueDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : null,
+                daysUntilDue: daysUntilDue,
+                lastPaid: premiumLastPayment
+            };
+            
+            if (!premiumLastPayment) {
+                neverPaid.push(premiumInfo);
+            } else if (daysUntilDue < 0) {
+                overdue.push(premiumInfo);
+            } else if (daysUntilDue === 0) {
+                dueToday.push(premiumInfo);
+            } else if (daysUntilDue === 1) {
+                dueTomorrow.push(premiumInfo);
+            }
+        });
+        
+        const total = overdue.length + dueToday.length + dueTomorrow.length + neverPaid.length;
+        
+        if (total === 0) {
+            panel.classList.add('hidden');
+            return;
+        }
+        
+        panel.classList.remove('hidden');
+        
+        const isUrgent = overdue.length > 0 || neverPaid.length > 0;
+        const isWarning = dueToday.length > 0;
+        
+        const borderColor = isUrgent ? 'border-amber-500/70' : isWarning ? 'border-orange-500/70' : 'border-cyan-500/70';
+        const headerGradient = isUrgent ? 'from-amber-600 to-orange-600' : isWarning ? 'from-orange-500 to-amber-500' : 'from-cyan-500 to-blue-500';
+        const headerIcon = isUrgent ? '👑' : isWarning ? '⏰' : '📅';
+        
+        let html = `
+            <div class="glass-effect rounded-2xl shadow-2xl overflow-hidden border-2 ${borderColor}">
+                <div class="bg-gradient-to-r ${headerGradient} px-6 py-4 cursor-pointer" onclick="togglePremiumPanel()">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${headerIcon}</span>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Premium Listing Collection Alert</h3>
+                                <p class="text-white/80 text-sm">${total} premium listing${total !== 1 ? 's' : ''} need${total === 1 ? 's' : ''} payment</p>
+                            </div>
+                        </div>
+                        <div id="premiumPanelToggle" class="text-white/80 hover:text-white transition">
+                            <svg class="w-6 h-6 transform transition-transform" id="premiumPanelArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="premiumPanelContent" class="p-4 space-y-4">
+        `;
+        
+        if (neverPaid.length > 0) {
+            html += `
+                <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/50">
+                    <h4 class="text-red-400 font-bold mb-3 flex items-center gap-2">
+                        <span>🚨</span> NEVER PAID (${neverPaid.length})
+                    </h4>
+                    <div class="space-y-2">
+                        ${neverPaid.map(p => renderPremiumItem(p, 'never')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (overdue.length > 0) {
+            html += `
+                <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/50">
+                    <h4 class="text-red-400 font-bold mb-3 flex items-center gap-2">
+                        <span>🚨</span> OVERDUE (${overdue.length})
+                    </h4>
+                    <div class="space-y-2">
+                        ${overdue.map(p => renderPremiumItem(p, 'overdue')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (dueToday.length > 0) {
+            html += `
+                <div class="bg-orange-900/30 rounded-xl p-4 border border-orange-500/50">
+                    <h4 class="text-orange-400 font-bold mb-3 flex items-center gap-2">
+                        <span>⏰</span> DUE TODAY (${dueToday.length})
+                    </h4>
+                    <div class="space-y-2">
+                        ${dueToday.map(p => renderPremiumItem(p, 'today')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (dueTomorrow.length > 0) {
+            html += `
+                <div class="bg-cyan-900/30 rounded-xl p-4 border border-cyan-500/50">
+                    <h4 class="text-cyan-400 font-bold mb-3 flex items-center gap-2">
+                        <span>📅</span> DUE TOMORROW (${dueTomorrow.length})
+                    </h4>
+                    <div class="space-y-2">
+                        ${dueTomorrow.map(p => renderPremiumItem(p, 'tomorrow')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+        
+        panel.innerHTML = html;
+        
+        // Set global premium alert count
+        window.premiumAlertCount = total;
+        
+    } catch (error) {
+        console.error('[PremiumAlerts] Error:', error);
+        panel.classList.add('hidden');
+        window.premiumAlertCount = 0;
+    }
+};
+
+function renderPremiumItem(item, urgency) {
+    const statusColors = {
+        never: 'text-red-300',
+        overdue: 'text-red-300',
+        today: 'text-orange-300',
+        tomorrow: 'text-yellow-300'
+    };
+    
+    const borderColors = {
+        never: 'border-l-red-500',
+        overdue: 'border-l-red-500',
+        today: 'border-l-orange-500',
+        tomorrow: 'border-l-yellow-500'
+    };
+    
+    let dueDisplay = item.dueDateFormatted || 'Never paid';
+    let reminderMsg = '';
+    
+    if (urgency === 'never') {
+        reminderMsg = `Hey ${item.ownerName}! 👋 Just a reminder about the premium listing fee for "${item.title}". 💰 $${item.amount.toLocaleString()}/week. Let me know when you're ready to meet up!`;
+    } else if (item.daysUntilDue === 1) {
+        reminderMsg = `Hey ${item.ownerName}! 👋 Just a reminder that the premium listing fee for "${item.title}" is due tomorrow. 💰 $${item.amount.toLocaleString()}/week. Let me know when you're available!`;
+    } else if (item.daysUntilDue === 0) {
+        reminderMsg = `Hey ${item.ownerName}! 👋 Just a reminder that the premium listing fee for "${item.title}" is due today. 💰 $${item.amount.toLocaleString()}/week. Let me know when you're available!`;
+    } else if (item.daysUntilDue < 0) {
+        const daysOverdue = Math.abs(item.daysUntilDue);
+        reminderMsg = `Hey ${item.ownerName}, the premium listing fee for "${item.title}" was due ${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago. 💰 $${item.amount.toLocaleString()}/week. Please let me know when we can meet up to sort this out!`;
+        dueDisplay = `${daysOverdue}d OVERDUE!`;
+    }
+    
+    const escapedReminder = reminderMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const escapedEmail = item.ownerEmail.replace(/'/g, "\\'");
+    
+    return `
+        <div class="bg-gray-800/50 rounded-lg border border-gray-700 border-l-4 ${borderColors[urgency] || 'border-l-gray-500'} p-3 flex items-center justify-between gap-3 hover:bg-gray-700/50 transition cursor-pointer" onclick="goToAdminUserByEmail('${escapedEmail}')">
+            <div class="flex-1 min-w-0">
+                <div class="text-white font-medium truncate flex items-center gap-2">
+                    <span class="text-amber-400">👑</span>
+                    ${item.title}
+                </div>
+                <div class="text-gray-400 text-sm">Owner: ${item.ownerName}</div>
+                <div class="${statusColors[urgency] || 'text-gray-400'} text-xs">Due: ${dueDisplay}</div>
+            </div>
+            <div class="text-right">
+                <div class="text-amber-400 font-bold">$${item.amount.toLocaleString()}/wk</div>
+                <button onclick="event.stopPropagation(); copySubscriptionReminder('${escapedReminder}')" 
+                        class="text-cyan-400 hover:text-cyan-300 text-xs mt-1 flex items-center gap-1"
+                        style="outline: none;">
+                    📋 Copy Reminder
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+window.togglePremiumPanel = function() {
+    const content = $('premiumPanelContent');
+    const arrow = $('premiumPanelArrow');
+    if (content && arrow) {
+        content.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+    }
+};
+
+window.handlePremiumPanelClick = function(event) {
+    // Check if clicked on the header area (gradient background)
+    const header = event.target.closest('.bg-gradient-to-r');
+    if (header) {
+        togglePremiumPanel();
+        return;
+    }
+    
+    // Check if clicked on copy button
+    if (event.target.closest('button') && event.target.textContent.includes('Copy')) {
+        return;
+    }
+    
+    // Check if clicked on a premium item row
+    const premiumItem = event.target.closest('.cursor-pointer');
+    if (premiumItem && premiumItem.getAttribute('onclick')?.includes('goToAdminUserByEmail')) {
+        const match = premiumItem.getAttribute('onclick')?.match(/goToAdminUserByEmail\('([^']+)'\)/);
+        if (match) {
+            goToAdminUserByEmail(match[1]);
+        }
+    }
+};
+
+// ============================================================
+// PASSWORD RESET FUNCTIONS
+// ============================================================
+
+/**
+ * Open the reset password modal for a user
+ */
+window.openResetPasswordModal = function(email, displayName) {
+    // Remove any existing modal
+    const existingModal = document.getElementById('resetPasswordModal');
+    if (existingModal) existingModal.remove();
+    
+    const modalHTML = `
+        <div id="resetPasswordModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-900 rounded-2xl shadow-2xl border border-blue-500/50 max-w-md w-full p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span>🔑</span> Reset Password
+                    </h3>
+                    <button onclick="closeResetPasswordModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+                </div>
+                
+                <div class="bg-blue-900/30 border border-blue-500/30 rounded-xl p-4 mb-4">
+                    <p class="text-blue-300 text-sm">
+                        <strong>User:</strong> ${displayName}<br>
+                        <strong>Email:</strong> ${email}
+                    </p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-sm mb-2">New Temporary Password:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newPasswordInput" 
+                               class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                               placeholder="Enter new password (min 6 chars)"
+                               minlength="6">
+                        <button onclick="generateRandomPassword()" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg font-bold text-sm transition" 
+                                title="Generate random password">
+                            🎲
+                        </button>
+                    </div>
+                    <p class="text-gray-500 text-xs mt-2">Give this password to the user in-city so they can log in.</p>
+                </div>
+                
+                <div class="bg-amber-900/30 border border-amber-500/30 rounded-xl p-3 mb-4">
+                    <p class="text-amber-300 text-xs">
+                        ⚠️ <strong>Note:</strong> This action will be logged for security audit. The user should change their password after logging in.
+                    </p>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button id="resetPasswordBtn" onclick="confirmResetPassword('${email.replace(/'/g, "\\'")}')" 
+                            class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                        🔑 Set Password
+                    </button>
+                    <button onclick="closeResetPasswordModal()" 
+                            class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Focus the input
+    setTimeout(() => {
+        const input = document.getElementById('newPasswordInput');
+        if (input) input.focus();
+    }, 100);
+};
+
+/**
+ * Close the reset password modal
+ */
+window.closeResetPasswordModal = function() {
+    const modal = document.getElementById('resetPasswordModal');
+    if (modal) modal.remove();
+};
+
+/**
+ * Generate a random password
+ */
+window.generateRandomPassword = function() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const input = document.getElementById('newPasswordInput');
+    if (input) {
+        input.value = password;
+        input.select();
+    }
+};
+
+/**
+ * Confirm and execute password reset
+ */
+window.confirmResetPassword = async function(email) {
+    const input = document.getElementById('newPasswordInput');
+    const newPassword = input?.value?.trim();
+    
+    if (!newPassword) {
+        showToast('Please enter a password', 'error');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+    
+    const btn = document.getElementById('resetPasswordBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-pulse">⏳ Setting password...</span>';
+    }
+    
+    try {
+        // Call the Cloud Function
+        const adminSetUserPassword = firebase.functions().httpsCallable('adminSetUserPassword');
+        const result = await adminSetUserPassword({
+            targetEmail: email,
+            newPassword: newPassword
+        });
+        
+        if (result.data.success) {
+            showToast(`✅ Password set successfully! Tell the user: "${newPassword}"`, 'success', 8000);
+            
+            // Copy password to clipboard
+            try {
+                await navigator.clipboard.writeText(newPassword);
+                showToast('📋 Password copied to clipboard!', 'success');
+            } catch (e) {
+                // Clipboard failed, that's okay - they can see it in the toast
+            }
+            
+            closeResetPasswordModal();
+        } else {
+            throw new Error(result.data.message || 'Failed to set password');
+        }
+        
+    } catch (error) {
+        console.error('[Password Reset] Error:', error);
+        showToast('❌ ' + (error.message || 'Failed to reset password'), 'error');
+        
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '🔑 Set Password';
+        }
+    }
+};

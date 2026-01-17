@@ -7,10 +7,10 @@
  * 
  * NOTIFICATION TYPES:
  * - user: New user registrations
- * - listing: New vehicle listings
+ * - listing: New property listings
  * - photo: Photo service requests
  * - premium: Premium listing requests
- * - rent: Financing payment alerts (computed, not stored)
+ * - rent: Rent payment alerts (computed, not stored)
  * 
  * ARCHITECTURE:
  * - State: Single state object with all notification data
@@ -50,7 +50,7 @@
         // Icons for each notification type
         ICONS: {
             user: '👤',
-            listing: '🚗',
+            listing: '🏠',
             photo: '📸',
             premium: '👑',
             rent: '💰'
@@ -76,7 +76,7 @@
         // Kept as Set for fast lookups, synced with Firestore via UserPreferencesService
         dismissed: new Set(),
         
-        // Rent alerts (computed from vehicles, not stored in Firestore)
+        // Rent alerts (computed from properties, not stored in Firestore)
         rentAlerts: {
             overdue: [],    // Past due date
             today: [],      // Due today
@@ -149,14 +149,14 @@
                 const ownerName = rawData.ownerName || rawData.ownerEmail?.split('@')[0] || 'Unknown';
                 notification.title = isMissed 
                     ? (isPremiumTrial ? '🎁 Premium Trial Listing' : '📬 While You Were Away...')
-                    : (isPremium ? '👑 New Premium Listing!' : isPremiumTrial ? '🎁 New Premium Trial!' : '🚗 New Listing Posted!');
-                notification.subtitle = `${rawData.title || 'New Vehicle'} by ${ownerName}`;
+                    : (isPremium ? '👑 New Premium Listing!' : isPremiumTrial ? '🎁 New Premium Trial!' : '🏠 New Listing Posted!');
+                notification.subtitle = `${rawData.title || 'New Property'} by ${ownerName}`;
                 notification.ownerName = ownerName;
                 notification.urgency = isPremium ? CONFIG.URGENCY.WARNING : CONFIG.URGENCY.INFO;
                 notification.action = {
                     type: 'scrollToUserByEmail',
                     target: rawData.ownerEmail,
-                    vehicleId: rawData.id,
+                    propertyId: rawData.id,
                     tab: 'admin',
                     subtab: 'users',
                     highlightSelector: `.admin-user-card[data-email="${rawData.ownerEmail}"]`
@@ -167,7 +167,7 @@
                 
             case 'photo':
                 notification.title = '📸 Photo Service Request';
-                notification.subtitle = `${rawData.name || 'Someone'} requested photos for ${rawData.vehicleAddress || 'a vehicle'}`;
+                notification.subtitle = `${rawData.name || 'Someone'} requested photos for ${rawData.propertyAddress || 'a property'}`;
                 notification.urgency = CONFIG.URGENCY.INFO;
                 notification.action = {
                     type: 'scrollToSection',
@@ -180,7 +180,7 @@
                 
             case 'premium':
                 notification.title = '👑 Premium Listing Request';
-                notification.subtitle = `${rawData.title || 'Vehicle'} wants premium placement`;
+                notification.subtitle = `${rawData.title || 'Property'} wants premium placement`;
                 notification.urgency = CONFIG.URGENCY.WARNING;
                 notification.action = {
                     type: 'scrollToSection',
@@ -200,13 +200,13 @@
                     : isToday 
                         ? '⏰ Due Today'
                         : '📅 Due Tomorrow';
-                notification.subtitle = `${rawData.title || rawData.vehicleId} - ${rawData.buyerName || 'Unknown'}`;
+                notification.subtitle = `${rawData.title || rawData.propertyId} - ${rawData.renterName || 'Unknown'}`;
                 notification.urgency = isOverdue ? CONFIG.URGENCY.CRITICAL : isToday ? CONFIG.URGENCY.WARNING : CONFIG.URGENCY.INFO;
                 notification.action = {
                     type: 'scrollToRent',
-                    target: rawData.vehicleId,
-                    tab: 'myVehicles',
-                    highlightSelector: `#rent-item-${rawData.vehicleId}`
+                    target: rawData.propertyId,
+                    tab: 'myProperties',
+                    highlightSelector: `#rent-item-${rawData.propertyId}`
                 };
                 break;
         }
@@ -219,10 +219,7 @@
     // =========================================================================
     
     function addNotification(notification) {
-        // Check if already dismissed - log for debugging
-        if (state.dismissed.has(notification.id)) {
-            return;
-        }
+        if (state.dismissed.has(notification.id)) return;
         
         const exists = state.notifications.find(n => n.id === notification.id);
         if (exists) return;
@@ -291,14 +288,12 @@
             }
         });
         
-        // Payment alerts: pending down payments + financing payments
-        counts.rent = (state.rentAlerts.pendingDownPayments?.length || 0) +
-                      (state.rentAlerts.overdue?.length || 0) +
+        counts.rent = (state.rentAlerts.overdue?.length || 0) +
                       (state.rentAlerts.today?.length || 0) +
                       (state.rentAlerts.tomorrow?.length || 0);
         counts.total += counts.rent;
         
-        // Subscription alerts (admin only, set by ui-admin.js)
+        // Get subscription count from global state (set by ui-admin.js)
         counts.subscription = window.subscriptionAlertCount || 0;
         counts.total += counts.subscription;
         
@@ -412,25 +407,21 @@
                 break;
                 
             case 'rent':
-                // Navigate to My Vehicles tab, scroll to payment alerts panel
+                // Navigate to My Properties tab, scroll to rent panel
                 if (typeof window.switchDashboardTab === 'function') {
-                    window.switchDashboardTab('myVehicles');
+                    window.switchDashboardTab('myProperties');
                     await sleep(200);
                 }
-                await scrollToAndHighlight('#paymentNotificationsPanel', type);
+                await scrollToAndHighlight('#rentNotificationsPanel', type);
                 break;
                 
             case 'subscription':
-                // Navigate to admin panel, scroll to subscription alerts
+                // Navigate to My Properties tab (where subscription alerts are shown), scroll to subscription panel
                 if (typeof window.switchDashboardTab === 'function') {
-                    window.switchDashboardTab('admin');
+                    window.switchDashboardTab('myProperties');
                     await sleep(200);
                 }
-                if (typeof window.switchAdminTab === 'function') {
-                    window.switchAdminTab('users');
-                    await sleep(200);
-                }
-                await scrollToAndHighlight('#subscriptionNotificationsPanel', type);
+                await scrollToAndHighlight('#subscriptionNotificationsPanel', 'rent'); // Use rent colors (red)
                 break;
                 
             default:
@@ -532,21 +523,14 @@
         updateBadge('dropdownRentBadge', 'dropdownRentCount', counts.rent);
         updateBadge('dropdownSubscriptionBadge', 'dropdownSubscriptionCount', counts.subscription);
         
+        // Nav username badge (total count for admin)
+        const totalAdmin = counts.user + counts.listing + counts.photo + counts.premium + counts.rent + counts.subscription;
+        updateBadge('navNotificationBadge', 'navNotificationCount', totalAdmin);
+        
         // Mobile badges
         const mobileAdminTotal = counts.user + counts.listing + counts.photo + counts.premium;
         updateBadge('mobileAdminBadge', 'mobileAdminCount', mobileAdminTotal);
         updateBadge('mobileRentBadge', 'mobileRentCount', counts.rent);
-        
-        // Navbar notification dot (shows when any admin notification exists)
-        const navDot = document.getElementById('navNotificationDot');
-        if (navDot) {
-            const totalAdminNotifs = counts.user + counts.listing + counts.photo + counts.premium + counts.subscription;
-            if (totalAdminNotifs > 0) {
-                navDot.classList.remove('hidden');
-            } else {
-                navDot.classList.add('hidden');
-            }
-        }
     }
     
     function updateBadge(badgeId, countId, count) {
@@ -565,12 +549,14 @@
     
     function refreshPanels() {
         renderNotificationStack();
-        renderPaymentAlertsPanel();
-        
-        // Subscription alerts are rendered by ui-admin.js when admin panel loads
-        // Just trigger a refresh if the function exists
+        renderRentAlertsPanel();
+        // Also render subscription alerts for admin
         if (typeof window.renderSubscriptionAlertsPanel === 'function') {
             window.renderSubscriptionAlertsPanel();
+        }
+        // Also render premium listing alerts for admin
+        if (typeof window.renderPremiumAlertsPanel === 'function') {
+            window.renderPremiumAlertsPanel();
         }
     }
     
@@ -623,7 +609,7 @@
                 gradientClass = isMissed 
                     ? 'from-emerald-700 to-green-600 border-emerald-500'
                     : 'from-green-600 to-teal-600 border-green-500';
-                icon = isMissed ? '📬' : '🚗';
+                icon = isMissed ? '📬' : '🏠';
             }
         }
         
@@ -667,8 +653,8 @@
         `;
     }
     
-    function renderPaymentAlertsPanel() {
-        const panel = document.getElementById('paymentNotificationsPanel');
+    function renderRentAlertsPanel() {
+        const panel = document.getElementById('rentNotificationsPanel');
         if (!panel) return;
         
         if (!auth?.currentUser?.email) {
@@ -676,9 +662,8 @@
             return;
         }
         
-        const { pendingDownPayments = [], overdue = [], today = [], tomorrow = [] } = state.rentAlerts;
-        const totalFinancing = overdue.length + today.length + tomorrow.length;
-        const total = pendingDownPayments.length + totalFinancing;
+        const { overdue, today, tomorrow } = state.rentAlerts;
+        const total = overdue.length + today.length + tomorrow.length;
         
         if (total === 0) {
             panel.classList.add('hidden');
@@ -687,64 +672,47 @@
         
         panel.classList.remove('hidden');
         
-        const hasDownPayments = pendingDownPayments.length > 0;
         const isUrgent = overdue.length > 0;
-        const isWarning = today.length > 0 || hasDownPayments;
+        const isWarning = today.length > 0;
         
         const borderColor = isUrgent ? 'border-red-500/70' : isWarning ? 'border-orange-500/70' : 'border-yellow-500/70';
-        const headerGradient = isUrgent ? 'from-red-600 to-red-700' : isWarning ? 'from-orange-500 to-amber-500' : 'from-yellow-500 to-orange-400';
-        const headerIcon = isUrgent ? '🚨' : hasDownPayments ? '💰' : isWarning ? '⏰' : '📅';
+        const headerGradient = isUrgent ? 'from-red-600 to-red-700' : isWarning ? 'from-orange-500 to-red-500' : 'from-yellow-500 to-orange-400';
+        const headerIcon = isUrgent ? '🚨' : isWarning ? '⏰' : '📅';
         
         let html = `
             <div class="glass-effect rounded-2xl shadow-2xl overflow-hidden border-2 ${borderColor}">
-                <div class="bg-gradient-to-r ${headerGradient} px-6 py-4">
+                <div class="bg-gradient-to-r ${headerGradient} px-6 py-4 cursor-pointer" onclick="NotificationManager.toggleRentPanel()">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">${headerIcon}</span>
                             <div>
-                                <h3 class="text-xl font-bold text-white">Payment Collection Alert</h3>
+                                <h3 class="text-xl font-bold text-white">Rent Collection Alert</h3>
                                 <p class="text-white/80 text-sm">${total} payment${total !== 1 ? 's' : ''} need${total === 1 ? 's' : ''} attention</p>
                             </div>
                         </div>
-                        <button onclick="NotificationManager.togglePaymentPanel()" id="paymentPanelToggle" class="text-white/80 hover:text-white transition">
-                            <svg class="w-6 h-6 transform transition-transform" id="paymentPanelArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div id="rentPanelToggle" class="text-white/80 hover:text-white transition">
+                            <svg class="w-6 h-6 transform transition-transform" id="rentPanelArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
-                        </button>
+                        </div>
                     </div>
                 </div>
-                <div id="paymentPanelContent" class="p-4 space-y-4">
+                <div id="rentPanelContent" class="p-4 space-y-4">
         `;
         
-        // Pending Down Payments section
-        if (pendingDownPayments.length > 0) {
-            html += `
-                <div class="bg-amber-900/30 rounded-xl p-4 border border-amber-500/50">
-                    <h4 class="text-amber-400 font-bold mb-3 flex items-center gap-2">
-                        <span>💵</span> PENDING DOWN PAYMENTS (${pendingDownPayments.length})
-                    </h4>
-                    <div class="space-y-2">
-                        ${pendingDownPayments.map(item => renderDownPaymentItem(item)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Financing Overdue section
         if (overdue.length > 0) {
             html += `
                 <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/50">
                     <h4 class="text-red-400 font-bold mb-3 flex items-center gap-2">
-                        <span>🚨</span> FINANCING OVERDUE (${overdue.length})
+                        <span>🚨</span> OVERDUE (${overdue.length})
                     </h4>
                     <div class="space-y-2">
-                        ${overdue.map(item => renderFinancingItem(item, 'overdue')).join('')}
+                        ${overdue.map(rent => renderRentItem(rent, 'overdue')).join('')}
                     </div>
                 </div>
             `;
         }
         
-        // Due Today section
         if (today.length > 0) {
             html += `
                 <div class="bg-orange-900/30 rounded-xl p-4 border border-orange-500/50">
@@ -752,13 +720,12 @@
                         <span>⏰</span> DUE TODAY (${today.length})
                     </h4>
                     <div class="space-y-2">
-                        ${today.map(item => renderFinancingItem(item, 'today')).join('')}
+                        ${today.map(rent => renderRentItem(rent, 'today')).join('')}
                     </div>
                 </div>
             `;
         }
         
-        // Due Tomorrow section
         if (tomorrow.length > 0) {
             html += `
                 <div class="bg-yellow-900/30 rounded-xl p-4 border border-yellow-500/50">
@@ -766,7 +733,7 @@
                         <span>📅</span> DUE TOMORROW (${tomorrow.length})
                     </h4>
                     <div class="space-y-2">
-                        ${tomorrow.map(item => renderFinancingItem(item, 'tomorrow')).join('')}
+                        ${tomorrow.map(rent => renderRentItem(rent, 'tomorrow')).join('')}
                     </div>
                 </div>
             `;
@@ -780,61 +747,35 @@
         panel.innerHTML = html;
     }
     
-    function renderDownPaymentItem(item) {
-        const vehicleId = item.propId || item.vehicleId || item.id;
-        const vehicleTitle = item.description || item.title || `Vehicle ${vehicleId}`;
-        const buyerName = item.buyerName || 'Unknown Buyer';
-        const downPayment = item.downPayment || 0;
-        const salePrice = item.salePrice || 0;
-        
-        // Generate reminder message
-        const reminderMsg = `Hey ${buyerName}! 👋 Just a friendly reminder about your down payment of $${downPayment.toLocaleString()} for the ${vehicleTitle}. The total sale price is $${salePrice.toLocaleString()}. Let me know when you're ready to complete the payment!`;
-        const escapedReminder = reminderMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        
-        return `
-            <div class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
-                <div class="flex-1 min-w-0 cursor-pointer" onclick="viewVehicleStats(${vehicleId})" style="outline: none;">
-                    <div class="text-white font-medium truncate">🚗 ${vehicleTitle}</div>
-                    <div class="text-gray-400 text-sm">Buyer: ${buyerName}</div>
-                    <div class="text-amber-300 text-xs">Awaiting down payment</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-amber-400 font-bold">$${downPayment.toLocaleString()}</div>
-                    <div class="text-gray-500 text-xs">of $${salePrice.toLocaleString()}</div>
-                    <button onclick="event.stopPropagation(); navigator.clipboard.writeText('${escapedReminder}').then(() => showToast('Reminder copied!', 'success'))" 
-                            class="text-cyan-400 hover:text-cyan-300 text-xs mt-1 flex items-center gap-1"
-                            style="outline: none;">
-                        📋 Copy Reminder
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-    
-    function renderFinancingItem(item, status) {
+    function renderRentItem(rent, status) {
         const statusColors = {
             overdue: 'text-red-300',
             today: 'text-orange-300',
             tomorrow: 'text-yellow-300'
         };
         
-        const vehicleId = item.propId || item.vehicleId || item.id;
-        const paymentAmount = item.paymentAmount || 0;
-        const buyerName = item.buyerName || 'Unknown';
-        const vehicleTitle = item.description || item.title || `Vehicle ${vehicleId}`;
-        const dueDisplay = item.dueDate ? new Date(item.dueDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Unknown';
-        const paymentInfo = item.totalPayments ? `Payment ${(item.currentPayment || 0) + 1} of ${item.totalPayments}` : '';
+        const borderColors = {
+            overdue: 'border-l-red-500',
+            today: 'border-l-orange-500',
+            tomorrow: 'border-l-yellow-500'
+        };
+        
+        const propertyId = rent.propId || rent.propertyId || rent.id;
+        const rentAmount = rent.rentAmount || rent.weeklyPrice || 0;
+        const renterName = rent.renterName || 'Unknown';
+        const propertyTitle = rent.title || `Property ${propertyId}`;
+        const dueDisplay = rent.dueDate ? new Date(rent.dueDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Unknown';
         
         return `
-            <div id="payment-item-${vehicleId}" class="bg-gray-800/50 rounded-lg p-3 flex items-center justify-between gap-3">
-                <div class="flex-1 min-w-0 cursor-pointer" onclick="viewVehicleStats(${vehicleId})" style="outline: none;">
-                    <div class="text-white font-medium truncate">🚗 ${vehicleTitle}</div>
-                    <div class="text-gray-400 text-sm">Buyer: ${buyerName}</div>
-                    <div class="${statusColors[status]} text-xs">Due: ${dueDisplay} ${paymentInfo ? `• ${paymentInfo}` : ''}</div>
+            <div id="rent-item-${propertyId}" class="bg-gray-800/50 rounded-lg border border-gray-700 border-l-4 ${borderColors[status]} p-3 flex items-center justify-between gap-3 hover:bg-gray-700/50 transition cursor-pointer" onclick="viewPropertyStats('${propertyId}')">
+                <div class="flex-1 min-w-0" style="outline: none;">
+                    <div class="text-white font-medium truncate">${propertyTitle}</div>
+                    <div class="text-gray-400 text-sm">Renter: ${renterName}</div>
+                    <div class="${statusColors[status]} text-xs">Due: ${dueDisplay}</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-white font-bold">$${paymentAmount.toLocaleString()}</div>
-                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyPaymentReminder('${vehicleId}', '${buyerName.replace(/'/g, "\\'")}', '${vehicleTitle.replace(/'/g, "\\'")}', ${paymentAmount})" 
+                    <div class="text-white font-bold">$${rentAmount.toLocaleString()}</div>
+                    <button onclick="event.stopPropagation(); this.blur(); NotificationManager.copyRentReminder('${propertyId}', '${renterName.replace(/'/g, "\\'")}', '${propertyTitle.replace(/'/g, "\\'")}', ${rentAmount})" 
                             class="text-cyan-400 hover:text-cyan-300 text-xs mt-1 flex items-center gap-1"
                             style="outline: none;">
                         📋 Copy Reminder
@@ -844,9 +785,9 @@
         `;
     }
     
-    function togglePaymentPanel() {
-        const content = document.getElementById('paymentPanelContent');
-        const arrow = document.getElementById('paymentPanelArrow');
+    function toggleRentPanel() {
+        const content = document.getElementById('rentPanelContent');
+        const arrow = document.getElementById('rentPanelArrow');
         
         if (content && arrow) {
             content.classList.toggle('hidden');
@@ -854,35 +795,44 @@
         }
     }
     
-    function copyPaymentReminder(vehicleId, buyerName, vehicleTitle, amount) {
-        // Find the financing data to get full details
-        const allFinancing = [...(state.rentAlerts.overdue || []), ...(state.rentAlerts.today || []), ...(state.rentAlerts.tomorrow || [])];
-        const financingData = allFinancing.find(r => String(r.propId) === String(vehicleId) || String(r.id) === String(vehicleId));
+    function copyRentReminder(propertyId, renterName, propertyTitle, amount) {
+        // Find the rent data to get full details (frequency, due date, days overdue)
+        const allRents = [...state.rentAlerts.overdue, ...state.rentAlerts.today, ...state.rentAlerts.tomorrow];
+        const rentData = allRents.find(r => String(r.propId) === String(propertyId) || String(r.id) === String(propertyId));
+        
+        // Get first name for friendly greeting
+        const firstName = window.getFirstName ? window.getFirstName(renterName) : renterName;
         
         let message;
         
-        if (financingData) {
-            const frequency = financingData.paymentFrequency || 'monthly';
-            const dueDate = financingData.dueDate;
-            const daysOverdue = financingData.daysOverdue || 0;
-            const paymentAmount = financingData.paymentAmount || amount;
-            const paymentNum = financingData.currentPayment ? `(Payment ${financingData.currentPayment + 1} of ${financingData.totalPayments})` : '';
+        if (rentData) {
+            // Use full details from rent data
+            const frequency = rentData.paymentFrequency || 'weekly';
+            const dueDate = rentData.dueDate;
+            const daysOverdue = rentData.daysOverdue || 0;
+            const rentAmount = rentData.rentAmount || amount;
             
+            // Format due date nicely
             const dueDateFormatted = dueDate ? new Date(dueDate + 'T12:00:00').toLocaleDateString('en-US', { 
                 weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' 
             }) : 'soon';
             
             if (daysOverdue >= 2) {
-                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for repossession in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
+                // 2+ days overdue - eviction warning
+                message = `Hey ${firstName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} for ${propertyTitle} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). ⚠️ You are scheduled for eviction in 24 hours if payment is not received. Please make your payment immediately or contact me to discuss your situation.`;
             } else if (daysOverdue > 0) {
-                message = `Hey ${buyerName}, your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
-            } else if (financingData.isToday) {
-                message = `Hey ${buyerName}! 👋 Just a friendly reminder that your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🚗`;
+                // Overdue but less than 2 days
+                message = `Hey ${firstName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} for ${propertyTitle} was due on ${dueDateFormatted} (${daysOverdue} day${daysOverdue > 1 ? 's' : ''} ago). Please make your payment as soon as possible. Let me know if you need to discuss anything!`;
+            } else if (rentData.isToday) {
+                // Due today
+                message = `Hey ${firstName}, your ${frequency} rent payment of $${rentAmount.toLocaleString()} for ${propertyTitle} is due today (${dueDateFormatted}). Please make your payment when you get a chance. Thanks! 🏠`;
             } else {
-                message = `Hey ${buyerName}! 👋 Just a heads up - your ${frequency} financing payment of $${paymentAmount.toLocaleString()} ${paymentNum} is due tomorrow (${dueDateFormatted}). Thanks! 🚗`;
+                // Due tomorrow
+                message = `Hey ${firstName}, just a heads up - your ${frequency} rent payment of $${rentAmount.toLocaleString()} for ${propertyTitle} is due tomorrow (${dueDateFormatted}). Thanks! 🏠`;
             }
         } else {
-            message = `Hey ${buyerName}! 👋 Just a friendly reminder about your financing payment for the ${vehicleTitle} ($${amount.toLocaleString()}). Please send payment when you get a chance. Thanks! 🚗`;
+            // Fallback if rent data not found
+            message = `Hey ${firstName}! 👋 Just a friendly reminder that rent for ${propertyTitle} ($${amount.toLocaleString()}) is due. Please send payment when you get a chance. Thanks! 🏠`;
         }
         
         navigator.clipboard.writeText(message).then(() => {
@@ -948,9 +898,9 @@
                     }
                 }
                 
-                // Check for financing payment alerts (down payments + recurring financing)
-                await checkPaymentAlerts();
-                state.listeners.rentInterval = setInterval(checkPaymentAlerts, CONFIG.RENT_CHECK_INTERVAL);
+                // All users get rent checks
+                await checkRentDue();
+                state.listeners.rentInterval = setInterval(checkRentDue, CONFIG.RENT_CHECK_INTERVAL);
                 
                 state.initialized = true;
                 refreshUI();
@@ -993,12 +943,9 @@
                         // Initial load - check for missed notifications
                         state.knownUserIds.add(userId);
                         
-                        // Check if user was created after last admin visit
                         if (createdAt && state.lastAdminVisit && createdAt > state.lastAdminVisit) {
-                            const notificationId = `user-${userId}`;
-                            
                             const notification = createNotification('user', user, {
-                                id: notificationId,
+                                id: `user-${userId}`,
                                 timestamp: createdAt.toISOString(),
                                 isMissed: true
                             });
@@ -1030,14 +977,10 @@
             .onSnapshot(doc => {
                 if (!doc.exists) return;
                 
-                const vehicles = doc.data();
+                const properties = doc.data();
                 
-                Object.entries(vehicles).forEach(([propId, prop]) => {
-                    // Skip flat keys (e.g., "1.plate") and non-numeric IDs
-                    if (propId.includes('.') || isNaN(parseInt(propId))) return;
-                    
-                    // Skip invalid vehicle data
-                    if (!prop || typeof prop !== 'object') return;
+                Object.entries(properties).forEach(([propId, prop]) => {
+                    if (!prop) return;
                     
                     const createdAt = prop.createdAtTimestamp?.toDate?.() || 
                                      (prop.createdAt ? new Date(prop.createdAt) : null);
@@ -1082,11 +1025,7 @@
             });
     }
     
-    /**
-     * Check for payment alerts: pending down payments + financing payments due
-     * Shows alerts to vehicle OWNERS for their own vehicles
-     */
-    async function checkPaymentAlerts() {
+    async function checkRentDue() {
         const currentUser = auth?.currentUser;
         if (!currentUser) return;
         
@@ -1094,119 +1033,108 @@
             const propsDoc = await db.collection('settings').doc('properties').get();
             if (!propsDoc.exists) return;
             
-            const vehicles = propsDoc.data();
+            const properties = propsDoc.data();
             const now = new Date();
             now.setHours(0, 0, 0, 0);
+            const todayStr = now.toISOString().split('T')[0];
+            const tomorrow = new Date(now.getTime() + 86400000);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
             
-            const pendingDownPayments = [];
-            const financingOverdue = [];
-            const financingDueToday = [];
-            const financingDueTomorrow = [];
+            const overdue = [];
+            const dueToday = [];
+            const dueTomorrow = [];
             
-            Object.entries(vehicles).forEach(([propId, prop]) => {
+            const isAdmin = window.TierService?.isMasterAdmin(currentUser.email);
+            
+            Object.entries(properties).forEach(([propId, prop]) => {
                 if (!prop) return;
                 
-                // Only show alerts for current user's vehicles
-                if (prop.ownerEmail !== currentUser.email) return;
-                
-                // Check for pending down payments (active sale with downPaymentReceived: false)
-                if (prop.pendingSale && !prop.pendingSale.downPaymentReceived && prop.pendingSale.downPayment > 0) {
-                    pendingDownPayments.push({
-                        propId,
-                        vehicleId: propId,
-                        id: propId,
-                        title: prop.title || 'Vehicle',
-                        description: prop.description || prop.title,
-                        buyerName: prop.pendingSale.buyerName || 'Unknown Buyer',
-                        buyerPhone: prop.pendingSale.buyerPhone || '',
-                        downPayment: prop.pendingSale.downPayment,
-                        salePrice: prop.pendingSale.salePrice || prop.buyPrice,
-                        contractDate: prop.pendingSale.agreementDate || prop.pendingSale.createdAt,
-                        contractId: prop.pendingSale.contractId
-                    });
+                // Must have renterName, lastPaymentDate, and paymentFrequency to calculate due date
+                if (!prop.renterName || !prop.lastPaymentDate || !prop.paymentFrequency) {
+                    return;
                 }
                 
-                // Check for financing payments due (has active financing with lastPaymentDate)
-                if (prop.hasActiveFinancing && prop.lastPaymentDate && prop.paymentFrequency && prop.buyerName) {
-                    // Parse the lastPaymentDate (format: YYYY-MM-DD)
-                    const lastDateParts = prop.lastPaymentDate.split('-');
-                    const lastDate = new Date(
-                        parseInt(lastDateParts[0]), 
-                        parseInt(lastDateParts[1]) - 1, 
-                        parseInt(lastDateParts[2])
-                    );
-                    lastDate.setHours(0, 0, 0, 0);
-                    
-                    const nextDate = new Date(lastDate);
-                    if (prop.paymentFrequency === 'daily') {
-                        nextDate.setDate(nextDate.getDate() + 1);
-                    } else if (prop.paymentFrequency === 'weekly') {
-                        nextDate.setDate(nextDate.getDate() + 7);
-                    } else if (prop.paymentFrequency === 'biweekly') {
-                        nextDate.setDate(nextDate.getDate() + 14);
-                    } else {
-                        // Monthly
-                        nextDate.setMonth(nextDate.getMonth() + 1);
-                    }
-                    
-                    const dueDate = nextDate.toISOString().split('T')[0];
-                    const daysUntilDue = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
-                    
-                    // Get payment amount based on frequency
-                    let paymentAmount = prop.weeklyPrice || 0;
-                    if (prop.paymentFrequency === 'daily' && prop.dailyPrice) {
-                        paymentAmount = prop.dailyPrice;
-                    } else if (prop.paymentFrequency === 'biweekly' && prop.biweeklyPrice) {
-                        paymentAmount = prop.biweeklyPrice;
-                    } else if (prop.paymentFrequency === 'monthly' && prop.monthlyPrice) {
-                        paymentAmount = prop.monthlyPrice;
-                    } else if (prop.paymentFrequency === 'daily') {
-                        paymentAmount = Math.round((prop.weeklyPrice || 0) / 7);
-                    } else if (prop.paymentFrequency === 'biweekly') {
-                        paymentAmount = (prop.weeklyPrice || 0) * 2;
-                    } else if (prop.paymentFrequency === 'monthly') {
-                        paymentAmount = (prop.weeklyPrice || 0) * 4;
-                    }
-                    
-                    const financingData = {
-                        propId,
-                        vehicleId: propId,
-                        id: propId,
-                        title: prop.title || 'Vehicle',
-                        description: prop.description || prop.title,
-                        buyerName: prop.buyerName,
-                        buyerPhone: prop.buyerPhone || '',
-                        paymentFrequency: prop.paymentFrequency,
-                        paymentAmount,
-                        dueDate,
-                        daysUntilDue,
-                        currentPayment: prop.financingCurrentPayment || 0,
-                        totalPayments: prop.financingTotalPayments || 0
-                    };
-                    
-                    if (daysUntilDue < 0) {
-                        financingData.daysOverdue = Math.abs(daysUntilDue);
-                        financingOverdue.push(financingData);
-                    } else if (daysUntilDue === 0) {
-                        financingData.isToday = true;
-                        financingDueToday.push(financingData);
-                    } else if (daysUntilDue === 1) {
-                        financingDueTomorrow.push(financingData);
-                    }
+                // Rent alerts are ALWAYS filtered to current user's properties only
+                // Even admins only see their own rent alerts (they can view all in admin panel)
+                if (prop.ownerEmail !== currentUser.email) return;
+                
+                // Calculate next rent due date from lastPaymentDate + paymentFrequency
+                // Parse the lastPaymentDate (format: YYYY-MM-DD)
+                const lastDateParts = prop.lastPaymentDate.split('-');
+                const lastDate = new Date(
+                    parseInt(lastDateParts[0]), 
+                    parseInt(lastDateParts[1]) - 1, 
+                    parseInt(lastDateParts[2])
+                );
+                lastDate.setHours(0, 0, 0, 0);
+                
+                const nextDate = new Date(lastDate);
+                if (prop.paymentFrequency === 'daily') {
+                    nextDate.setDate(nextDate.getDate() + 1);
+                } else if (prop.paymentFrequency === 'weekly') {
+                    nextDate.setDate(nextDate.getDate() + 7);
+                } else if (prop.paymentFrequency === 'biweekly') {
+                    nextDate.setDate(nextDate.getDate() + 14);
+                } else {
+                    // Monthly
+                    nextDate.setMonth(nextDate.getMonth() + 1);
+                }
+                
+                const dueDate = nextDate.toISOString().split('T')[0];
+                const daysUntilDue = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24));
+                
+                // Get rent amount based on frequency
+                let rentAmount = prop.weeklyPrice || 0;
+                if (prop.paymentFrequency === 'daily' && prop.dailyPrice) {
+                    rentAmount = prop.dailyPrice;
+                } else if (prop.paymentFrequency === 'biweekly' && prop.biweeklyPrice) {
+                    rentAmount = prop.biweeklyPrice;
+                } else if (prop.paymentFrequency === 'monthly' && prop.monthlyPrice) {
+                    rentAmount = prop.monthlyPrice;
+                } else if (prop.paymentFrequency === 'daily') {
+                    rentAmount = Math.round((prop.weeklyPrice || 0) / 7);
+                } else if (prop.paymentFrequency === 'biweekly') {
+                    rentAmount = (prop.weeklyPrice || 0) * 2;
+                } else if (prop.paymentFrequency === 'monthly') {
+                    rentAmount = (prop.weeklyPrice || 0) * 4;
+                }
+                
+                const rentData = {
+                    propId,
+                    propertyId: propId,
+                    id: propId,
+                    ...prop,
+                    dueDate,
+                    nextRentDue: dueDate,
+                    rentAmount,
+                    daysUntilDue
+                };
+                
+                if (daysUntilDue < 0) {
+                    // Overdue
+                    rentData.daysOverdue = Math.abs(daysUntilDue);
+                    overdue.push(rentData);
+                } else if (daysUntilDue === 0) {
+                    // Due today
+                    rentData.isToday = true;
+                    dueToday.push(rentData);
+                } else if (daysUntilDue === 1) {
+                    // Due tomorrow
+                    dueTomorrow.push(rentData);
                 }
             });
             
+            
             state.rentAlerts = {
-                pendingDownPayments,
-                overdue: financingOverdue,
-                today: financingDueToday,
-                tomorrow: financingDueTomorrow
+                overdue,
+                today: dueToday,
+                tomorrow: dueTomorrow
             };
             
             refreshUI();
             
         } catch (error) {
-            console.error('[NotificationManager] Error checking payment alerts:', error);
+            console.error('[NotificationManager] Error checking rent due:', error);
         }
     }
 
@@ -1272,10 +1200,10 @@
         refreshBadges,
         refreshPanels,
         
-        // Payment alerts (replaces rent)
-        checkPaymentAlerts,
-        togglePaymentPanel,
-        copyPaymentReminder,
+        // Rent
+        checkRentDue,
+        toggleRentPanel,
+        copyRentReminder,
         
         // Utilities
         createNotification,
@@ -1291,11 +1219,33 @@
     // Legacy aliases
     window.initAdminNotifications = init;
     window.initAdminNotificationSystem = init;
-    window.initRentNotifications = checkPaymentAlerts;
-    window.checkRentDueNotifications = checkPaymentAlerts;
-    window.renderRentNotificationsPanel = renderPaymentAlertsPanel;
+    window.initRentNotifications = checkRentDue;
+    window.checkRentDueNotifications = checkRentDue;
+    window.renderRentNotificationsPanel = renderRentAlertsPanel;
     window.updateMobileRentBadge = refreshBadges;
     window.updateMobileAdminBadges = refreshBadges;
 
+    // Event delegation handler for rent panel clicks
+    window.handleRentPanelClick = function(event) {
+        // Check if clicked on the header area (gradient background)
+        const header = event.target.closest('.bg-gradient-to-r');
+        if (header) {
+            NotificationManager.toggleRentPanel();
+            return;
+        }
+        
+        // Check if clicked on copy button
+        if (event.target.closest('button') && event.target.textContent.includes('Copy')) {
+            // The button's own onclick should handle this
+            return;
+        }
+        
+        // Check if clicked on a rent item row
+        const rentItem = event.target.closest('[id^="rent-item-"]');
+        if (rentItem) {
+            const propertyId = rentItem.id.replace('rent-item-', '');
+            viewPropertyStats(propertyId);
+        }
+    };
 
 })();
