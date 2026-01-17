@@ -450,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = $('newAccountEmail').value.trim().toLowerCase();
             const email = username + '@pma.network'; // Append domain
             const password = $('newAccountPassword').value;
-            const displayName = $('newAccountDisplayName').value.trim();
             const errorDiv = $('createAccountError');
             const btn = $('createAccountBtn');
             
@@ -481,16 +480,18 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 // Set flag to prevent false "deleted account" detection
                 window.isCreatingAccount = true;
+                // Set flag to trigger new user welcome flow after login
+                window.isNewUserRegistration = true;
                 
                 // Create the user with Firebase Auth
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
-                // Create user document with starter tier, display name, and gamification
-                // CRITICAL: Save to displayName field - this is what gets displayed on tiles
+                // Create user document with starter tier and gamification
+                // NOTE: displayName will be set later when user completes profile
                 await db.collection('users').doc(user.uid).set({
                     email: user.email.toLowerCase(),
-                    displayName: displayName,  // PRIMARY field for display
-                    username: displayName,     // Keep for backwards compatibility
+                    displayName: '',  // Will be set when user saves their profile
+                    username: '',     // Keep for backwards compatibility
                     tier: 'starter',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     gamification: {
@@ -511,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     await db.collection('adminNotifications').add({
                         type: 'new_user',
                         userEmail: user.email.toLowerCase(),
-                        displayName: displayName,
+                        displayName: '(Profile incomplete)',
                         tier: 'starter',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         dismissed: false
@@ -524,20 +525,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Clear the flag after document is created
                 window.isCreatingAccount = false;
                 
-                // Show success with credentials reminder
+                // Show brief success then redirect to dashboard
                 errorDiv.className = 'text-green-400 text-sm font-medium text-center p-3 bg-green-900/30 rounded-xl';
-                errorDiv.innerHTML = `✓ Account created!<br><strong>Save these credentials:</strong><br>Username: ${username}@pma.network<br>Password: (what you entered)`;
+                errorDiv.innerHTML = `✓ Account created! Redirecting to your dashboard...`;
                 showElement(errorDiv);
                 
-                // Close modal after delay
+                // Close modal and navigate to dashboard after brief delay
                 setTimeout(() => {
                     closeModal('loginModal');
                     errorDiv.className = 'hidden text-red-400 text-sm font-medium text-center p-3 bg-red-900/30 rounded-xl';
-                }, 3000);
+                    // Navigate to dashboard - the auth state change will trigger the new user flow
+                    navigateTo('dashboard');
+                }, 1500);
                 
             } catch (error) {
-                // Clear flag on error too
+                // Clear flags on error too
                 window.isCreatingAccount = false;
+                window.isNewUserRegistration = false;
                 
                 console.error('[Auth] Create account error:', error);
                 
@@ -862,5 +866,97 @@ window.toggleServicesSubmenu = function(event) {
     if (event) event.preventDefault();
     openServicesModal();
     closeUserDropdown();
+};
+
+// ==================== NEW USER WELCOME FLOW ====================
+/**
+ * Trigger the new user welcome flow
+ * - Shows welcome banner
+ * - Highlights profile fields
+ * - Scrolls to profile section
+ * - Requires City Name and Phone before listing
+ */
+window.triggerNewUserWelcome = function() {
+    console.log('[NewUser] Triggering welcome flow...');
+    
+    // Show the welcome banner
+    const welcomeBanner = $('newUserWelcomeBanner');
+    if (welcomeBanner) {
+        welcomeBanner.classList.remove('hidden');
+    }
+    
+    // Show required indicators
+    const cityNameRequired = $('cityNameRequired');
+    const cityPhoneRequired = $('cityPhoneRequired');
+    if (cityNameRequired) cityNameRequired.classList.remove('hidden');
+    if (cityPhoneRequired) cityPhoneRequired.classList.remove('hidden');
+    
+    // Add highlight styling to field wrappers
+    const displayNameWrapper = $('displayNameFieldWrapper');
+    const phoneWrapper = $('phoneFieldWrapper');
+    
+    if (displayNameWrapper) {
+        displayNameWrapper.style.background = 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2))';
+        displayNameWrapper.style.border = '2px solid rgb(34, 197, 94)';
+        displayNameWrapper.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.3)';
+    }
+    
+    if (phoneWrapper) {
+        phoneWrapper.style.background = 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2))';
+        phoneWrapper.style.border = '2px solid rgb(34, 197, 94)';
+        phoneWrapper.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.3)';
+    }
+    
+    // Scroll to the profile section after a brief delay
+    setTimeout(() => {
+        const profileSection = $('profileSection');
+        if (profileSection) {
+            profileSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Focus the city name input
+        setTimeout(() => {
+            const cityNameInput = $('ownerUsername');
+            if (cityNameInput) {
+                cityNameInput.focus();
+            }
+        }, 500);
+    }, 300);
+    
+    // Clear the new user flag
+    window.isNewUserRegistration = false;
+};
+
+/**
+ * Clear the new user welcome styling (called after profile is saved)
+ */
+window.clearNewUserWelcome = function() {
+    // Hide welcome banner
+    const welcomeBanner = $('newUserWelcomeBanner');
+    if (welcomeBanner) {
+        welcomeBanner.classList.add('hidden');
+    }
+    
+    // Hide required indicators
+    const cityNameRequired = $('cityNameRequired');
+    const cityPhoneRequired = $('cityPhoneRequired');
+    if (cityNameRequired) cityNameRequired.classList.add('hidden');
+    if (cityPhoneRequired) cityPhoneRequired.classList.add('hidden');
+    
+    // Remove highlight styling
+    const displayNameWrapper = $('displayNameFieldWrapper');
+    const phoneWrapper = $('phoneFieldWrapper');
+    
+    if (displayNameWrapper) {
+        displayNameWrapper.style.background = '';
+        displayNameWrapper.style.border = '';
+        displayNameWrapper.style.boxShadow = '';
+    }
+    
+    if (phoneWrapper) {
+        phoneWrapper.style.background = '';
+        phoneWrapper.style.border = '';
+        phoneWrapper.style.boxShadow = '';
+    }
 };
 
