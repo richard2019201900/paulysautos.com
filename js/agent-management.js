@@ -54,7 +54,8 @@ window.loadAgents = async function(forceRefresh) {
     }
     
     try {
-        var masterAdminEmail = 'richard2019201900@gmail.com';
+        // Use the global MASTER_ADMIN_EMAIL from services.js
+        var masterAdminEmail = window.MASTER_ADMIN_EMAIL || 'pauly@pma.network';
         var masterAdminLower = masterAdminEmail.toLowerCase();
         var seenEmails = {}; // Track emails to prevent duplicates
         var tempAgents = [];
@@ -70,7 +71,7 @@ window.loadAgents = async function(forceRefresh) {
             tempAgents.push({
                 odId: masterSnapshot.docs[0].id,
                 email: masterAdminEmail,
-                username: 'Pauly Amato', // Always use consistent name for master admin
+                username: masterData.displayName || masterData.username || 'Pauly Amato',
                 phone: masterData.phone || '2057028233',
                 tier: 'owner',
                 isAgent: true,
@@ -96,9 +97,9 @@ window.loadAgents = async function(forceRefresh) {
             tempAgents.push({
                 odId: doc.id,
                 email: data.email,
-                username: data.username || data.email.split('@')[0],
+                username: data.displayName || data.username || data.email.split('@')[0],
                 phone: data.phone || '',
-                tier: data.tier || 'free',
+                tier: data.tier || 'starter',
                 isAgent: true,
                 agentSince: data.agentSince || null
             });
@@ -169,7 +170,8 @@ window.demoteFromAgent = async function(odId, email) {
     }
     
     // Don't allow demoting master admin
-    if (email.toLowerCase() === 'richard2019201900@gmail.com') {
+    var masterAdminEmail = window.MASTER_ADMIN_EMAIL || 'pauly@pma.network';
+    if (email.toLowerCase() === masterAdminEmail.toLowerCase()) {
         showToast('Cannot remove agent role from Master Admin', 'error');
         return false;
     }
@@ -265,8 +267,9 @@ window.assignAgentToProperty = async function(vehicleId, agentEmail) {
         // Get agent display name AND phone for public viewing (anonymous users can't query users collection)
         var agentDisplayName = 'Agent';
         var agentPhone = '2057028233'; // Default to Pauly's number
+        var masterAdminEmail = window.MASTER_ADMIN_EMAIL || 'pauly@pma.network';
         
-        if (agentEmail.toLowerCase() === 'richard2019201900@gmail.com') {
+        if (agentEmail.toLowerCase() === masterAdminEmail.toLowerCase()) {
             agentDisplayName = 'Pauly Amato';
             agentPhone = '2057028233';
         } else {
@@ -443,8 +446,9 @@ window.getAgentContactsForProperty = async function(vehicleId) {
     
     // Last resort: Check for master admin email
     if (contacts.length === 0) {
+        var masterAdminEmail = window.MASTER_ADMIN_EMAIL || 'pauly@pma.network';
         agentEmails.forEach(function(email) {
-            if (email.toLowerCase() === 'richard2019201900@gmail.com') {
+            if (email.toLowerCase() === masterAdminEmail.toLowerCase()) {
                 contacts.push({
                     email: email,
                     phone: '2057028233',
@@ -527,7 +531,8 @@ window.renderAgentsTab = async function() {
                     totalCommission += comm.perAgent;
                 });
                 
-                var isMasterAdmin = agent.email.toLowerCase() === 'richard2019201900@gmail.com';
+                var masterAdminEmail = window.MASTER_ADMIN_EMAIL || 'pauly@pma.network';
+                var isMasterAdmin = agent.email.toLowerCase() === masterAdminEmail.toLowerCase();
                 var tierIcon = TierService.getTierIcon ? TierService.getTierIcon(agent.tier) : '';
                 
                 agentCardsHtml += '<div class="bg-gray-800/50 rounded-xl border border-gray-700 p-4">' +
@@ -871,12 +876,13 @@ window.migrateAgentDisplayNames = async function() {
             
             var displayNames = prop.agentDisplayNames || {};
             var phones = prop.agentPhones || {};
+            var masterAdminEmail = window.MASTER_ADMIN_EMAIL || 'pauly@pma.network';
             
             prop.agents.forEach(function(agentEmail) {
                 var emailLower = agentEmail.toLowerCase();
                 
                 // Master admin special case
-                if (emailLower === 'richard2019201900@gmail.com') {
+                if (emailLower === masterAdminEmail.toLowerCase()) {
                     displayNames[emailLower] = 'Pauly Amato';
                     phones[emailLower] = '2057028233';
                 } else {

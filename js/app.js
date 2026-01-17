@@ -3180,7 +3180,7 @@ window.saveNewImagesConfirmed = async function() {
         
         // Ensure owner info is set
         if (!prop.ownerEmail) {
-            prop.ownerEmail = (auth.currentUser?.email || 'richard2019201900@gmail.com').toLowerCase();
+            prop.ownerEmail = (auth.currentUser?.email || 'pauly@pma.network').toLowerCase();
         }
         
         // Save to Firestore
@@ -3234,7 +3234,7 @@ window.deletePropertyImage = async function(vehicleId, imageIndex, imageUrl) {
         
         // Ensure owner info is set (especially for base vehicles being edited)
         if (!prop.ownerEmail) {
-            prop.ownerEmail = (auth.currentUser?.email || 'richard2019201900@gmail.com').toLowerCase();
+            prop.ownerEmail = (auth.currentUser?.email || 'pauly@pma.network').toLowerCase();
         }
         
         // Save to Firestore
@@ -3381,7 +3381,7 @@ window.reorderPropertyImages = async function(vehicleId, fromIndex, toIndex) {
         
         // Ensure owner info is set
         if (!prop.ownerEmail) {
-            prop.ownerEmail = (auth.currentUser?.email || 'richard2019201900@gmail.com').toLowerCase();
+            prop.ownerEmail = (auth.currentUser?.email || 'pauly@pma.network').toLowerCase();
         }
         
         // Save to Firestore

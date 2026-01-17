@@ -2850,8 +2850,6 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                 </button>
             `;
             
-            const proratedBadge = isProratedUpgrade ? `<span class="bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">💰 PRORATED</span>` : '';
-            
             const subscriptionLabel = isFreeTrial 
                 ? `${tierName} Trial` 
                 : `Subscription: ${tierPrice}/mo`;
@@ -2872,7 +2870,6 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                             <span class="text-white font-bold text-sm">${subscriptionLabel}</span>
                             ${editAmountBtn}
                             ${trialBadge}
-                            ${proratedBadge}
                         </div>
                         <div class="flex items-center gap-2">
                             ${toggleTrialBtn}
@@ -3036,15 +3033,12 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
     
     // Elite section (expanded by default)
     if (groups.elite.length > 0) {
-        // Calculate actual elite revenue for header
+        // Calculate elite counts for header
         const elitePaidCount = groups.elite.filter(u => !u.isFreeTrial).length;
         const eliteTrialCount = groups.elite.filter(u => u.isFreeTrial).length;
-        const proratedEliteCount = groups.elite.filter(u => u.isProratedUpgrade && !u.isFreeTrial).length;
         let eliteSubLabel = '';
-        if (elitePaidCount > 0 && proratedEliteCount > 0) {
-            eliteSubLabel = `${elitePaidCount} paid (${proratedEliteCount} prorated)`;
-        } else if (elitePaidCount > 0) {
-            eliteSubLabel = `${elitePaidCount} × $50k/mo`;
+        if (elitePaidCount > 0) {
+            eliteSubLabel = `${elitePaidCount} × $25k/mo`;
         }
         if (eliteTrialCount > 0) {
             eliteSubLabel += eliteSubLabel ? `, ${eliteTrialCount} trial` : `${eliteTrialCount} on trial`;
