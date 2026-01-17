@@ -332,10 +332,23 @@ function formatMemberSince(createdAt) {
     try {
         let date;
         if (createdAt.toDate) {
+            // Firestore Timestamp object
             date = createdAt.toDate();
         } else if (typeof createdAt === 'string') {
+            // ISO string
             date = new Date(createdAt);
+        } else if (createdAt._seconds !== undefined) {
+            // Serialized Firestore Timestamp from Cloud Function
+            date = new Date(createdAt._seconds * 1000);
+        } else if (typeof createdAt === 'object' && createdAt.seconds !== undefined) {
+            // Another Timestamp format
+            date = new Date(createdAt.seconds * 1000);
         } else {
+            return 'Unknown';
+        }
+        
+        // Validate the date
+        if (isNaN(date.getTime())) {
             return 'Unknown';
         }
         

@@ -94,7 +94,8 @@ const GamificationService = {
                     title: 'Newcomer',
                     achievements: {},
                     stats: { totalSales: 0, vehiclesPosted: 0 },
-                    rewards: {}
+                    rewards: {},
+                    activityLog: []
                 };
                 
                 // Check if already earned
@@ -108,11 +109,32 @@ const GamificationService = {
                 const newXP = oldXP + xpAmount;
                 const newLevelInfo = GamificationService.getLevelFromXP(newXP);
                 
+                // Get achievement info for activity log
+                const achievementInfo = GamificationService.achievements[achievementId] || { name: achievementId };
+                
+                // Create activity log entry for this achievement
+                const activityLog = gamification.activityLog || [];
+                const newActivity = {
+                    type: 'achievement',
+                    achievementId: achievementId,
+                    amount: xpAmount,
+                    reason: achievementInfo.name || achievementId,
+                    timestamp: new Date().toISOString(),
+                    totalAfter: newXP
+                };
+                
+                // Add to front of activity log, keep last 20
+                activityLog.unshift(newActivity);
+                if (activityLog.length > 20) {
+                    activityLog.length = 20;
+                }
+                
                 // Build update object
                 const updates = {
                     'gamification.xp': newXP,
                     'gamification.level': newLevelInfo.level,
                     'gamification.title': newLevelInfo.title,
+                    'gamification.activityLog': activityLog,
                     [`gamification.achievements.${achievementId}`]: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 

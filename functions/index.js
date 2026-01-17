@@ -38,6 +38,16 @@ exports.getLeaderboard = functions.https.onCall(async (data, context) => {
 
             // Only include users with XP
             if (gamification.xp > 0) {
+                // Convert Firestore Timestamp to ISO string for JSON serialization
+                let createdAtStr = null;
+                if (userData.createdAt) {
+                    if (userData.createdAt.toDate) {
+                        createdAtStr = userData.createdAt.toDate().toISOString();
+                    } else if (typeof userData.createdAt === 'string') {
+                        createdAtStr = userData.createdAt;
+                    }
+                }
+                
                 leaderboard.push({
                     odbc: doc.id, // Obfuscated document ID (not email)
                     username: userData.displayName || userData.username || 'Anonymous', // Prefer displayName
@@ -47,7 +57,7 @@ exports.getLeaderboard = functions.https.onCall(async (data, context) => {
                     icon: getLevelIcon(gamification.level || 1),
                     tier: userData.tier || 'starter',
                     rank: rank++,
-                    createdAt: userData.createdAt || null,
+                    createdAt: createdAtStr,
                     activityLog: (gamification.activityLog || []).slice(0, 10) // Last 10 activities
                 });
             }
