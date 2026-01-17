@@ -77,10 +77,24 @@ async function getUsernameByEmail(email) {
     }
 
     try {
-        const querySnapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
-        if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            
+        const currentUser = auth.currentUser;
+        let userData = null;
+        
+        // If looking up current user's own info, use UID for direct access (always permitted)
+        if (currentUser && currentUser.email && currentUser.email.toLowerCase() === normalizedEmail) {
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            if (userDoc.exists) {
+                userData = userDoc.data();
+            }
+        } else {
+            // Looking up another user - try email query (works for admin, may fail for regular users)
+            const querySnapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
+            if (!querySnapshot.empty) {
+                userData = querySnapshot.docs[0].data();
+            }
+        }
+        
+        if (userData) {
             // Apply the display name hierarchy
             let displayName = resolveDisplayName(userData, email);
             
