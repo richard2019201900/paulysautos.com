@@ -883,6 +883,10 @@
                         <input type="password" id="newAccountPassword" required minlength="6" autocomplete="new-password" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-cyan-500 transition" placeholder="At least 6 characters">
                         <p class="text-gray-500 text-xs mt-1">Pick something you'll remember!</p>
                     </div>
+                    <div>
+                        <label for="newAccountDisplayName" class="block text-gray-300 font-semibold mb-2">Display Name (shown on listings)</label>
+                        <input type="text" id="newAccountDisplayName" required maxlength="30" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-cyan-500 transition" placeholder="Your in-city name">
+                    </div>
                     <div id="createAccountError" class="hidden text-red-400 text-sm font-medium text-center p-3 bg-red-900/30 rounded-xl"></div>
                     <button type="submit" id="createAccountBtn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-4 rounded-xl font-semibold hover:opacity-90 transition shadow-lg">🌱 Create Starter Account</button>
                 </form>
@@ -1366,6 +1370,22 @@
                         </div>
                     </div>
                     
+                    <!-- Pro Revenue Tile -->
+                    <div class="admin-stat-tile cursor-pointer" onclick="flipAdminTile('proRevenue')">
+                        <div id="adminTileProRevenue" class="relative min-h-[9rem] transition-transform duration-500" style="transform-style: preserve-3d;">
+                            <!-- Front -->
+                            <div class="absolute inset-0 bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-xl p-4 text-center border border-yellow-600/50 flex flex-col justify-center" style="backface-visibility: hidden;">
+                                <div id="adminStatProRevenue" class="text-2xl font-bold text-yellow-400">-</div>
+                                <div class="text-gray-400 text-sm">Pro Income</div>
+                                <div id="adminStatProRevenueSub" class="text-gray-500 text-xs mt-0.5">$25k/mo each</div>
+                            </div>
+                            <!-- Back -->
+                            <div class="absolute inset-0 bg-yellow-900/40 rounded-xl p-3 border border-yellow-600 flex flex-col justify-start text-xs overflow-y-auto" style="backface-visibility: hidden; transform: rotateY(180deg);">
+                                <div id="adminStatProRevenueDetail" class="text-gray-300 space-y-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Elite Revenue Tile -->
                     <div class="admin-stat-tile cursor-pointer" onclick="flipAdminTile('eliteRevenue')">
                         <div id="adminTileEliteRevenue" class="relative min-h-[9rem] transition-transform duration-500" style="transform-style: preserve-3d;">
@@ -1627,24 +1647,12 @@
                     </div>
                 </div>
                 
-                <!-- New User Welcome Banner (shown after registration) -->
-                <div id="newUserWelcomeBanner" class="hidden bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-500 rounded-xl p-5 mb-6 animate-pulse">
-                    <div class="flex items-start gap-4">
-                        <span class="text-3xl">🎉</span>
-                        <div class="flex-1">
-                            <h4 class="text-green-300 font-bold text-lg">Welcome to PaulysAutos!</h4>
-                            <p class="text-white mt-1">🌱 <strong>Free Starter Account</strong> - Your first 3 listings are FREE!</p>
-                            <p class="text-amber-300 mt-2 font-medium">⬇️ Please complete your profile below to start listing vehicles:</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="profileFieldsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Display Name -->
-                    <div id="displayNameFieldWrapper" class="flex flex-col sm:flex-row gap-3 p-3 rounded-xl transition-all duration-500">
+                    <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-1">
-                            <label for="ownerUsername" class="block text-gray-300 font-semibold mb-2 text-sm">City Name <span id="cityNameRequired" class="hidden text-red-400">*Required</span></label>
-                            <input type="text" id="ownerUsername" maxlength="30" placeholder="Enter your in-city name..." class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <label for="ownerUsername" class="block text-gray-300 font-semibold mb-2 text-sm">Display Name</label>
+                            <input type="text" id="ownerUsername" maxlength="30" placeholder="Enter display name..." class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
                         </div>
                         <div class="flex items-end">
                             <button onclick="saveUsername()" id="saveUsernameBtn" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm">
@@ -1654,9 +1662,9 @@
                     </div>
                     
                     <!-- Phone Number -->
-                    <div id="phoneFieldWrapper" class="flex flex-col sm:flex-row gap-3 p-3 rounded-xl transition-all duration-500">
+                    <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-1">
-                            <label for="ownerPhone" class="block text-gray-300 font-semibold mb-2 text-sm">City Phone <span id="cityPhoneRequired" class="hidden text-red-400">*Required</span></label>
+                            <label for="ownerPhone" class="block text-gray-300 font-semibold mb-2 text-sm">In-City Phone</label>
                             <input type="tel" id="ownerPhone" maxlength="10" placeholder="Enter phone number..." oninput="this.value = this.value.replace(/\D/g, '')" class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
                         </div>
                         <div class="flex items-end">

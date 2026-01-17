@@ -3624,6 +3624,12 @@ window.forceLogout = function() {
         window.adminPollInterval = null;
     }
     
+    // Destroy NotificationManager to reset knownListingIds/knownUserIds
+    // This ensures the next user sees fresh notifications
+    if (window.NotificationManager && typeof window.NotificationManager.destroy === 'function') {
+        window.NotificationManager.destroy();
+    }
+    
     // Stop vehicle sync listener
     if (typeof stopVehicleSyncListener === 'function') {
         stopVehicleSyncListener();

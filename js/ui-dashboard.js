@@ -71,6 +71,11 @@ window.logout = function() {
         window.userTierUnsubscribe();
         window.userTierUnsubscribe = null;
     }
+    // Destroy NotificationManager to reset knownListingIds/knownUserIds
+    // This ensures the next user sees fresh notifications
+    if (window.NotificationManager && typeof window.NotificationManager.destroy === 'function') {
+        window.NotificationManager.destroy();
+    }
     // Hide global alert
     dismissGlobalAlert();
     // Reset all admin alert state
@@ -99,6 +104,10 @@ window.forceLogout = function() {
     if (window.userTierUnsubscribe) {
         window.userTierUnsubscribe();
         window.userTierUnsubscribe = null;
+    }
+    // Destroy NotificationManager to reset knownListingIds/knownUserIds
+    if (window.NotificationManager && typeof window.NotificationManager.destroy === 'function') {
+        window.NotificationManager.destroy();
     }
     
     // Reset state
@@ -594,6 +603,35 @@ function renderOwnerDashboard() {
     // Initialize dashboard tabs
     if (typeof initDashboardTabs === 'function') {
         initDashboardTabs();
+    }
+    
+    // Check for new user welcome flow
+    // Trigger if: isNewUserRegistration flag is set OR user has no displayName/phone
+    if (window.isNewUserRegistration) {
+        setTimeout(() => {
+            if (typeof triggerNewUserWelcome === 'function') {
+                triggerNewUserWelcome();
+            }
+        }, 500);
+    } else if (window.currentUserData) {
+        // Also check if existing user has incomplete profile (no displayName or phone)
+        const userData = window.currentUserData;
+        const hasDisplayName = userData.displayName && userData.displayName.trim();
+        const hasPhone = userData.phone && userData.phone.trim();
+        
+        if (!hasDisplayName || !hasPhone) {
+            // Show subtle reminder for incomplete profile
+            setTimeout(() => {
+                if (typeof triggerNewUserWelcome === 'function') {
+                    triggerNewUserWelcome();
+                }
+            }, 1000);
+        } else {
+            // Profile is complete - clear any welcome styling
+            if (typeof clearNewUserWelcome === 'function') {
+                clearNewUserWelcome();
+            }
+        }
     }
     
     // Render site update notification if there's a new one
