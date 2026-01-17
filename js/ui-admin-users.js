@@ -148,13 +148,13 @@ window.editSubscriptionAmount = async function(userId, email, curpaymentAmount) 
         return;
     }
     
-    // Determine if this is a prorated amount
-    const isProrated = amount < 50000 && amount > 0;
+    // Elite is $25k/month - anything less than full price is considered a special rate
+    const isSpecialRate = amount < 25000 && amount > 0;
     
     try {
         await db.collection('users').doc(userId).update({
             subscriptionAmount: amount,
-            isProratedUpgrade: isProrated,
+            isSpecialRate: isSpecialRate,
             subscriptionUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
@@ -1202,8 +1202,8 @@ window.deleteUpgradeHistory = async function(entryId) {
 window.adminUpgradeUser = async function(email, newTier, currentTier) {
     if (!requireAdmin('adminUpgradeUser')) return;
     
-    const tierData = TIERS[newTier];
-    const price = '$50,000'; // Elite tier pricing
+    const tierData = TIERS[newTier] || TIERS.elite;
+    const price = '$25,000'; // Elite tier pricing
     
     // Show upgrade modal with trial option
     showUpgradeModal(email, newTier, currentTier, tierData, price);
@@ -1272,21 +1272,16 @@ function showUpgradeModal(email, newTier, currentTier, tierData, price) {
     
     // Add event listeners
     const trialCheckbox = $('upgradeTrialCheckbox');
-    const proratedCheckbox = $('upgradeProratedCheckbox');
     const notesInput = $('upgradeNotes');
     const amountValue = $('upgradeAmountValue');
     
     // Function to update amount display
     const updateAmountDisplay = () => {
         const isTrial = trialCheckbox?.checked;
-        const isProrated = proratedCheckbox?.checked;
         
         if (isTrial) {
             amountValue.textContent = '$0 (Trial)';
             amountValue.className = 'text-cyan-400 font-bold text-xl';
-        } else if (isProrated) {
-            amountValue.textContent = proratedPrice;
-            amountValue.className = 'text-amber-400 font-bold text-xl';
         } else {
             amountValue.textContent = price;
             amountValue.className = 'text-green-400 font-bold text-xl';
@@ -1295,37 +1290,10 @@ function showUpgradeModal(email, newTier, currentTier, tierData, price) {
     
     if (trialCheckbox) {
         trialCheckbox.addEventListener('change', function() {
-            // Uncheck prorated if trial is checked
-            if (this.checked && proratedCheckbox) {
-                proratedCheckbox.checked = false;
-            }
-            
             if (this.checked) {
-                const tierName = newTier === 'pro' ? 'Pro' : 'Elite';
-                notesInput.value = `Enjoy a 30 day free trial of ${tierName} Membership on Pauly!`;
+                notesInput.value = `Enjoy a 30 day free trial of Elite Membership on Pauly!`;
             } else {
                 if (notesInput.value.includes('free trial')) {
-                    notesInput.value = '';
-                }
-            }
-            updateAmountDisplay();
-        });
-    }
-    
-    if (proratedCheckbox) {
-        proratedCheckbox.addEventListener('change', function() {
-            // Uncheck trial if prorated is checked
-            if (this.checked && trialCheckbox) {
-                trialCheckbox.checked = false;
-                if (notesInput.value.includes('free trial')) {
-                    notesInput.value = '';
-                }
-            }
-            
-            if (this.checked) {
-                notesInput.value = `Prorated upgrade from Pro to Elite - paid $25k difference`;
-            } else {
-                if (notesInput.value.includes('Prorated')) {
                     notesInput.value = '';
                 }
             }
@@ -1342,10 +1310,10 @@ window.closeUpgradeModal = function() {
 window.confirmUpgrade = async function(email, newTier, currentTier) {
     const isTrial = $('upgradeTrialCheckbox')?.checked || false;
     const notes = $('upgradeNotes')?.value || '';
-    const tierData = TIERS[newTier];
+    const tierData = TIERS[newTier] || TIERS.elite;
     
-    // Calculate actual subscription amount - Elite is $50k/month
-    let subscriptionAmount = 50000;
+    // Calculate actual subscription amount - Elite is $25k/month
+    let subscriptionAmount = 25000;
     if (isTrial) {
         subscriptionAmount = 0;
     }
@@ -2034,8 +2002,8 @@ window.adminEditDisplayName = async function(userId, email, currentName) {
     }
     
     try {
-        // Update user document
-        await updateAdminUserField(userId, email, 'username', trimmedName);
+        // Update user document - use 'displayName' field (preferred) not 'username'
+        await updateAdminUserField(userId, email, 'displayName', trimmedName);
         
         // Update the display in the admin panel
         const displayNameEl = document.getElementById(`displayName_${userId}`);
@@ -2051,7 +2019,7 @@ window.adminEditDisplayName = async function(userId, email, currentName) {
             loadAllUsers();
         }
         
-        alert(`✅ Display name updated to "${trimmedName}" and synced across all vehicles!`);
+        showToast(`Display name updated to "${trimmedName}"`, 'success');
         
     } catch (error) {
         console.error('[AdminEditDisplayName] Error:', error);

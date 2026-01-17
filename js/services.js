@@ -2,7 +2,7 @@
 /**
  * User Tiers Configuration - PaulysAutos.com
  * - Starter (free): 3 listings
- * - Elite ($50k/month): Unlimited listings + all features
+ * - Elite ($25k/month): Unlimited listings + all features
  */
 const TIERS = {
     starter: { 
@@ -19,7 +19,7 @@ const TIERS = {
         name: 'Elite',
         color: 'text-amber-400',
         bgColor: 'bg-amber-600',
-        price: 50000
+        price: 25000
     }
 };
 
@@ -158,12 +158,32 @@ const TierService = {
         
         try {
             const normalizedEmail = email.toLowerCase();
-            const snapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
+            const currentUser = auth.currentUser;
             
             let tier = 'starter';
-            if (!snapshot.empty) {
-                const userData = snapshot.docs[0].data();
-                tier = userData.tier || 'starter';
+            
+            // If checking current user's own tier, use UID for direct access (always permitted)
+            // This avoids the collection query which requires special permissions
+            if (currentUser && currentUser.email && currentUser.email.toLowerCase() === normalizedEmail) {
+                try {
+                    const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                    if (userDoc.exists) {
+                        tier = userDoc.data().tier || 'starter';
+                    }
+                } catch (uidError) {
+                    console.warn('[TierService] UID lookup failed, trying email query:', uidError.message);
+                    // Fall through to email query as backup
+                    const snapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
+                    if (!snapshot.empty) {
+                        tier = snapshot.docs[0].data().tier || 'starter';
+                    }
+                }
+            } else {
+                // Admin checking another user's tier - use email query
+                const snapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
+                if (!snapshot.empty) {
+                    tier = snapshot.docs[0].data().tier || 'starter';
+                }
             }
             
             // Count user's listings from FRESH Firestore data (not cached map)
@@ -250,7 +270,7 @@ const TierService = {
         });
         
         // Add to upgrade history
-        // Elite is $50k/month, Starter is free
+        // Elite is $25k/month, Starter is free
         await db.collection('upgradeHistory').add({
             userEmail: normalizedEmail,
             previousTier: oldTier,
@@ -258,7 +278,7 @@ const TierService = {
             upgradedAt: firebase.firestore.FieldValue.serverTimestamp(),
             upgradedBy: auth.currentUser?.email || 'system',
             paymentNote: paymentNote,
-            price: isFreeTrial ? 0 : (newTier === 'elite' ? 50000 : 0),
+            price: isFreeTrial ? 0 : (newTier === 'elite' ? 25000 : 0),
             isFreeTrial: isFreeTrial
         });
     },

@@ -389,10 +389,8 @@ window.updateTierBadge = function(tier, email) {
         // Update badge background based on tier
         if (badgeEl) {
             badgeEl.className = badgeEl.className.replace(/border-\w+-\d+/g, '');
-            if (tier === 'pro') {
-                badgeEl.classList.add('border-yellow-600');
-            } else if (tier === 'elite') {
-                badgeEl.classList.add('border-purple-600');
+            if (tier === 'elite') {
+                badgeEl.classList.add('border-amber-600');
             } else {
                 badgeEl.classList.add('border-gray-600');
             }

@@ -71,6 +71,11 @@ window.logout = function() {
         window.userTierUnsubscribe();
         window.userTierUnsubscribe = null;
     }
+    // Destroy NotificationManager to reset knownListingIds/knownUserIds
+    // This ensures the next user sees fresh notifications
+    if (window.NotificationManager && typeof window.NotificationManager.destroy === 'function') {
+        window.NotificationManager.destroy();
+    }
     // Hide global alert
     dismissGlobalAlert();
     // Reset all admin alert state
@@ -99,6 +104,10 @@ window.forceLogout = function() {
     if (window.userTierUnsubscribe) {
         window.userTierUnsubscribe();
         window.userTierUnsubscribe = null;
+    }
+    // Destroy NotificationManager to reset knownListingIds/knownUserIds
+    if (window.NotificationManager && typeof window.NotificationManager.destroy === 'function') {
+        window.NotificationManager.destroy();
     }
     
     // Reset state

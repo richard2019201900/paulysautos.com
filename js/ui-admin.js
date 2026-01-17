@@ -120,9 +120,9 @@ window.loadUpgradeRequests = async function() {
         
         container.innerHTML = requests.map(req => {
             const currentTierData = TIERS[req.currentTier] || TIERS.starter;
-            const requestedTierData = TIERS[req.requestedTier] || TIERS.pro;
+            const requestedTierData = TIERS[req.requestedTier] || TIERS.elite;
             const date = req.createdAt?.toDate ? req.createdAt.toDate().toLocaleString() : 'Unknown';
-            const price = req.requestedTier === 'pro' ? '$25,000' : '$50,000';
+            const price = '$25,000'; // Elite is the only paid tier
             
             return `
                 <div class="bg-gray-800 rounded-xl p-4 border border-orange-600/50">
@@ -416,14 +416,10 @@ window.deletePhotoRequest = async function(requestId) {
 window.approveUpgradeRequest = async function(requestId, userEmail, newTier, currentTier) {
     if (!requireAdmin('approveUpgradeRequest')) return;
     
-    const tierData = TIERS[newTier];
-    const price = newTier === 'pro' ? '$25,000' : '$50,000';
+    const tierData = TIERS[newTier] || TIERS.elite;
+    const price = '$25,000'; // Elite is the only paid tier at $25k/month
     
-    // Check if this is a Pro → Elite upgrade (prorated eligible)
-    const isProToElite = currentTier === 'pro' && newTier === 'elite';
-    const proratedPrice = '$25,000'; // Difference between Elite ($50k) and Pro ($25k)
-    
-    // Show approval modal with trial and prorated options
+    // Show approval modal with trial option
     const modalHTML = `
         <div id="approveModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
             <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-green-700">
@@ -432,22 +428,9 @@ window.approveUpgradeRequest = async function(requestId, userEmail, newTier, cur
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
                     <p class="text-gray-300 mb-2"><strong>User:</strong> ${userEmail}</p>
                     <p class="text-gray-300 mb-2"><strong>Current Tier:</strong> <span class="text-gray-400">${TIERS[currentTier]?.name || currentTier}</span></p>
-                    <p class="text-gray-300"><strong>Requested Tier:</strong> <span class="${newTier === 'pro' ? 'text-purple-400' : 'text-yellow-400'} font-bold">${tierData?.icon || '⭐'} ${tierData?.name || newTier}</span></p>
+                    <p class="text-gray-300"><strong>Requested Tier:</strong> <span class="text-yellow-400 font-bold">${tierData?.icon || '👑'} ${tierData?.name || 'Elite'}</span></p>
                     <p class="text-gray-300"><strong>Standard Price:</strong> ${price}/month</p>
                 </div>
-                
-                ${isProToElite ? `
-                <!-- Prorated Upgrade Option (Pro → Elite) -->
-                <div class="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-4 mb-4">
-                    <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" id="approveProratedCheckbox" class="w-5 h-5 rounded border-amber-500 text-amber-500 focus:ring-amber-500 cursor-pointer">
-                        <div>
-                            <span class="text-amber-300 font-bold">💰 Prorated Upgrade (${proratedPrice})</span>
-                            <p class="text-amber-400/70 text-sm">User was already paying for Pro - only charge the $25k difference</p>
-                        </div>
-                    </label>
-                </div>
-                ` : ''}
                 
                 <!-- Free Trial Checkbox -->
                 <div class="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-xl p-4 mb-4">
@@ -498,21 +481,16 @@ window.approveUpgradeRequest = async function(requestId, userEmail, newTier, cur
     
     // Set up checkbox event listeners
     const trialCheckbox = $('approveTrialCheckbox');
-    const proratedCheckbox = $('approveProratedCheckbox');
     const notesInput = $('approveNotes');
     const amountValue = $('approveAmountValue');
     
     // Function to update amount display
     const updateAmountDisplay = () => {
         const isTrial = trialCheckbox?.checked;
-        const isProrated = proratedCheckbox?.checked;
         
         if (isTrial) {
             amountValue.textContent = '$0 (Trial)';
             amountValue.className = 'text-cyan-400 font-bold text-xl';
-        } else if (isProrated) {
-            amountValue.textContent = proratedPrice;
-            amountValue.className = 'text-amber-400 font-bold text-xl';
         } else {
             amountValue.textContent = price;
             amountValue.className = 'text-green-400 font-bold text-xl';
@@ -520,31 +498,7 @@ window.approveUpgradeRequest = async function(requestId, userEmail, newTier, cur
     };
     
     if (trialCheckbox) {
-        trialCheckbox.addEventListener('change', function() {
-            // Uncheck prorated if trial is checked
-            if (this.checked && proratedCheckbox) {
-                proratedCheckbox.checked = false;
-            }
-            updateAmountDisplay();
-        });
-    }
-    
-    if (proratedCheckbox) {
-        proratedCheckbox.addEventListener('change', function() {
-            // Uncheck trial if prorated is checked
-            if (this.checked && trialCheckbox) {
-                trialCheckbox.checked = false;
-            }
-            
-            if (this.checked) {
-                notesInput.value = `Prorated upgrade from Pro to Elite - paid $25k difference`;
-            } else {
-                if (notesInput.value.includes('Prorated')) {
-                    notesInput.value = '';
-                }
-            }
-            updateAmountDisplay();
-        });
+        trialCheckbox.addEventListener('change', updateAmountDisplay);
     }
 };
 
@@ -555,16 +509,13 @@ window.closeApproveModal = function() {
 
 window.confirmApproveRequest = async function(requestId, userEmail, newTier, currentTier) {
     const isTrial = $('approveTrialCheckbox')?.checked || false;
-    const isProrated = $('approveProratedCheckbox')?.checked || false;
     const paymentNote = $('approveNotes')?.value || '';
-    const tierData = TIERS[newTier];
+    const tierData = TIERS[newTier] || TIERS.elite;
     
-    // Calculate actual subscription amount
-    let subscriptionAmount = newTier === 'pro' ? 25000 : 50000; // Standard prices
+    // Calculate actual subscription amount - Elite is $25k/month
+    let subscriptionAmount = 25000;
     if (isTrial) {
         subscriptionAmount = 0;
-    } else if (isProrated && currentTier === 'pro' && newTier === 'elite') {
-        subscriptionAmount = 25000; // Only the difference
     }
     
     // Show loading state
@@ -593,10 +544,7 @@ window.confirmApproveRequest = async function(requestId, userEmail, newTier, cur
                 trialStartDate: isTrial ? today : null,
                 trialEndDate: isTrial ? trialEndDate.toISOString().split('T')[0] : null,
                 trialNotes: isTrial ? (paymentNote || 'Free trial from upgrade request') : null,
-                // Track actual subscription amount for prorated upgrades
                 subscriptionAmount: subscriptionAmount,
-                isProratedUpgrade: isProrated,
-                proratedFrom: isProrated ? currentTier : null,
                 upgradeNotes: paymentNote || null
             };
             
@@ -610,22 +558,19 @@ window.confirmApproveRequest = async function(requestId, userEmail, newTier, cur
             approvedBy: auth.currentUser?.email,
             paymentNote: paymentNote,
             isFreeTrial: isTrial,
-            isProratedUpgrade: isProrated,
             subscriptionAmount: subscriptionAmount
         });
         
         // Create notification for user
         const trialNote = isTrial ? ' (Free Trial)' : '';
-        const proratedNote = isProrated ? ' (Prorated from Pro)' : '';
         await db.collection('userNotifications').add({
             userEmail: userEmail.toLowerCase(),
             type: 'upgrade_approved',
             title: '🎉 Upgrade Approved!',
-            message: `Your upgrade to ${tierData?.name || newTier}${trialNote}${proratedNote} has been approved! You now have access to ${tierData?.maxListings === Infinity ? 'unlimited' : tierData?.maxListings} listings.`,
+            message: `Your upgrade to ${tierData?.name || 'Elite'}${trialNote} has been approved! You now have access to ${tierData?.maxListings === Infinity ? 'unlimited' : tierData?.maxListings} listings.`,
             newTier: newTier,
             previousTier: currentTier,
             isFreeTrial: isTrial,
-            isProratedUpgrade: isProrated,
             subscriptionAmount: subscriptionAmount,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             read: false
@@ -642,7 +587,6 @@ window.confirmApproveRequest = async function(requestId, userEmail, newTier, cur
             previousTier: currentTier,
             newTier: newTier,
             isTrial: isTrial,
-            isProrated: isProrated,
             amount: subscriptionAmount,
             approvedBy: auth.currentUser?.email
         });
@@ -650,8 +594,7 @@ window.confirmApproveRequest = async function(requestId, userEmail, newTier, cur
         setTimeout(() => {
             closeApproveModal();
             const trialMsg = isTrial ? ' as FREE TRIAL' : '';
-            const proratedMsg = isProrated ? ` (Prorated: $${(subscriptionAmount/1000).toFixed(0)}k)` : '';
-            showToast(`${userEmail} upgraded to ${tierData?.name || newTier}${trialMsg}${proratedMsg}!`, 'success');
+            showToast(`${userEmail} upgraded to ${tierData?.name || 'Elite'}${trialMsg}!`, 'success');
             loadUpgradeRequests();
             loadAllUsers();
             loadActivityLog(); // Refresh activity log
@@ -1036,20 +979,25 @@ window.startAdminUsersListener = function() {
                 users.push(user);
                 currentUserIds.add(doc.id);
                 
+                // Skip notifications for the current logged-in user's own account
+                const currentUserEmail = auth?.currentUser?.email?.toLowerCase();
+                const userEmail = (data.email || '').toLowerCase();
+                const isCurrentUser = currentUserEmail && userEmail === currentUserEmail;
+                
                 const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : null;
                 const notificationId = 'new-user-' + doc.id;
                 
                 if (isFirstSnapshot) {
                     // Check if this user has a pending (unacknowledged) notification
                     if (window.pendingAdminNotifications.has(notificationId)) {
-                        if (!window.dismissedAdminNotifications.has(notificationId)) {
+                        if (!window.dismissedAdminNotifications.has(notificationId) && !isCurrentUser) {
                             missedUsers.push(user);
                             validPendingUserIds.add(notificationId);
                         }
                     }
                     // Also check for users created since last visit (new missed users)
                     else if (lastAdminVisit && createdAt && createdAt > lastAdminVisit) {
-                        if (!window.dismissedAdminNotifications.has(notificationId)) {
+                        if (!window.dismissedAdminNotifications.has(notificationId) && !isCurrentUser) {
                             missedUsers.push(user);
                             // Add to pending so it persists across refreshes
                             window.pendingAdminNotifications.add(notificationId);
@@ -1057,7 +1005,7 @@ window.startAdminUsersListener = function() {
                     }
                 } else {
                     // Real-time: detect users created AFTER session started
-                    if (!window.knownUserIds.has(doc.id)) {
+                    if (!window.knownUserIds.has(doc.id) && !isCurrentUser) {
                         if (createdAt && createdAt > window.adminSessionStartTime) {
                             newUsers.push(user);
                             // Add to pending notifications
@@ -1957,6 +1905,10 @@ window.reRenderPendingNotifications = function() {
     
     const stack = $('adminNotificationsStack');
     if (!stack) return;
+    
+    // Get current user email for filtering
+    const currentUserEmail = auth?.currentUser?.email?.toLowerCase();
+    
     // Go through all pending notifications and re-render any that aren't showing
     window.pendingAdminNotifications.forEach(notificationId => {
         // Skip if already dismissed
@@ -1974,6 +1926,12 @@ window.reRenderPendingNotifications = function() {
             const userId = notificationId.replace('new-user-', '');
             const user = window.adminUsersData?.find(u => u.id === userId);
             if (user) {
+                // Skip notifications for the current user's own account
+                const userEmail = (user.email || '').toLowerCase();
+                if (currentUserEmail && userEmail === currentUserEmail) {
+                    window.pendingAdminNotifications.delete(notificationId);
+                    return;
+                }
                 showNewUserNotification(user, true);
             }
         } else if (notificationId.startsWith('new-listing-')) {
@@ -2262,8 +2220,8 @@ window.updateAdminStats = async function(users) {
     let eliteRevenue = 0;
     
     elitePaidUsers.forEach(u => {
-        // Use stored subscriptionAmount if available, otherwise default $50k
-        const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 50000;
+        // Use stored subscriptionAmount if available, otherwise default $25k
+        const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 25000;
         eliteRevenue += amount;
     });
     
@@ -2387,13 +2345,13 @@ window.updateAdminStats = async function(users) {
     const statEliteRevenueSub = $('adminStatEliteRevenueSub');
     if (statEliteRevenue) statEliteRevenue.textContent = `$${(eliteRevenue / 1000).toFixed(0)}k`;
     if (statEliteRevenueSub) {
-        statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid × $50k`;
+        statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid × $25k`;
     }
     
     const eliteRevenueDetail = $('adminStatEliteRevenueDetail');
     if (eliteRevenueDetail) {
         const paidList = elitePaidUsers.map(u => {
-            const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 50000;
+            const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 25000;
             return `<div class="truncate">💰 ${u.username || u.email.split('@')[0]} - $${(amount/1000).toFixed(0)}k</div>`;
         }).join('');
         eliteRevenueDetail.innerHTML = `
@@ -2552,8 +2510,8 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
     const pending = pendingRequests || window.adminPendingRequests || [];
     const pendingEmails = pending.map(r => r.userEmail?.toLowerCase());
     
-    // Sort users into tier groups
-    const tierOrder = { 'owner': 0, 'elite': 1, 'pro': 2, 'starter': 3 };
+    // Sort users into tier groups (no Pro tier - only Starter and Elite)
+    const tierOrder = { 'owner': 0, 'elite': 1, 'starter': 2 };
     const sortedUsers = [...users].sort((a, b) => {
         const aIsAdmin = TierService.isMasterAdmin(a.email);
         const bIsAdmin = TierService.isMasterAdmin(b.email);
@@ -2562,17 +2520,16 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
         
         // First sort by tier
         if (tierOrder[aTier] !== tierOrder[bTier]) {
-            return tierOrder[aTier] - tierOrder[bTier];
+            return (tierOrder[aTier] ?? 99) - (tierOrder[bTier] ?? 99);
         }
         // Then by name
         return (a.username || a.email).localeCompare(b.username || b.email);
     });
     
-    // Group users by tier
+    // Group users by tier (no Pro tier)
     const groups = {
         owner: sortedUsers.filter(u => TierService.isMasterAdmin(u.email)),
         elite: sortedUsers.filter(u => !TierService.isMasterAdmin(u.email) && u.tier === 'elite'),
-        pro: sortedUsers.filter(u => !TierService.isMasterAdmin(u.email) && u.tier === 'pro'),
         starter: sortedUsers.filter(u => !TierService.isMasterAdmin(u.email) && (!u.tier || u.tier === 'starter'))
     };
     
@@ -2797,18 +2754,17 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
             </span>
         ` : '';
         
-        // Subscription tracking HTML for Pro/Elite
+        // Subscription tracking HTML for Elite
         let subscriptionHTML = '';
-        if (!isUserMasterAdmin && (user.tier === 'pro' || user.tier === 'elite')) {
+        if (!isUserMasterAdmin && user.tier === 'elite') {
             const subLastPaid = user.subscriptionLastPaid || '';
-            // Use actual subscription amount if set (for prorated upgrades), otherwise default
-            const defaultPrice = user.tier === 'pro' ? 25000 : 50000;
+            // Use actual subscription amount if set, otherwise default $25k
+            const defaultPrice = 25000;
             const actualAmount = user.subscriptionAmount !== undefined ? user.subscriptionAmount : defaultPrice;
             const tierPrice = '$' + actualAmount.toLocaleString();
-            const tierName = user.tier === 'pro' ? 'Pro ⭐' : 'Elite 👑';
+            const tierName = 'Elite 👑';
             const isFreeTrial = user.isFreeTrial === true;
             const trialEndDate = user.trialEndDate || '';
-            const isProratedUpgrade = user.isProratedUpgrade === true;
             
             let nextDueDate = '';
             let daysUntilDue = null;
@@ -3109,23 +3065,6 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
         `;
     }
     
-    // Pro section (expanded by default)
-    if (groups.pro.length > 0) {
-        html += `
-            <div class="mb-6">
-                <div class="flex items-center gap-2 mb-3 pb-2 border-b border-purple-600/50 cursor-pointer hover:opacity-80 transition" onclick="toggleUserGroup('proGroup')">
-                    <span id="proGroupToggle" class="text-gray-400 transition">▼</span>
-                    <span class="text-xl">⭐</span>
-                    <h5 class="text-purple-400 font-bold">Pro Members</h5>
-                    <span class="text-gray-500 text-sm">(${groups.pro.length}) • $25k/mo each</span>
-                </div>
-                <div id="proGroup" class="space-y-3">
-                    ${groups.pro.map(renderUserCard).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
     // Starter section (expanded by default)
     if (groups.starter.length > 0) {
         html += `
@@ -3134,7 +3073,7 @@ window.renderAdminUsersList = function(users, pendingRequests = null) {
                     <span id="starterGroupToggle" class="text-gray-400 transition">▼</span>
                     <span class="text-xl">🌱</span>
                     <h5 class="text-green-400 font-bold">Starter Members</h5>
-                    <span class="text-gray-500 text-sm">(${groups.starter.length}) • Free tier</span>
+                    <span class="text-gray-500 text-sm">(${groups.starter.length}) • Free (3 listings)</span>
                 </div>
                 <div id="starterGroup" class="space-y-3">
                     ${groups.starter.map(renderUserCard).join('')}

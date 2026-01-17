@@ -989,6 +989,14 @@
                     const user = { id: userId, ...doc.data() };
                     const createdAt = user.createdAt?.toDate?.();
                     
+                    // Skip notifications for the current logged-in user's own account
+                    const currentUserEmail = auth?.currentUser?.email?.toLowerCase();
+                    const userEmail = (user.email || '').toLowerCase();
+                    if (currentUserEmail && userEmail === currentUserEmail) {
+                        state.knownUserIds.add(userId);
+                        return;
+                    }
+                    
                     if (!state.initialLoadComplete.users) {
                         // Initial load - check for missed notifications
                         state.knownUserIds.add(userId);
