@@ -2232,15 +2232,12 @@ window.updateClearAllButton = function() {
 
 window.updateAdminStats = async function(users) {
     const totalUsers = users.length;
-    const proUsers = users.filter(u => u.tier === 'pro');
     const eliteUsers = users.filter(u => u.tier === 'elite');
     // Exclude master admin from starter count
     const starterUsers = users.filter(u => !TierService.isMasterAdmin(u.email) && (u.tier === 'starter' || !u.tier));
     const adminUsers = users.filter(u => TierService.isMasterAdmin(u.email));
     
-    // Separate trial users from paid users
-    const proTrialUsers = proUsers.filter(u => u.isFreeTrial === true);
-    const proPaidUsers = proUsers.filter(u => u.isFreeTrial !== true);
+    // Separate trial users from paid users (Elite only - Starter is free)
     const eliteTrialUsers = eliteUsers.filter(u => u.isFreeTrial === true);
     const elitePaidUsers = eliteUsers.filter(u => u.isFreeTrial !== true);
     
@@ -2261,22 +2258,13 @@ window.updateAdminStats = async function(users) {
     }
     
     // Calculate PAID revenue only (excluding trials)
-    // Use actual subscriptionAmount when available (for prorated upgrades)
-    let proRevenue = 0;
+    // Only Elite tier generates revenue - Starter is free
     let eliteRevenue = 0;
-    let proratedCount = 0;
-    
-    proPaidUsers.forEach(u => {
-        // Use stored subscriptionAmount if available, otherwise default
-        const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 25000;
-        proRevenue += amount;
-    });
     
     elitePaidUsers.forEach(u => {
-        // Use stored subscriptionAmount if available, otherwise default
+        // Use stored subscriptionAmount if available, otherwise default $50k
         const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 50000;
         eliteRevenue += amount;
-        if (u.isProratedUpgrade) proratedCount++;
     });
     
     // Calculate Premium Ad Fees (weekly fees from premium listings)
@@ -2308,7 +2296,7 @@ window.updateAdminStats = async function(users) {
     
     // Total revenue is monthly subscriptions + weekly premium (not multiplied)
     // This represents: confirmed recurring revenue from subs + current weekly premium fees
-    const totalRevenue = proRevenue + eliteRevenue + premiumWeeklyRevenue;
+    const totalRevenue = eliteRevenue + premiumWeeklyRevenue;
     
     // Helper function to get user listing count - uses OwnershipService for consistency
     const getUserListings = (user) => {
@@ -2327,7 +2315,7 @@ window.updateAdminStats = async function(users) {
             `<div class="truncate">🌱 ${u.username || u.email.split('@')[0]}</div>`
         ).join('');
         starterDetail.innerHTML = `
-            <div class="mb-1 text-gray-400">Free tier (1 listing max)</div>
+            <div class="mb-1 text-gray-400">Free tier (3 listings max)</div>
             ${recentStarters || '<div class="text-gray-500">No starter users</div>'}
             ${starterUsers.length > 5 ? `<div class="text-gray-500">+${starterUsers.length - 5} more...</div>` : ''}
         `;
@@ -2388,49 +2376,25 @@ window.updateAdminStats = async function(users) {
         usersDetail.innerHTML = `
             <div>👑 Owner/Admin: ${adminUsers.length}</div>
             <div>🌱 Starter: ${starterUsers.length}</div>
-            <div>⭐ Pro: ${proUsers.length} ${proTrialUsers.length > 0 ? `<span class="text-cyan-400">(${proTrialUsers.length} trial)</span>` : ''}</div>
             <div>👑 Elite: ${eliteUsers.length} ${eliteTrialUsers.length > 0 ? `<span class="text-cyan-400">(${eliteTrialUsers.length} trial)</span>` : ''}</div>
         `;
     }
     
     // ==================== ROW 2: REVENUE ====================
     
-    // Pro Revenue Tile
-    const statProRevenue = $('adminStatProRevenue');
-    const statProRevenueSub = $('adminStatProRevenueSub');
-    if (statProRevenue) statProRevenue.textContent = `$${(proRevenue / 1000).toFixed(0)}k`;
-    if (statProRevenueSub) statProRevenueSub.textContent = `${proPaidUsers.length} paid × $25k`;
-    
-    const proRevenueDetail = $('adminStatProRevenueDetail');
-    if (proRevenueDetail) {
-        const paidList = proPaidUsers.map(u => 
-            `<div class="truncate">💰 ${u.username || u.email.split('@')[0]} - $25k</div>`
-        ).join('');
-        proRevenueDetail.innerHTML = `
-            <div class="mb-1 text-yellow-400 font-bold">$${proRevenue.toLocaleString()}/mo</div>
-            ${paidList || '<div class="text-gray-500">No paid Pro users</div>'}
-            ${proTrialUsers.length > 0 ? `<div class="text-cyan-400 mt-1">🎁 ${proTrialUsers.length} on free trial</div>` : ''}
-        `;
-    }
-    
-    // Elite Revenue Tile
+    // Elite Revenue Tile (only paid tier)
     const statEliteRevenue = $('adminStatEliteRevenue');
     const statEliteRevenueSub = $('adminStatEliteRevenueSub');
     if (statEliteRevenue) statEliteRevenue.textContent = `$${(eliteRevenue / 1000).toFixed(0)}k`;
     if (statEliteRevenueSub) {
-        if (proratedCount > 0) {
-            statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid (${proratedCount} prorated)`;
-        } else {
-            statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid × $50k`;
-        }
+        statEliteRevenueSub.textContent = `${elitePaidUsers.length} paid × $50k`;
     }
     
     const eliteRevenueDetail = $('adminStatEliteRevenueDetail');
     if (eliteRevenueDetail) {
         const paidList = elitePaidUsers.map(u => {
             const amount = u.subscriptionAmount !== undefined ? u.subscriptionAmount : 50000;
-            const proratedLabel = u.isProratedUpgrade ? ' <span class="text-amber-400">(prorated)</span>' : '';
-            return `<div class="truncate">💰 ${u.username || u.email.split('@')[0]} - $${(amount/1000).toFixed(0)}k${proratedLabel}</div>`;
+            return `<div class="truncate">💰 ${u.username || u.email.split('@')[0]} - $${(amount/1000).toFixed(0)}k</div>`;
         }).join('');
         eliteRevenueDetail.innerHTML = `
             <div class="mb-1 text-purple-400 font-bold">$${eliteRevenue.toLocaleString()}/mo</div>
@@ -2476,17 +2440,16 @@ window.updateAdminStats = async function(users) {
     const statTotalRevenueSub = $('adminStatTotalRevenueSub');
     if (statTotalRevenue) statTotalRevenue.textContent = `$${(totalRevenue / 1000).toFixed(0)}k`;
     if (statTotalRevenueSub) {
-        const totalTrials = proTrialUsers.length + eliteTrialUsers.length;
+        const totalTrials = eliteTrialUsers.length;
         statTotalRevenueSub.textContent = totalTrials > 0 ? `${totalTrials} on free trial` : 'Current revenue';
     }
     
     const totalRevenueDetail = $('adminStatTotalRevenueDetail');
     if (totalRevenueDetail) {
-        const totalTrials = proTrialUsers.length + eliteTrialUsers.length;
+        const totalTrials = eliteTrialUsers.length;
         totalRevenueDetail.innerHTML = `
             <div class="text-green-400 font-bold mb-2">$${totalRevenue.toLocaleString()}</div>
             <div class="space-y-1 text-xs">
-                <div>⭐ Pro: $${proRevenue.toLocaleString()}/mo</div>
                 <div>👑 Elite: $${eliteRevenue.toLocaleString()}/mo</div>
                 <div>🏆 Premium: $${premiumWeeklyRevenue.toLocaleString()}/wk</div>
             </div>
@@ -2521,7 +2484,7 @@ window.flipAdminTile = function(tileType) {
 
 // Reset all admin tiles to show front (unflipped) state
 window.resetAdminTiles = function() {
-    const tiles = ['Starter', 'Pro', 'Elite', 'Users', 'ProRevenue', 'EliteRevenue', 'Premium', 'TotalRevenue'];
+    const tiles = ['Starter', 'Elite', 'Users', 'EliteRevenue', 'Premium', 'TotalRevenue'];
     tiles.forEach(tileName => {
         const tile = $('adminTile' + tileName);
         if (tile) {

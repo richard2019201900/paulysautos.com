@@ -177,9 +177,10 @@ window.editSubscriptionAmount = async function(userId, email, curpaymentAmount) 
 
 // Open subscription reminder modal with editable text
 window.openSubscriptionReminderModal = function(userId, email, displayName, tier, price, daysUntilDue) {
-    const tierName = tier === 'pro' ? 'Pro ⭐' : 'Elite 👑';
-    const tierEmoji = tier === 'pro' ? '⭐' : '👑';
-    const benefits = tier === 'pro' ? '3 vehicle listings' : 'Unlimited vehicle listings';
+    // Only Elite tier pays subscriptions - Starter is free
+    const tierName = 'Elite 👑';
+    const tierEmoji = '👑';
+    const benefits = 'Unlimited vehicle listings + all features';
     
     // Determine reminder type based on days until due
     let reminderType, reminderTitle, reminderBg;
@@ -229,17 +230,11 @@ window.openSubscriptionReminderModal = function(userId, email, displayName, tier
         paymentScript = `Hey ${displayName}! 👋 Just checking in! Your PaulysAutos.com ${tierName} subscription is all good - next payment isn't due for another ${daysUntilDue} days. 💰 ${price} | ${tierEmoji} ${tierName} | 📅 ${daysUntilDue} days left. No action needed right now. Just wanted to say thanks for being part of the platform! 🚗✨`;
     }
     
-    // Generate upsell script - TEXT MESSAGE FRIENDLY
-    let upsellScript = '';
-    if (tier === 'pro') {
-        upsellScript = `Hey ${displayName}! 🌟 I wanted to share something with you - I've noticed you're doing great with your ${benefits} on the Pro plan! Have you considered upgrading to Elite? Here's what you'd get: 👑 ELITE TIER - $50,000/month ✨ UNLIMITED vehicle listings (no cap!) 🎯 Priority placement in search results 🏆 Elite badge on all your listings 💼 Perfect for scaling your sales. You're already at 2/3 listings on Pro. With Elite, you could list ALL your vehicles and really dominate the market here. The extra $25k/month pays for itself when you think about the additional sales from more listings! Want to chat about upgrading? I can switch you over anytime. 🚀`;
-    } else {
-        // Already Elite - thank them instead
-        upsellScript = `Hey ${displayName}! 👑 Just wanted to say THANK YOU for being an Elite member! You're one of our top sellers on PaulysAutos.com, and we really appreciate your business. 🏆 Elite Status with Unlimited Listings and Priority Placement - your vehicles are getting maximum visibility, and buyers love what you're offering. If there's anything we can do to help you succeed even more, just let me know. We're here for you! Keep crushing it! 💪🚗`;
-    }
+    // Generate VIP thank you script - Elite users are our top tier
+    const upsellScript = `Hey ${displayName}! 👑 Just wanted to say THANK YOU for being an Elite member! You're one of our top sellers on PaulysAutos.com, and we really appreciate your business. 🏆 Elite Status with Unlimited Listings and Priority Placement - your vehicles are getting maximum visibility, and buyers love what you're offering. If there's anything we can do to help you succeed even more, just let me know. We're here for you! Keep crushing it! 💪🚗`;
     
     // Generate referral script - TEXT MESSAGE FRIENDLY
-    const referralScript = `Hey ${displayName}! 🤝 Quick question - do you know any other vehicle sellers who might benefit from PaulysAutos.com? Here's the deal: 🎁 For every seller you refer who signs up for Pro or Elite, I'll give you a $5,000 credit toward your next subscription payment! It's a win-win - your friend gets a great platform for their vehicles, you save money on your subscription, and more listings means more options for buyers. Just have them mention your name when they sign up, and I'll apply the credit to your account. Know anyone who might be interested? 🚗💰`;
+    const referralScript = `Hey ${displayName}! 🤝 Quick question - do you know any other vehicle sellers who might benefit from PaulysAutos.com? Here's the deal: 🎁 For every seller you refer who signs up for Elite, I'll give you a $5,000 credit toward your next subscription payment! It's a win-win - your friend gets a great platform for their vehicles, you save money on your subscription, and more listings means more options for buyers. Just have them mention your name when they sign up, and I'll apply the credit to your account. Know anyone who might be interested? 🚗💰`;
     
     // Create modal HTML with larger text areas
     const modalHTML = `
@@ -265,11 +260,11 @@ window.openSubscriptionReminderModal = function(userId, email, displayName, tier
                             <textarea id="subScript_payment" class="w-full bg-gray-900 text-gray-300 text-sm p-4 rounded-lg border border-gray-600 resize-none" rows="5">${paymentScript}</textarea>
                         </div>
                         
-                        <!-- Upsell / Thank You -->
+                        <!-- VIP Thank You -->
                         <div class="bg-gray-700/50 rounded-xl p-4">
                             <div class="flex justify-between items-center mb-2">
-                                <span class="${tier === 'pro' ? 'text-purple-400' : 'text-yellow-400'} font-bold">${tier === 'pro' ? '🚀 Upgrade to Elite' : '👑 VIP Thank You'}</span>
-                                <button onclick="copySubscriptionScript('upsell', '${displayName}')" class="${tier === 'pro' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-yellow-600 hover:bg-yellow-700'} text-white px-4 py-1.5 rounded font-bold">📋 Copy</button>
+                                <span class="text-yellow-400 font-bold">👑 VIP Thank You</span>
+                                <button onclick="copySubscriptionScript('upsell', '${displayName}')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-1.5 rounded font-bold">📋 Copy</button>
                             </div>
                             <textarea id="subScript_upsell" class="w-full bg-gray-900 text-gray-300 text-sm p-4 rounded-lg border border-gray-600 resize-none" rows="5">${upsellScript}</textarea>
                         </div>
@@ -338,7 +333,7 @@ window.checkSubscriptionAlerts = function() {
     const neverPaidUsers = [];
     
     window.adminUsersData.forEach(user => {
-        if (user.tier !== 'pro' && user.tier !== 'elite') return;
+        if (user.tier !== 'elite') return;
         if (TierService.isMasterAdmin(user.email)) return;
         
         const subLastPaid = user.subscriptionLastPaid;
@@ -1208,7 +1203,7 @@ window.adminUpgradeUser = async function(email, newTier, currentTier) {
     if (!requireAdmin('adminUpgradeUser')) return;
     
     const tierData = TIERS[newTier];
-    const price = newTier === 'pro' ? '$25,000' : '$50,000';
+    const price = '$50,000'; // Elite tier pricing
     
     // Show upgrade modal with trial option
     showUpgradeModal(email, newTier, currentTier, tierData, price);
@@ -1216,10 +1211,6 @@ window.adminUpgradeUser = async function(email, newTier, currentTier) {
 
 // Show upgrade modal with trial checkbox
 function showUpgradeModal(email, newTier, currentTier, tierData, price) {
-    // Check if this is an upgrade from Pro to Elite (prorated eligible)
-    const isProToElite = currentTier === 'pro' && newTier === 'elite';
-    const proratedPrice = '$25,000'; // Difference between Elite ($50k) and Pro ($25k)
-    
     // Create modal overlay
     const modalHTML = `
         <div id="upgradeModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
@@ -1232,22 +1223,9 @@ function showUpgradeModal(email, newTier, currentTier, tierData, price) {
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
                     <p class="text-gray-300 mb-2"><strong>User:</strong> ${email}</p>
                     <p class="text-gray-300 mb-2"><strong>Current Tier:</strong> <span class="text-gray-400">${TIERS[currentTier]?.name || currentTier}</span></p>
-                    <p class="text-gray-300"><strong>New Tier:</strong> <span class="${newTier === 'pro' ? 'text-purple-400' : 'text-yellow-400'} font-bold">${tierData.icon} ${tierData.name}</span></p>
+                    <p class="text-gray-300"><strong>New Tier:</strong> <span class="text-yellow-400 font-bold">${tierData.icon} ${tierData.name}</span></p>
                     <p class="text-gray-300"><strong>Standard Price:</strong> ${price}/month</p>
                 </div>
-                
-                ${isProToElite ? `
-                <!-- Prorated Upgrade Option (Pro → Elite) -->
-                <div class="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-4 mb-4">
-                    <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" id="upgradeProratedCheckbox" class="w-5 h-5 rounded border-amber-500 text-amber-500 focus:ring-amber-500 cursor-pointer">
-                        <div>
-                            <span class="text-amber-300 font-bold">💰 Prorated Upgrade (${proratedPrice})</span>
-                            <p class="text-amber-400/70 text-sm">User was already paying for Pro - only charge the $25k difference</p>
-                        </div>
-                    </label>
-                </div>
-                ` : ''}
                 
                 <!-- Free Trial Checkbox -->
                 <div class="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-xl p-4 mb-4">
@@ -1363,16 +1341,13 @@ window.closeUpgradeModal = function() {
 
 window.confirmUpgrade = async function(email, newTier, currentTier) {
     const isTrial = $('upgradeTrialCheckbox')?.checked || false;
-    const isProrated = $('upgradeProratedCheckbox')?.checked || false;
     const notes = $('upgradeNotes')?.value || '';
     const tierData = TIERS[newTier];
     
-    // Calculate actual subscription amount
-    let subscriptionAmount = newTier === 'pro' ? 25000 : 50000; // Standard prices
+    // Calculate actual subscription amount - Elite is $50k/month
+    let subscriptionAmount = 50000;
     if (isTrial) {
         subscriptionAmount = 0;
-    } else if (isProrated && currentTier === 'pro' && newTier === 'elite') {
-        subscriptionAmount = 25000; // Only the difference
     }
     
     // Show loading state on button
@@ -1407,10 +1382,7 @@ window.confirmUpgrade = async function(email, newTier, currentTier) {
                 trialStartDate: isTrial ? today : null,
                 trialEndDate: isTrial ? trialEndDate.toISOString().split('T')[0] : null,
                 trialNotes: isTrial ? (notes || 'Free trial upgrade') : null,
-                // NEW: Track actual subscription amount for prorated upgrades
                 subscriptionAmount: subscriptionAmount,
-                isProratedUpgrade: isProrated,
-                proratedFrom: isProrated ? currentTier : null,
                 upgradeNotes: notes || null
             };
             
@@ -1577,10 +1549,10 @@ window.markAsTrial = async function(userId, email) {
 window.adminDowngradeUser = async function(email, currentTier, targetTier = 'starter') {
     if (!requireAdmin('adminDowngradeUser')) return;
     
-    const tierName = targetTier === 'pro' ? 'Pro' : 'Starter';
-    const confirmMsg = targetTier === 'starter' 
-        ? `Are you sure you want to reset ${email} to Starter tier?\n\nThis will also clear their subscription payment history and trial status.`
-        : `Are you sure you want to downgrade ${email} to Pro tier?\n\nTheir subscription will be adjusted to $25,000/mo.`;
+    // Only downgrade to Starter - no Pro tier exists
+    targetTier = 'starter';
+    const tierName = 'Starter';
+    const confirmMsg = `Are you sure you want to reset ${email} to Starter tier?\n\nThis will also clear their subscription payment history and trial status.`;
     
     if (!confirm(confirmMsg)) return;
     
@@ -1594,33 +1566,16 @@ window.adminDowngradeUser = async function(email, currentTier, targetTier = 'sta
         if (!snapshot.empty) {
             const userId = snapshot.docs[0].id;
             
-            if (targetTier === 'starter') {
-                // Clear subscription data AND trial data when downgrading to starter
-                await db.collection('users').doc(userId).update({
-                    subscriptionLastPaid: '',
-                    subscriptionUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    subscriptionAmount: null,
-                    isProratedUpgrade: false,
-                    proratedFrom: null,
-                    isFreeTrial: false,
-                    trialStartDate: null,
-                    trialEndDate: null,
-                    trialNotes: null
-                });
-            } else if (targetTier === 'pro') {
-                // Downgrading from Elite to Pro - keep subscription but adjust amount
-                const today = new Date().toISOString().split('T')[0];
-                await db.collection('users').doc(userId).update({
-                    subscriptionUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    subscriptionAmount: 25000, // Pro price
-                    isProratedUpgrade: false,
-                    proratedFrom: null,
-                    isFreeTrial: false,
-                    trialStartDate: null,
-                    trialEndDate: null,
-                    trialNotes: null
-                });
-            }
+            // Clear subscription data AND trial data when downgrading to starter
+            await db.collection('users').doc(userId).update({
+                subscriptionLastPaid: '',
+                subscriptionUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                subscriptionAmount: null,
+                isFreeTrial: false,
+                trialStartDate: null,
+                trialEndDate: null,
+                trialNotes: null
+            });
         }
         
         // Log to activity log

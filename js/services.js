@@ -158,32 +158,12 @@ const TierService = {
         
         try {
             const normalizedEmail = email.toLowerCase();
-            const currentUser = auth.currentUser;
+            const snapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
             
             let tier = 'starter';
-            
-            // If checking current user's own tier, use UID for direct access (always permitted)
-            // This avoids the collection query which requires special permissions
-            if (currentUser && currentUser.email && currentUser.email.toLowerCase() === normalizedEmail) {
-                try {
-                    const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                    if (userDoc.exists) {
-                        tier = userDoc.data().tier || 'starter';
-                    }
-                } catch (uidError) {
-                    console.warn('[TierService] UID lookup failed, trying email query:', uidError.message);
-                    // Fall through to email query as backup
-                    const snapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
-                    if (!snapshot.empty) {
-                        tier = snapshot.docs[0].data().tier || 'starter';
-                    }
-                }
-            } else {
-                // Admin checking another user's tier - use email query
-                const snapshot = await db.collection('users').where('email', '==', normalizedEmail).get();
-                if (!snapshot.empty) {
-                    tier = snapshot.docs[0].data().tier || 'starter';
-                }
+            if (!snapshot.empty) {
+                const userData = snapshot.docs[0].data();
+                tier = userData.tier || 'starter';
             }
             
             // Count user's listings from FRESH Firestore data (not cached map)

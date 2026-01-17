@@ -490,6 +490,13 @@ window.saveUsername = async function() {
         // Re-check profile completion
         checkProfileCompletion(newDisplayName, phone);
         
+        // Clear new user welcome styling if profile is now complete
+        if (newDisplayName && phone && phone.length >= 7) {
+            if (typeof clearNewUserWelcome === 'function') {
+                clearNewUserWelcome();
+            }
+        }
+        
         // Award XP for adding display name (gamification)
         if (typeof GamificationService !== 'undefined') {
             GamificationService.awardAchievement(user.uid, 'display_name', 50).then(result => {
@@ -554,6 +561,13 @@ window.saveOwnerPhone = async function() {
         // Re-check profile completion
         const username = $('ownerUsername')?.value?.trim() || '';
         checkProfileCompletion(username, phone);
+        
+        // Clear new user welcome styling if profile is now complete
+        if (username && phone && phone.length >= 7) {
+            if (typeof clearNewUserWelcome === 'function') {
+                clearNewUserWelcome();
+            }
+        }
         
         // Award XP for adding phone number (gamification)
         if (typeof GamificationService !== 'undefined') {
