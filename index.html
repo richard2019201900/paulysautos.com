@@ -162,6 +162,51 @@
         .scrollbar-hide::-webkit-scrollbar {
             display: none;  /* Chrome, Safari, Opera */
         }
+        
+        /* LB-Phone & narrow mobile optimizations */
+        @media (max-width: 480px) {
+            /* Reduce padding/margins on very small screens */
+            .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+            .py-4 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+            
+            /* Modal improvements for narrow screens */
+            .fixed.inset-0 > div[class*="max-w"] {
+                margin-left: 0.5rem;
+                margin-right: 0.5rem;
+            }
+            
+            /* Notification stack improvements */
+            #adminNotificationsStack {
+                padding: 0.5rem;
+            }
+            #adminNotificationsStack > div {
+                padding: 0.75rem;
+            }
+            
+            /* Dashboard stats cards */
+            .grid.grid-cols-2 {
+                gap: 0.5rem;
+            }
+            
+            /* Text size reduction for cramped displays */
+            .text-2xl { font-size: 1.25rem; }
+            .text-xl { font-size: 1.125rem; }
+            
+            /* Vehicle card badges - prevent overflow */
+            span[class*="rounded-full"] {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+        }
+        
+        /* Very narrow screens (lb-phone in windowed mode) */
+        @media (max-width: 380px) {
+            .grid.grid-cols-2 { grid-template-columns: 1fr; }
+            .flex.gap-4 { gap: 0.5rem; }
+            .px-6 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-gray-100">
@@ -368,18 +413,18 @@
                 </h3>
                 <p class="text-gray-400 text-sm mb-4">High-quality photos that showcase your vehicle's best features. Vehicles with pro photos sell <span class="text-green-400 font-bold">3x faster</span> and command higher prices.</p>
                 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <!-- Per Photo -->
-                    <div id="photoOptionSingle" onclick="selectPhotoOption('single')" class="photo-option bg-gray-800/70 rounded-xl p-4 border-2 border-gray-600 hover:border-amber-500 transition cursor-pointer">
-                        <div class="text-2xl font-black text-white">$5k<span class="text-gray-400 text-sm font-normal">/photo</span></div>
+                    <div id="photoOptionSingle" onclick="selectPhotoOption('single')" class="photo-option bg-gray-800/70 rounded-xl p-3 sm:p-4 border-2 border-gray-600 hover:border-amber-500 transition cursor-pointer">
+                        <div class="text-xl sm:text-2xl font-black text-white">$5k<span class="text-gray-400 text-xs sm:text-sm font-normal">/photo</span></div>
                         <div class="text-gray-400 text-xs mt-1">10 photo minimum</div>
                         <div class="text-green-400 text-xs mt-1">✓ Extra angles included free</div>
                     </div>
                     
                     <!-- Bundle -->
-                    <div id="photoOptionBundle" onclick="selectPhotoOption('bundle')" class="photo-option bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-xl p-4 border-2 border-amber-500 cursor-pointer hover:border-amber-400 transition relative">
-                        <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">BEST VALUE</div>
-                        <div class="text-2xl font-black text-amber-400 mt-1">$75k</div>
+                    <div id="photoOptionBundle" onclick="selectPhotoOption('bundle')" class="photo-option bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-xl p-3 sm:p-4 border-2 border-amber-500 cursor-pointer hover:border-amber-400 transition relative">
+                        <div class="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">BEST VALUE</div>
+                        <div class="text-xl sm:text-2xl font-black text-amber-400 mt-1">$75k</div>
                         <div class="text-amber-300/80 text-xs mt-1">Complete media package</div>
                         <div class="text-gray-300 text-xs mt-1">✓ 10 photos + video tour + 4 weeks premium listing</div>
                     </div>
@@ -402,12 +447,12 @@
                 </div>
             </div>
             
-            <!-- CTA - buttons on same row -->
-            <div class="flex gap-3 mb-2">
-                <button id="photoServicesCopyBtn" onclick="copyAndNotifyPhotoServices()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
-                    Select an option above
+            <!-- CTA - buttons stack on small screens -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-2">
+                <button id="photoServicesCopyBtn" onclick="copyAndNotifyPhotoServices()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 sm:px-6 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm sm:text-base">
+                    📋 Copy Number & Request Bundle
                 </button>
-                <button onclick="closeModal('photoServicesModal')" class="bg-gray-700 text-gray-200 px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                <button onclick="closeModal('photoServicesModal')" class="bg-gray-700 text-gray-200 px-4 sm:px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition text-sm sm:text-base">
                     Close
                 </button>
             </div>
@@ -908,7 +953,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 md:h-20">
                 <!-- Logo with Site Switcher Dropdown -->
-                <div class="relative flex-shrink-0 mr-4" id="siteSwitcherContainer">
+                <div class="relative flex-shrink-0 mr-6 md:mr-8" id="siteSwitcherContainer">
                     <button onclick="toggleSiteSwitcher()" class="flex items-center space-x-2 cursor-pointer p-2 rounded-xl border-2 border-amber-500/50 hover:border-amber-400 transition-all duration-300 site-switcher-glow" role="button" tabindex="0" aria-label="Switch between Pauly's sites" id="siteSwitcherBtn">
                         <div class="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
                             <svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-lg" xmlns="http://www.w3.org/2000/svg">
@@ -1889,7 +1934,6 @@
                                 <th class="px-4 py-4 font-bold">Vehicle</th>
                                 <th class="px-4 py-4 font-bold text-right">Price</th>
                                 <th class="px-4 py-4 font-bold text-center">Status</th>
-                                <th class="px-3 py-4 font-bold text-center w-16"></th>
                             </tr>
                         </thead>
                         <tbody id="ownerVehiclesTable"></tbody>

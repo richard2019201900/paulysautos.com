@@ -704,8 +704,9 @@ function renderOwnerDashboard() {
                 statusBadge = '<span class="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full">RESERVED</span>';
             }
             
+            // Make entire row clickable - no separate View button
             return `
-                <tr class="border-b border-gray-700 hover:bg-gray-800/50 transition">
+                <tr class="border-b border-gray-700 hover:bg-gray-800/50 transition cursor-pointer" onclick="viewVehicleStats(${v.id})">
                     <td class="px-3 py-3 text-center text-gray-400">${index + 1}</td>
                     <td class="px-4 py-3">
                         <div class="font-semibold text-white">${sanitize(description)}</div>
@@ -713,11 +714,6 @@ function renderOwnerDashboard() {
                     </td>
                     <td class="px-4 py-3 text-right font-bold text-green-400">${formatPrice(price)}</td>
                     <td class="px-4 py-3 text-center">${statusBadge}</td>
-                    <td class="px-3 py-3 text-center">
-                        <button onclick="viewVehicleStats(${v.id})" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                            View
-                        </button>
-                    </td>
                 </tr>
             `;
         }).join('');

@@ -924,11 +924,17 @@ window.startAdminNotificationsListener = function() {
 };
 
 // Real-time listener for users - detects new signups immediately AND shows missed signups
-window.startAdminUsersListener = function() {
+window.startAdminUsersListener = async function() {
     if (!TierService.isMasterAdmin(auth.currentUser?.email)) return;
     
     if (window.adminUsersUnsubscribe) {
         window.adminUsersUnsubscribe();
+    }
+    
+    // CRITICAL: Wait for preferences to load from Firebase before checking dismissed
+    // This ensures sync between browser and lb-phone
+    if (window.UserPreferencesService) {
+        await UserPreferencesService.load();
     }
     
     // Get admin's last visit time from UserPreferencesService
