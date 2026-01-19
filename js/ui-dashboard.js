@@ -76,6 +76,10 @@ window.logout = function() {
     if (window.NotificationManager && typeof window.NotificationManager.destroy === 'function') {
         window.NotificationManager.destroy();
     }
+    // Reset UserPreferencesService to stop real-time sync and clear cache
+    if (window.UserPreferencesService && typeof window.UserPreferencesService.reset === 'function') {
+        window.UserPreferencesService.reset();
+    }
     // Hide global alert
     dismissGlobalAlert();
     // Reset all admin alert state
@@ -108,6 +112,10 @@ window.forceLogout = function() {
     // Destroy NotificationManager to reset knownListingIds/knownUserIds
     if (window.NotificationManager && typeof window.NotificationManager.destroy === 'function') {
         window.NotificationManager.destroy();
+    }
+    // Reset UserPreferencesService to stop real-time sync and clear cache
+    if (window.UserPreferencesService && typeof window.UserPreferencesService.reset === 'function') {
+        window.UserPreferencesService.reset();
     }
     
     // Reset state

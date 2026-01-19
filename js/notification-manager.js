@@ -922,9 +922,10 @@
         initPromise = (async () => {
             try {
                 
-                // Load preferences from Firestore via UserPreferencesService
+                // CRITICAL: Force load preferences from Firestore (not cached)
+                // This ensures cross-device sync between desktop/mobile/lb-phone
                 if (window.UserPreferencesService) {
-                    await UserPreferencesService.load();
+                    await UserPreferencesService.forceLoad();
                     
                     // Load dismissed notifications into local Set for fast lookups
                     const dismissedList = UserPreferencesService.getAll().dismissedNotifications || [];
@@ -932,6 +933,19 @@
                     
                     // Load last admin visit time
                     state.lastAdminVisit = UserPreferencesService.getAdminLastVisit();
+                    
+                    // Register for real-time sync - when another device dismisses, update here
+                    UserPreferencesService.onPreferenceChange((key, value) => {
+                        if (key === 'dismissedNotifications') {
+                            state.dismissed = new Set(value);
+                            
+                            // Remove notifications that were dismissed on another device
+                            state.notifications = state.notifications.filter(n => !state.dismissed.has(n.id));
+                            
+                            // Refresh UI to hide dismissed notifications
+                            refreshUI();
+                        }
+                    });
                 }
                 
                 state.sessionStart = new Date();

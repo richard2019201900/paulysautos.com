@@ -931,10 +931,31 @@ window.startAdminUsersListener = async function() {
         window.adminUsersUnsubscribe();
     }
     
-    // CRITICAL: Wait for preferences to load from Firebase before checking dismissed
-    // This ensures sync between browser and lb-phone
+    // CRITICAL: Force a FRESH load from Firebase (not cached) to ensure cross-device sync
+    // This is the key fix for desktop/mobile/lb-phone sync issues
     if (window.UserPreferencesService) {
-        await UserPreferencesService.load();
+        await UserPreferencesService.forceLoad();
+        
+        // Register callback for real-time sync of dismissed notifications across devices
+        UserPreferencesService.onPreferenceChange((key, value) => {
+            if (key === 'dismissedNotifications') {
+                // Update local Set with fresh data from Firestore
+                window.dismissedAdminNotifications = new Set(value);
+                
+                // Remove any visible notifications that are now dismissed
+                value.forEach(id => {
+                    const notificationEl = document.getElementById('notification-' + id);
+                    if (notificationEl) {
+                        notificationEl.style.animation = 'slideUp 0.3s ease-out forwards';
+                        setTimeout(() => notificationEl.remove(), 300);
+                    }
+                    window.pendingAdminNotifications.delete(id);
+                });
+                
+                // Update badge
+                updateNotificationBadge();
+            }
+        });
     }
     
     // Get admin's last visit time from UserPreferencesService
@@ -991,7 +1012,7 @@ window.startAdminUsersListener = async function() {
                 const isCurrentUser = currentUserEmail && userEmail === currentUserEmail;
                 
                 const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : null;
-                const notificationId = 'new-user-' + doc.id;
+                const notificationId = 'user-' + doc.id;
                 
                 if (isFirstSnapshot) {
                     // Check if this user has a pending (unacknowledged) notification
@@ -1028,7 +1049,7 @@ window.startAdminUsersListener = async function() {
             if (window.UserPreferencesService) {
                 // Add any new pending notifications
                 window.pendingAdminNotifications.forEach(id => {
-                    if (id.startsWith('new-user-')) {
+                    if (id.startsWith('user-')) {
                         UserPreferencesService.addPendingNotification(id, 'user');
                     }
                 });
@@ -1078,8 +1099,8 @@ window.startAdminUsersListener = async function() {
                 // Clean up stale pending notifications (users that were deleted)
                 const staleNotifications = [];
                 window.pendingAdminNotifications.forEach(id => {
-                    if (id.startsWith('new-user-')) {
-                        const userId = id.replace('new-user-', '');
+                    if (id.startsWith('user-')) {
+                        const userId = id.replace('user-', '');
                         if (!currentUserIds.has(userId)) {
                             staleNotifications.push(id);
                         }
@@ -1611,7 +1632,7 @@ window.showNewUserNotification = function(user, isMissed = false) {
     
     stack.classList.remove('hidden');
     
-    const notificationId = 'new-user-' + user.id;
+    const notificationId = 'user-' + user.id;
     
     // Don't add if already dismissed or already showing
     if (window.dismissedAdminNotifications.has(notificationId)) return;
@@ -1928,8 +1949,8 @@ window.reRenderPendingNotifications = function() {
             return;
         }
         // Parse the notification ID to determine type
-        if (notificationId.startsWith('new-user-')) {
-            const userId = notificationId.replace('new-user-', '');
+        if (notificationId.startsWith('user-')) {
+            const userId = notificationId.replace('user-', '');
             const user = window.adminUsersData?.find(u => u.id === userId);
             if (user) {
                 // Skip notifications for the current user's own account

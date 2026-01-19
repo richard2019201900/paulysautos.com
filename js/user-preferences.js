@@ -48,6 +48,96 @@ const UserPreferencesService = (function() {
     
     // Current user ID (for Firestore path)
     let currentUserId = null;
+    
+    // Real-time listener unsubscribe function
+    let unsubscribeListener = null;
+    
+    // Callbacks for when preferences change (for real-time sync)
+    const changeCallbacks = [];
+
+    // =========================================================================
+    // REAL-TIME SYNC
+    // =========================================================================
+    
+    /**
+     * Start real-time listener for preferences changes
+     * This ensures sync across devices (desktop, mobile, lb-phone)
+     */
+    function startRealtimeSync() {
+        const user = auth?.currentUser;
+        if (!user) return;
+        
+        // Don't start duplicate listeners
+        if (unsubscribeListener && currentUserId === user.uid) return;
+        
+        // Stop existing listener if user changed
+        if (unsubscribeListener) {
+            unsubscribeListener();
+            unsubscribeListener = null;
+        }
+        
+        currentUserId = user.uid;
+        
+        unsubscribeListener = db.collection('users').doc(user.uid)
+            .onSnapshot(doc => {
+                if (!doc.exists) return;
+                
+                const data = doc.data();
+                const prefs = data.preferences || {};
+                
+                // Update cache with fresh data from Firestore
+                const oldDismissed = [...cache.dismissedNotifications];
+                
+                cache = {
+                    dismissedNotifications: prefs.dismissedNotifications || [],
+                    dashboardTab: prefs.dashboardTab || 'myProperties',
+                    lastSeenSiteUpdate: prefs.lastSeenSiteUpdate || null,
+                    adminLastVisit: prefs.adminLastVisit || null,
+                    pendingUserNotifications: prefs.pendingUserNotifications || [],
+                    pendingListingNotifications: prefs.pendingListingNotifications || [],
+                    adminActivityLog: prefs.adminActivityLog || []
+                };
+                
+                isLoaded = true;
+                
+                // Notify listeners if dismissed notifications changed
+                const newDismissed = cache.dismissedNotifications;
+                const hasChanges = newDismissed.length !== oldDismissed.length ||
+                    newDismissed.some(id => !oldDismissed.includes(id));
+                
+                if (hasChanges && changeCallbacks.length > 0) {
+                    changeCallbacks.forEach(cb => {
+                        try {
+                            cb('dismissedNotifications', cache.dismissedNotifications);
+                        } catch (e) {
+                            console.error('[UserPreferences] Callback error:', e);
+                        }
+                    });
+                }
+            }, error => {
+                console.error('[UserPreferences] Realtime sync error:', error);
+            });
+    }
+    
+    /**
+     * Stop real-time listener
+     */
+    function stopRealtimeSync() {
+        if (unsubscribeListener) {
+            unsubscribeListener();
+            unsubscribeListener = null;
+        }
+    }
+    
+    /**
+     * Register a callback for preference changes
+     * @param {Function} callback - Function(key, value) called when preferences change
+     */
+    function onPreferenceChange(callback) {
+        if (typeof callback === 'function') {
+            changeCallbacks.push(callback);
+        }
+    }
 
     // =========================================================================
     // FIRESTORE OPERATIONS
@@ -55,22 +145,23 @@ const UserPreferencesService = (function() {
     
     /**
      * Load preferences from Firestore for the current user
+     * @param {boolean} forceRefresh - If true, always fetch from Firestore (ignore cache)
      * @returns {Promise<Object>} The preferences object
      */
-    async function load() {
+    async function load(forceRefresh = false) {
         const user = auth?.currentUser;
         if (!user) {
             isLoaded = true;
             return cache;
         }
         
-        // Return existing promise if already loading
-        if (isLoading && loadPromise) {
+        // Return existing promise if already loading (unless force refresh)
+        if (!forceRefresh && isLoading && loadPromise) {
             return loadPromise;
         }
         
-        // Return cache if already loaded for this user
-        if (isLoaded && currentUserId === user.uid) {
+        // Return cache if already loaded for this user (unless force refresh)
+        if (!forceRefresh && isLoaded && currentUserId === user.uid) {
             return cache;
         }
         
@@ -95,22 +186,53 @@ const UserPreferencesService = (function() {
                         pendingListingNotifications: prefs.pendingListingNotifications || [],
                         adminActivityLog: prefs.adminActivityLog || []
                     };
-                    
                 }
                 
                 isLoaded = true;
                 isLoading = false;
+                
+                // Start real-time sync after initial load
+                startRealtimeSync();
+                
                 return cache;
                 
             } catch (error) {
                 console.error('[UserPreferences] Error loading:', error);
                 isLoading = false;
-                isLoaded = true; // Mark as loaded to prevent infinite retries
+                isLoaded = true;
                 return cache;
             }
         })();
         
         return loadPromise;
+    }
+    
+    /**
+     * Force a fresh load from Firestore (ignores cache)
+     * Use this on page load to ensure cross-device sync
+     */
+    async function forceLoad() {
+        return load(true);
+    }
+    
+    /**
+     * Reset state (call on logout)
+     */
+    function reset() {
+        stopRealtimeSync();
+        isLoaded = false;
+        isLoading = false;
+        loadPromise = null;
+        currentUserId = null;
+        cache = {
+            dismissedNotifications: [],
+            dashboardTab: 'myProperties',
+            lastSeenSiteUpdate: null,
+            adminLastVisit: null,
+            pendingUserNotifications: [],
+            pendingListingNotifications: [],
+            adminActivityLog: []
+        };
     }
     
     /**
@@ -404,8 +526,14 @@ const UserPreferencesService = (function() {
     return {
         // Core
         load,
+        forceLoad,
         reset,
         getAll,
+        
+        // Real-time sync
+        startRealtimeSync,
+        stopRealtimeSync,
+        onPreferenceChange,
         
         // Notifications
         isNotificationDismissed,
