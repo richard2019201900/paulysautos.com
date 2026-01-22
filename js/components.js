@@ -33,6 +33,28 @@ window.copyToClipboard = function(elementId, btn) {
 window.openModal = function(id) {
     showElement($(id));
     
+    // If opening contact modal without pre-filled message, add default
+    if (id === 'contactModal') {
+        const modalMessage = $('modalMessage');
+        if (modalMessage && !modalMessage.value.trim()) {
+            // Set default title and styling for generic contact
+            const modalTitle = $('modalTitle');
+            const modalVehicleName = $('modalVehicleName');
+            const modalAccent = $('modalAccent');
+            
+            if (modalTitle) {
+                modalTitle.textContent = '🏎️ Get In Touch';
+                modalTitle.className = 'text-3xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent mb-4 text-center';
+            }
+            if (modalVehicleName) modalVehicleName.textContent = '';
+            if (modalAccent) {
+                modalAccent.className = 'bg-gradient-to-r from-amber-900/50 to-yellow-900/50 p-4 rounded-xl mb-6 text-center border border-amber-700';
+            }
+            
+            modalMessage.value = "Hey Pauly, I'm interested in learning more about some of your vehicles. Please contact me when you get a chance. Thanks!";
+        }
+    }
+    
     // If opening login modal, clear all forms and show login options
     if (id === 'loginModal') {
         // Clear login form
