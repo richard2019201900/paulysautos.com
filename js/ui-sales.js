@@ -880,9 +880,9 @@ function calculateSaleBreakdown(vehiclePrice) {
 }
 
 /**
- * Show the Start Sale modal
+ * Show the Sale Contract Wizard (4-step process matching PaulysProperties)
  */
-window.showStartSaleModal = function(vehicleId) {
+window.showStartSaleModal = async function(vehicleId) {
     // Ensure numeric ID for comparison
     const numericId = typeof vehicleId === 'string' ? parseInt(vehicleId) : vehicleId;
     const p = vehicles.find(prop => prop.id === numericId);
@@ -891,35 +891,426 @@ window.showStartSaleModal = function(vehicleId) {
         return;
     }
     
+    // Get the VEHICLE OWNER's display name
+    let sellerName = '';
+    try {
+        const ownerInfo = await getVehicleOwnerWithTier(numericId);
+        sellerName = ownerInfo.display || ownerInfo.username || '';
+    } catch (e) {
+        console.warn('Could not get seller name from getVehicleOwnerWithTier:', e);
+    }
+    
+    // Fallback to VehicleDataService
+    if (!sellerName || sellerName === 'Unassigned') {
+        sellerName = VehicleDataService.getValue(numericId, 'ownerName', p.ownerName || '');
+    }
+    
+    // Get buy price
     const buyPrice = VehicleDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
     
-    // Set form values
-    document.getElementById('saleVehicleId').value = numericId;
-    document.getElementById('saleBuyerName').value = '';
-    document.getElementById('saleBuyerPhone').value = '';
-    document.getElementById('salePriceEdit').value = buyPrice;
-    document.getElementById('saleAgreementDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('saleNotes').value = '';
-    document.getElementById('saleAcknowledge').checked = false;
+    // Get vehicle description/location
+    const vehicleDescription = VehicleDataService.getValue(numericId, 'location', p.location || '') || 
+                               VehicleDataService.getValue(numericId, 'description', p.description || '');
     
-    // Update breakdown with initial price
-    updateSaleBreakdown();
+    // Initialize wizard state
+    window.saleWizardState = {
+        vehicleId: numericId,
+        step: 1,
+        vehicle: { ...p, description: vehicleDescription },
+        existingSeller: sellerName,
+        buyer: {
+            name: '',
+            phone: '',
+            useManual: true
+        },
+        seller: sellerName,
+        financial: {
+            salePrice: buyPrice,
+            breakdown: calculateSaleBreakdown(buyPrice)
+        },
+        notes: '',
+        acknowledged: false
+    };
     
-    openModal('startSaleModal');
+    renderSaleWizardStep(1);
 };
 
 /**
- * Update the payment breakdown when sale price changes
+ * Render the current wizard step
  */
-window.updateSaleBreakdown = function() {
-    const priceInput = document.getElementById('salePriceEdit');
-    const vehicleId = document.getElementById('saleVehicleId').value;
-    const price = parseInt(priceInput?.value) || 0;
+function renderSaleWizardStep(step) {
+    const state = window.saleWizardState;
+    state.step = step;
     
+    // Remove existing modal
+    const existingModal = document.getElementById('saleWizardModal');
+    if (existingModal) existingModal.remove();
+    
+    let content = '';
+    let title = '';
+    let stepIndicator = `
+        <div class="flex items-center justify-center gap-2 mb-6">
+            ${[1, 2, 3, 4].map(s => `
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${s === step ? 'bg-amber-500 text-gray-900' : s < step ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'}">
+                        ${s < step ? '✓' : s}
+                    </div>
+                    ${s < 4 ? '<div class="w-8 h-0.5 bg-gray-700"></div>' : ''}
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    if (step === 1) {
+        title = 'Step 1: Parties Information';
+        const existingSeller = state.existingSeller || '';
+        
+        content = `
+            <div class="space-y-4">
+                <p class="text-gray-400 text-sm">Enter the buyer and seller details for this vehicle sale.</p>
+                
+                <!-- Trust Warning -->
+                <div class="bg-gradient-to-r from-red-900/60 to-orange-900/60 border-2 border-red-500 rounded-xl p-4">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">🚨</span>
+                        <div>
+                            <h4 class="text-red-300 font-bold mb-2">⚠️ TRUST WARNING</h4>
+                            <ul class="text-red-200/90 text-sm space-y-1">
+                                <li>• Only proceed if you TRUST this buyer</li>
+                                <li>• VERIFY their identity in person</li>
+                                <li>• SCREENSHOT all transactions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Seller Info (Auto-populated) -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <h4 class="text-amber-400 font-bold mb-3 flex items-center gap-2">
+                        <span>👑</span> Seller Information
+                    </h4>
+                    <div class="bg-gray-700/50 rounded-lg p-3">
+                        <div class="text-gray-500 text-xs mb-1">Vehicle Owner</div>
+                        <div class="text-amber-400 font-semibold">${existingSeller || 'Unknown'}</div>
+                    </div>
+                    <p class="text-gray-500 text-xs mt-2">Auto-populated from vehicle owner records</p>
+                </div>
+                
+                <!-- Buyer Info (Manual Entry) -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
+                        <span>👤</span> Buyer Information
+                    </h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Buyer Name *</label>
+                            <input type="text" id="saleBuyerNameInput" value="${state.buyer.name}" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500"
+                                   placeholder="Character name in city">
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Buyer Phone *</label>
+                            <input type="text" id="saleBuyerPhoneInput" value="${state.buyer.phone}" 
+                                   class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500"
+                                   placeholder="In-city phone number">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (step === 2) {
+        title = 'Step 2: Sale Price & Payment';
+        const f = state.financial;
+        
+        content = `
+            <div class="space-y-4">
+                <p class="text-gray-400 text-sm">Set the sale price and review the payment breakdown.</p>
+                
+                <!-- Sale Price Input -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <label class="block text-gray-400 text-sm mb-2">Sale Price *</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                        <input type="number" id="saleWizardPrice" value="${f.salePrice || ''}" 
+                               class="w-full pl-8 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-xl font-bold focus:ring-2 focus:ring-amber-500"
+                               placeholder="Enter sale price" oninput="updateSaleWizardBreakdown()">
+                    </div>
+                    <p class="text-gray-500 text-xs mt-1">Enter the final negotiated price</p>
+                </div>
+                
+                <!-- Payment Breakdown -->
+                <div id="saleWizardBreakdown" class="bg-gray-800 rounded-xl p-4">
+                    <!-- Will be populated by JS -->
+                </div>
+                
+                <!-- LUX Info -->
+                <div class="bg-amber-900/30 border border-amber-500/30 rounded-xl p-4">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">🏦</span>
+                        <div>
+                            <h4 class="text-amber-300 font-bold mb-1">LUX Transaction Limit</h4>
+                            <p class="text-amber-200/80 text-sm">LUX app has a $750,000 max transaction. Sales above this require a cash down payment first.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes -->
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Additional Notes (optional)</label>
+                    <textarea id="saleWizardNotes" rows="2" placeholder="Any special terms or conditions..."
+                        class="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500">${state.notes || ''}</textarea>
+                </div>
+            </div>
+        `;
+    } else if (step === 3) {
+        title = 'Step 3: Review & Confirm';
+        const f = state.financial;
+        const breakdown = f.breakdown;
+        
+        content = `
+            <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                <!-- Vehicle Info -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <h4 class="text-amber-400 font-bold mb-2 flex items-center gap-2">
+                        <span>🚗</span> Vehicle
+                    </h4>
+                    <div class="text-white font-semibold">${state.vehicle.title}</div>
+                    <div class="text-gray-400 text-sm mt-1">${state.vehicle.description || 'No description available'}</div>
+                </div>
+                
+                <!-- Parties -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <h4 class="text-amber-400 font-bold mb-2 flex items-center gap-2">
+                        <span>👥</span> Parties Involved
+                    </h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-400">Seller:</span>
+                            <div class="text-white font-semibold">👑 ${state.seller}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Buyer:</span>
+                            <div class="text-white font-semibold">${state.buyer.name}</div>
+                            <div class="text-gray-500 text-xs">${state.buyer.phone}</div>
+                        </div>
+                    </div>
+                    <div class="text-gray-400 text-sm mt-2">Brokerage: <span class="text-white">${state.seller} / PaulysAutos.com</span></div>
+                </div>
+                
+                <!-- Financial Summary -->
+                <div class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-xl p-4">
+                    <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
+                        <span>💰</span> Payment Summary
+                    </h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Sale Price</span>
+                            <span class="text-white font-bold text-lg">$${breakdown.vehiclePrice.toLocaleString()}</span>
+                        </div>
+                        ${breakdown.needsDownPayment ? `
+                        <div class="flex justify-between border-t border-gray-700 pt-2">
+                            <span class="text-red-400">Cash Down Payment</span>
+                            <span class="text-red-400 font-semibold">$${breakdown.downPayment.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">LUX Transaction</span>
+                            <span class="text-green-400 font-semibold">$${breakdown.luxTransaction.toLocaleString()}</span>
+                        </div>
+                        ` : `
+                        <div class="flex justify-between border-t border-gray-700 pt-2">
+                            <span class="text-gray-400">LUX Transaction</span>
+                            <span class="text-green-400 font-semibold">$${breakdown.vehiclePrice.toLocaleString()}</span>
+                        </div>
+                        `}
+                        <div class="flex justify-between bg-amber-900/30 p-2 rounded-lg mt-2">
+                            <span class="text-amber-300">+ City Fee (buyer pays)</span>
+                            <span class="text-amber-300 font-bold">$${breakdown.cityFee.toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Agreement Date -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <label class="block text-gray-400 text-sm mb-2">Agreement Date</label>
+                    <input type="date" id="saleWizardDate" value="${new Date().toISOString().split('T')[0]}" 
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500">
+                </div>
+                
+                <!-- Acknowledgment Checkbox -->
+                <div class="bg-red-900/30 rounded-xl p-4 border border-red-500/50">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="saleWizardAcknowledge" ${state.acknowledged ? 'checked' : ''} 
+                               class="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-amber-500 focus:ring-amber-500"
+                               onchange="window.saleWizardState.acknowledged = this.checked">
+                        <span class="text-red-200 text-sm">
+                            I understand that <strong>PaulysAutos.com is NOT responsible</strong> for any disputes arising from this sale. 
+                            I have verified the buyer's identity and accept all risks associated with this transaction.
+                        </span>
+                    </label>
+                </div>
+            </div>
+        `;
+    } else if (step === 4) {
+        title = 'Contract Generated';
+        const contract = generateSaleContract();
+        
+        content = `
+            <div class="space-y-4">
+                <div class="flex items-center justify-center gap-3 text-green-400 mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-xl font-bold">Contract Ready!</span>
+                </div>
+                
+                <div class="bg-gray-800 rounded-xl p-4 max-h-[35vh] overflow-y-auto">
+                    <div id="saleContractPreview" class="text-xs text-gray-300 whitespace-pre-wrap font-mono">
+                        ${contract.preview}
+                    </div>
+                </div>
+                
+                <div class="text-gray-400 text-xs text-center">
+                    Document ID: ${contract.documentId}
+                </div>
+                
+                <!-- Primary Actions -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="copySaleContractWizard()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        Copy Text
+                    </button>
+                    <button onclick="downloadSaleContractImage()" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Download Image
+                    </button>
+                </div>
+                
+                <!-- Save Action -->
+                <button onclick="saveSaleContractWizard()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    Save to Firestore & Close
+                </button>
+                
+                <p class="text-gray-500 text-xs text-center">
+                    Saving stores the contract in your database for future reference.<br>
+                    The image includes cursive signatures for both parties.
+                </p>
+            </div>
+        `;
+    }
+    
+    const modalHTML = `
+        <div id="saleWizardModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div class="bg-gray-900 rounded-2xl max-w-2xl w-full border border-amber-500/50 shadow-2xl overflow-hidden my-4">
+                <!-- Header with Close Button -->
+                <div class="bg-gradient-to-r from-amber-600 to-yellow-600 px-6 py-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Vehicle Sale Contract
+                        </h3>
+                        <p class="text-gray-900/70 text-sm mt-1">${state.vehicle.title}</p>
+                    </div>
+                    <button onclick="closeSaleWizard()" class="bg-gray-900/30 hover:bg-gray-900/50 text-gray-900 p-2 rounded-full transition" title="Close">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                
+                <!-- Content -->
+                <div class="p-6 max-h-[70vh] overflow-y-auto">
+                    ${stepIndicator}
+                    <h4 class="text-lg font-bold text-white mb-4">${title}</h4>
+                    ${content}
+                    
+                    <!-- Navigation -->
+                    <div class="flex gap-3 mt-6 pt-4 border-t border-gray-700">
+                        ${step > 1 && step < 4 ? `
+                            <button onclick="renderSaleWizardStep(${step - 1})" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
+                                ← Back
+                            </button>
+                        ` : ''}
+                        ${step < 3 ? `
+                            <button onclick="nextSaleWizardStep()" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 px-4 rounded-xl font-bold transition hover:opacity-90">
+                                Next →
+                            </button>
+                        ` : step === 3 ? `
+                            <button onclick="generateAndShowSaleContract()" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Generate Contract
+                            </button>
+                        ` : `
+                            <button onclick="renderSaleWizardStep(3)" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
+                                ← Back
+                            </button>
+                            <button onclick="closeSaleWizard()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-3 px-4 rounded-xl font-bold transition">
+                                Close
+                            </button>
+                        `}
+                        ${step === 1 ? `
+                            <button onclick="closeSaleWizard()" class="px-6 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-bold transition">
+                                Cancel
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Run breakdown update if on step 2
+    if (step === 2) {
+        setTimeout(updateSaleWizardBreakdown, 100);
+    }
+}
+
+/**
+ * Move to next step with validation
+ */
+window.nextSaleWizardStep = function() {
+    const state = window.saleWizardState;
+    
+    if (state.step === 1) {
+        // Validate parties
+        const buyerName = document.getElementById('saleBuyerNameInput')?.value?.trim();
+        const buyerPhone = document.getElementById('saleBuyerPhoneInput')?.value?.trim();
+        
+        if (!buyerName) {
+            showToast('Please enter buyer name', 'error');
+            return;
+        }
+        if (!buyerPhone) {
+            showToast('Please enter buyer phone', 'error');
+            return;
+        }
+        
+        state.buyer.name = buyerName;
+        state.buyer.phone = buyerPhone;
+    } else if (state.step === 2) {
+        // Validate and save financial terms
+        const salePrice = parseInt(document.getElementById('saleWizardPrice')?.value) || 0;
+        const notes = document.getElementById('saleWizardNotes')?.value?.trim() || '';
+        
+        if (salePrice <= 0) {
+            showToast('Please enter a valid sale price', 'error');
+            return;
+        }
+        
+        state.financial.salePrice = salePrice;
+        state.financial.breakdown = calculateSaleBreakdown(salePrice);
+        state.notes = notes;
+    }
+    
+    renderSaleWizardStep(state.step + 1);
+};
+
+/**
+ * Update the payment breakdown in wizard step 2
+ */
+window.updateSaleWizardBreakdown = function() {
+    const price = parseInt(document.getElementById('saleWizardPrice')?.value) || 0;
     const breakdown = calculateSaleBreakdown(price);
     
-    // Update the breakdown display
-    const breakdownEl = document.getElementById('salePaymentBreakdown');
+    const breakdownEl = document.getElementById('saleWizardBreakdown');
     if (!breakdownEl) return;
     
     if (breakdown.needsDownPayment) {
@@ -930,7 +1321,7 @@ window.updateSaleBreakdown = function() {
             </h4>
             <div class="grid grid-cols-3 gap-3 text-center">
                 <div class="bg-gray-700/50 rounded-lg p-3">
-                    <div class="text-gray-400 text-xs">Vehicle Price</div>
+                    <div class="text-gray-400 text-xs">Sale Price</div>
                     <div class="text-white text-xl font-bold">$${breakdown.vehiclePrice.toLocaleString()}</div>
                 </div>
                 <div class="bg-red-900/50 border border-red-500/50 rounded-lg p-3">
@@ -967,16 +1358,464 @@ window.updateSaleBreakdown = function() {
         `;
     }
     
-    // Also update the vehicle's buy price in the background if changed significantly
-    if (vehicleId && price > 0) {
-        const numericId = parseInt(vehicleId);
-        const p = vehicles.find(v => v.id === numericId);
-        if (p) {
-            const originalPrice = VehicleDataService.getValue(numericId, 'buyPrice', p.buyPrice || 0);
-            // Store the negotiated price for contract generation
-            window._negotiatedSalePrice = price;
+    // Update state
+    if (window.saleWizardState) {
+        window.saleWizardState.financial.salePrice = price;
+        window.saleWizardState.financial.breakdown = breakdown;
+    }
+};
+
+/**
+ * Generate and show the contract (step 3 → 4)
+ */
+window.generateAndShowSaleContract = function() {
+    const state = window.saleWizardState;
+    
+    // Validate acknowledgment
+    const acknowledged = document.getElementById('saleWizardAcknowledge')?.checked;
+    if (!acknowledged) {
+        showToast('Please acknowledge the disclaimer to proceed', 'error');
+        return;
+    }
+    
+    // Save the agreement date
+    state.agreementDate = document.getElementById('saleWizardDate')?.value || new Date().toISOString().split('T')[0];
+    state.acknowledged = true;
+    
+    renderSaleWizardStep(4);
+};
+
+/**
+ * Generate the full sale contract
+ */
+function generateSaleContract() {
+    const state = window.saleWizardState;
+    const breakdown = state.financial.breakdown;
+    const agreementDate = new Date(state.agreementDate);
+    
+    // Generate document ID
+    const dateStr = agreementDate.toISOString().split('T')[0].replace(/-/g, '');
+    const sellerInitials = state.seller.split(' ').map(n => n[0]).join('').toUpperCase();
+    const buyerInitials = state.buyer.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    const documentId = `SA-SALE-${dateStr.substring(0, 4)}-${dateStr.substring(4, 8)}-${sellerInitials}-${buyerInitials}`;
+    
+    const formattedDate = agreementDate.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    
+    // Build preview text
+    const preview = `
+═══════════════════════════════════════════════════════════════
+                    VEHICLE SALE CONTRACT
+                       PaulysAutos.com
+═══════════════════════════════════════════════════════════════
+
+VEHICLE INFORMATION
+────────────────────────────────────────────────────────────────
+Vehicle: ${state.vehicle.title}
+Description: ${state.vehicle.description || 'N/A'}
+Transaction Type: Direct Sale
+
+PARTIES INVOLVED
+────────────────────────────────────────────────────────────────
+Seller: 👑 ${state.seller}
+Buyer: ${state.buyer.name}
+Buyer Phone: ${state.buyer.phone}
+Brokerage: ${state.seller} / PaulysAutos.com
+
+FINANCIAL DETAILS
+────────────────────────────────────────────────────────────────
+Item                              Amount
+─────────────────────────────────────────────────────
+Sale Price                        $${breakdown.vehiclePrice.toLocaleString()}
+${breakdown.needsDownPayment ? `Cash Down Payment                 $${breakdown.downPayment.toLocaleString()}
+LUX Transaction                   $${breakdown.luxTransaction.toLocaleString()}` : `LUX Transaction                   $${breakdown.vehiclePrice.toLocaleString()}`}
+City Fee (buyer pays at LUX)      $${breakdown.cityFee.toLocaleString()}
+─────────────────────────────────────────────────────
+Total Buyer Pays                  $${breakdown.totalWithFee.toLocaleString()}
+
+${breakdown.needsDownPayment ? `PAYMENT INSTRUCTIONS
+────────────────────────────────────────────────────────────────
+1. Buyer pays CASH down payment of $${breakdown.downPayment.toLocaleString()} to Seller
+2. Both parties meet at LUX to complete transfer
+3. Buyer pays remaining $${breakdown.luxTransaction.toLocaleString()} via LUX app
+4. City charges $${breakdown.cityFee.toLocaleString()} fee automatically at LUX
+
+` : `PAYMENT INSTRUCTIONS
+────────────────────────────────────────────────────────────────
+1. Both parties meet at LUX to complete transfer
+2. Buyer pays $${breakdown.vehiclePrice.toLocaleString()} via LUX app
+3. City charges $${breakdown.cityFee.toLocaleString()} fee automatically at LUX
+
+`}CONTRACT TERMS
+────────────────────────────────────────────────────────────────
+• Vehicle sold AS-IS with no warranty
+• Seller guarantees clear title and ownership
+• Transfer of ownership occurs upon completion at LUX
+• All sales are FINAL - no refunds
+• PaulysAutos.com is NOT responsible for disputes
+${state.notes ? `\nAdditional Notes: ${state.notes}` : ''}
+
+AGREEMENT DATE
+────────────────────────────────────────────────────────────────
+${formattedDate}
+
+DOCUMENT IDENTIFIERS
+────────────────────────────────────────────────────────────────
+Document ID: ${documentId}
+Jurisdiction: State of San Andreas
+Generated: ${new Date().toLocaleString()}
+
+═══════════════════════════════════════════════════════════════
+                    SIGNATURES REQUIRED
+═══════════════════════════════════════════════════════════════
+
+Seller: _________________________ Date: ___________
+        👑 ${state.seller}
+
+Buyer:  _________________________ Date: ___________
+        ${state.buyer.name}
+
+PaulysAutos.com: ________________ Date: ___________
+                 Authorized Representative
+
+═══════════════════════════════════════════════════════════════
+`;
+
+    // Store for later use
+    window.saleGeneratedContract = {
+        documentId,
+        preview,
+        data: {
+            ...state,
+            generatedAt: new Date().toISOString()
+        }
+    };
+    
+    return { documentId, preview };
+}
+
+/**
+ * Copy contract to clipboard
+ */
+window.copySaleContractWizard = function() {
+    const contract = window.saleGeneratedContract;
+    if (!contract) {
+        showToast('No contract generated', 'error');
+        return;
+    }
+    
+    navigator.clipboard.writeText(contract.preview).then(() => {
+        showToast('📋 Contract copied to clipboard!', 'success');
+    }).catch(err => {
+        console.error('Copy failed:', err);
+        showToast('Failed to copy', 'error');
+    });
+};
+
+/**
+ * Save contract to Firestore
+ */
+window.saveSaleContractWizard = async function() {
+    const contract = window.saleGeneratedContract;
+    if (!contract) {
+        showToast('No contract generated', 'error');
+        return;
+    }
+    
+    try {
+        const state = window.saleWizardState;
+        const breakdown = state.financial.breakdown;
+        
+        // Save contract to Firestore
+        await db.collection('saleContracts').doc(contract.documentId).set({
+            documentId: contract.documentId,
+            vehicleId: state.vehicleId,
+            vehicleTitle: state.vehicle.title,
+            vehicleDescription: state.vehicle.description,
+            seller: state.seller,
+            buyer: state.buyer.name,
+            buyerPhone: state.buyer.phone,
+            salePrice: breakdown.vehiclePrice,
+            downPayment: breakdown.downPayment,
+            luxTransaction: breakdown.luxTransaction,
+            cityFee: breakdown.cityFee,
+            totalWithFee: breakdown.totalWithFee,
+            needsDownPayment: breakdown.needsDownPayment,
+            notes: state.notes,
+            agreementDate: state.agreementDate,
+            status: 'pending',
+            createdBy: auth.currentUser?.email || 'unknown',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            contractText: contract.preview
+        });
+        
+        // Update vehicle with pending sale info
+        await VehicleDataService.write(state.vehicleId, 'pendingSale', {
+            contractId: contract.documentId,
+            buyerName: state.buyer.name,
+            buyerPhone: state.buyer.phone,
+            salePrice: breakdown.vehiclePrice,
+            createdAt: new Date().toISOString()
+        });
+        
+        showToast('✅ Contract saved! Vehicle marked as pending sale.', 'success');
+        
+        // Award XP for creating sale contract
+        if (typeof GamificationService !== 'undefined' && GamificationService.awardXP) {
+            const userId = auth.currentUser?.uid;
+            if (userId) {
+                await GamificationService.awardXP(userId, 50, `Created sale contract: ${contract.documentId}`);
+            }
+        }
+        
+        // Close the modal after a short delay
+        setTimeout(() => {
+            closeSaleWizard();
+            // Refresh the vehicle stats page
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(state.vehicleId);
+            }
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error saving contract:', error);
+        showToast('Failed to save contract: ' + error.message, 'error');
+    }
+};
+
+/**
+ * Download contract as PNG image with signatures
+ */
+window.downloadSaleContractImage = async function() {
+    const contract = window.saleGeneratedContract;
+    const state = window.saleWizardState;
+    if (!contract || !state) {
+        showToast('No contract generated', 'error');
+        return;
+    }
+    
+    showToast('🖼️ Generating contract image...', 'info');
+    
+    const breakdown = state.financial.breakdown;
+    const agreementDate = new Date(state.agreementDate);
+    
+    // Create canvas - SQUARE format
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const size = 1000;
+    canvas.width = size;
+    canvas.height = size;
+    
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#1a1a2e');
+    gradient.addColorStop(1, '#16213e');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    let y = 50;
+    const margin = 60;
+    const contentWidth = canvas.width - (margin * 2);
+    const goldColor = '#D4AF37';
+    const greenColor = '#4ade80';
+    const redColor = '#ef4444';
+    
+    // Helper functions
+    const drawText = (text, x, fontSize, color, font = 'Arial') => {
+        ctx.font = `${fontSize}px ${font}`;
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+        y += fontSize + 6;
+    };
+    
+    const drawLine = () => {
+        ctx.strokeStyle = goldColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(margin, y);
+        ctx.lineTo(canvas.width - margin, y);
+        ctx.stroke();
+        y += 12;
+    };
+    
+    // === HEADER ===
+    ctx.textAlign = 'center';
+    drawText('🚗 VEHICLE SALE CONTRACT', canvas.width / 2, 26, goldColor, 'Arial Black');
+    drawText('PaulysAutos.com', canvas.width / 2, 18, '#fbbf24', 'Arial');
+    y += 8;
+    drawLine();
+    
+    // === VEHICLE INFORMATION ===
+    ctx.textAlign = 'left';
+    y += 8;
+    drawText('VEHICLE INFORMATION', margin, 16, goldColor, 'Arial Black');
+    drawText(`Vehicle: ${state.vehicle.title}`, margin, 13, '#ffffff');
+    
+    // Description with word wrap
+    const desc = state.vehicle.description || 'N/A';
+    ctx.font = '11px Arial';
+    const words = desc.split(' ');
+    let line = 'Description: ';
+    for (let word of words) {
+        const testLine = line + word + ' ';
+        if (ctx.measureText(testLine).width > contentWidth) {
+            ctx.fillStyle = '#9ca3af';
+            ctx.fillText(line, margin, y);
+            y += 14;
+            line = word + ' ';
+        } else {
+            line = testLine;
         }
     }
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText(line, margin, y);
+    y += 16;
+    
+    drawText('Transaction Type: Direct Sale', margin, 12, '#ffffff');
+    y += 6;
+    
+    // === PARTIES INVOLVED ===
+    drawLine();
+    y += 4;
+    drawText('PARTIES INVOLVED', margin, 16, goldColor, 'Arial Black');
+    drawText(`Seller: 👑 ${state.seller}`, margin, 12, '#ffffff');
+    drawText(`Buyer: ${state.buyer.name}`, margin, 12, '#ffffff');
+    drawText(`Buyer Phone: ${state.buyer.phone}`, margin, 12, '#9ca3af');
+    drawText(`Brokerage: ${state.seller} / PaulysAutos.com`, margin, 12, '#ffffff');
+    y += 6;
+    
+    // === FINANCIAL DETAILS ===
+    drawLine();
+    y += 4;
+    drawText('FINANCIAL DETAILS', margin, 16, goldColor, 'Arial Black');
+    
+    const financialItems = [
+        ['Sale Price', `$${breakdown.vehiclePrice.toLocaleString()}`],
+    ];
+    
+    if (breakdown.needsDownPayment) {
+        financialItems.push(['Cash Down Payment', `$${breakdown.downPayment.toLocaleString()}`]);
+        financialItems.push(['LUX Transaction', `$${breakdown.luxTransaction.toLocaleString()}`]);
+    } else {
+        financialItems.push(['LUX Transaction', `$${breakdown.vehiclePrice.toLocaleString()}`]);
+    }
+    
+    financialItems.push(['City Fee (buyer pays)', `$${breakdown.cityFee.toLocaleString()}`]);
+    financialItems.push(['Total Buyer Pays', `$${breakdown.totalWithFee.toLocaleString()}`]);
+    
+    financialItems.forEach(([label, value], idx) => {
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText(label, margin, y);
+        ctx.fillStyle = idx === financialItems.length - 1 ? greenColor : (label.includes('Down') ? redColor : greenColor);
+        ctx.fillText(value, margin + 280, y);
+        y += 18;
+    });
+    
+    y += 6;
+    
+    // === CONTRACT TERMS ===
+    drawLine();
+    y += 4;
+    drawText('KEY CONTRACT TERMS', margin, 16, goldColor, 'Arial Black');
+    drawText('• Vehicle sold AS-IS with no warranty', margin, 11, '#ffffff');
+    drawText('• Transfer of ownership at LUX upon payment', margin, 11, '#ffffff');
+    drawText('• All sales are FINAL - no refunds', margin, 11, '#ffffff');
+    drawText('• PaulysAutos.com is NOT responsible for disputes', margin, 11, '#ef4444');
+    y += 10;
+    
+    // === DOCUMENT ID ===
+    drawLine();
+    y += 4;
+    drawText(`Document ID: ${contract.documentId}`, margin, 12, '#9ca3af');
+    drawText(`Agreement Date: ${agreementDate.toLocaleDateString()}`, margin, 10, '#6b7280');
+    drawText(`Generated: ${new Date().toLocaleDateString()}`, margin, 10, '#6b7280');
+    y += 12;
+    
+    // === SIGNATURES SECTION ===
+    drawLine();
+    y += 8;
+    ctx.textAlign = 'center';
+    drawText('SIGNATURES', canvas.width / 2, 18, goldColor, 'Arial Black');
+    ctx.textAlign = 'left';
+    y += 12;
+    
+    // Signature boxes - side by side
+    const sigBoxWidth = 380;
+    const sigBoxHeight = 60;
+    const sigSpacing = 20;
+    
+    // Seller signature
+    ctx.strokeStyle = '#4b5563';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(margin, y, sigBoxWidth, sigBoxHeight);
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(margin + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
+    
+    // Draw cursive signature for seller
+    ctx.font = 'italic 22px Georgia, serif';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText('👑 ' + state.seller, margin + 15, y + 38);
+    
+    ctx.font = '10px Arial';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText('Seller', margin, y + sigBoxHeight + 12);
+    ctx.fillText('👑 ' + state.seller, margin, y + sigBoxHeight + 24);
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(`Date: ${new Date().toLocaleDateString()}`, margin + 180, y + sigBoxHeight + 12);
+    
+    // Buyer signature
+    const buyerX = margin + sigBoxWidth + sigSpacing;
+    ctx.strokeStyle = '#4b5563';
+    ctx.strokeRect(buyerX, y, sigBoxWidth, sigBoxHeight);
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(buyerX + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
+    
+    // Draw cursive signature for buyer
+    ctx.font = 'italic 22px Georgia, serif';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText(state.buyer.name, buyerX + 15, y + 38);
+    
+    ctx.font = '10px Arial';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText('Buyer', buyerX, y + sigBoxHeight + 12);
+    ctx.fillText(state.buyer.name, buyerX, y + sigBoxHeight + 24);
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(`Date: ${new Date().toLocaleDateString()}`, buyerX + 180, y + sigBoxHeight + 12);
+    
+    y += sigBoxHeight + 45;
+    
+    // Footer
+    ctx.textAlign = 'center';
+    ctx.font = '9px Arial';
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('This document is a binding agreement in the State of San Andreas', canvas.width / 2, y);
+    ctx.fillText('© PaulysAutos.com - All Rights Reserved', canvas.width / 2, y + 12);
+    
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${contract.documentId}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('📥 Contract image downloaded!', 'success');
+    }, 'image/png');
+};
+
+/**
+ * Close the sale wizard
+ */
+window.closeSaleWizard = function() {
+    const modal = document.getElementById('saleWizardModal');
+    if (modal) modal.remove();
+    window.saleWizardState = null;
+    window.saleGeneratedContract = null;
 };
 
 /**
