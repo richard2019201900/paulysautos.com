@@ -59,12 +59,16 @@
         return localStorage.getItem('paulysautos_disclaimer_accepted') === 'true';
     };
     
-    // Show disclaimer modal
+    // Show disclaimer modal - blocks entire page
     window.showDisclaimerModal = function() {
         const modal = document.getElementById('disclaimerModal');
         if (modal) {
             modal.style.display = 'flex';
+            // Prevent scrolling on the body
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${window.scrollY}px`;
         }
     };
     
@@ -73,7 +77,13 @@
         const modal = document.getElementById('disclaimerModal');
         if (modal) {
             modal.style.display = 'none';
+            // Restore scrolling
+            const scrollY = document.body.style.top;
             document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            window.scrollTo(0, parseInt(scrollY || '0') * -1);
         }
     };
     
