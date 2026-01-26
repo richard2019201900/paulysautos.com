@@ -154,8 +154,8 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
     if (disclaimer) {
         disclaimer.innerHTML = `
             <div class="text-xs text-gray-400 mt-2 space-y-1">
-                <div><strong>📋 Note:</strong> All communications, vehicle viewings, and transactions are conducted in-city. This website serves as a listing platform only.</div>
-                <div><strong>💰 City Fee:</strong> The government charges an additional <span class="text-amber-400 font-bold">$25,000</span> when selling vehicles through the LUX app. This fee goes directly to the city and is not charged by PaulysAutos.com.</div>
+                <div><strong>📋 Note:</strong> This website serves as a listing platform only. All transactions are between buyers and sellers.</div>
+                <div><strong>💰 Processing Fee:</strong> LUX charges an additional <span class="text-amber-400 font-bold">$25,000</span> when transferring vehicles. This fee is not charged by PaulysAutos.com.</div>
             </div>
         `;
     }
@@ -642,18 +642,18 @@ window.copyAndNotifyPhotoServices = async function() {
         });
         // Update button to show success
         if (btn) {
-            btn.innerHTML = `✅ Number Copied - Text us in city!`;
+            btn.innerHTML = `✅ Number Copied - Text us!`;
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
         }
         
-        showToast(`📱 Phone number copied! Text 205-702-8233 in city to schedule your ${packageName}`, 'success');
+        showToast(`📱 Phone number copied! Text 205-702-8233 to schedule your ${packageName}`, 'success');
         
     } catch (error) {
         // Still show success for copy even if notification failed
-        showToast('📱 Phone number copied! Text 205-702-8233 in city to schedule', 'success');
+        showToast('📱 Phone number copied! Text 205-702-8233 to schedule', 'success');
         if (btn) {
-            btn.innerHTML = '✅ Number Copied - Text us in city!';
+            btn.innerHTML = '✅ Number Copied - Text us!';
         }
     }
 };

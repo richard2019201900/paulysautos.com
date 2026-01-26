@@ -300,7 +300,7 @@ window.renderBlogPage = function() {
                     <li>Create an account to list your vehicles for sale</li>
                     <li>Premium listings to feature your vehicle at the top</li>
                     <li>Real-time sync - changes appear instantly across all devices</li>
-                    <li>Works in your in-city phone browser</li>
+                    <li>Works in your phone browser</li>
                 </ul>
                 
                 <h4 class="font-bold text-white mb-2 mt-6">📱 How to Get Started:</h4>
@@ -322,7 +322,7 @@ window.renderBlogPage = function() {
                 
                 <p class="mt-6 text-gray-300">Stay tuned for more updates as we continue to improve the platform. Big things coming soon!</p>
                 
-                <p class="mt-4 text-gray-400 italic">Questions or feedback? <strong class="text-green-400">Text Pauly in city</strong> - we'd love to hear from you.</p>
+                <p class="mt-4 text-gray-400 italic">Questions or feedback? <strong class="text-green-400">Text Pauly</strong> - we'd love to hear from you.</p>
             `
         }
     ];
@@ -358,7 +358,7 @@ window.renderBlogPage = function() {
             <!-- Footer -->
             <div class="text-center mt-12 py-8 border-t border-gray-700">
                 <p class="text-gray-500 text-sm">
-                    Updates posted weekly. Text Pauly in city with questions or feedback.
+                    Updates posted weekly. Text Pauly with questions or feedback.
                 </p>
                 <button onclick="navigateTo('home')" class="mt-4 bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-900 px-6 py-2 rounded-xl font-bold hover:opacity-90 transition">
                     ← Back to Home

@@ -210,6 +210,58 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-gray-100">
+    <!-- Disclaimer Modal - Must be accepted before browsing -->
+    <div id="disclaimerModal" class="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-gray-900 rounded-2xl max-w-lg w-full border-2 border-amber-500/50 shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-amber-600 to-yellow-600 px-6 py-4">
+                <h2 class="text-xl font-black text-gray-900 flex items-center gap-3">
+                    <span class="text-2xl">⚠️</span>
+                    IMPORTANT DISCLAIMER
+                </h2>
+            </div>
+            <div class="p-6">
+                <p class="text-white font-semibold mb-4">
+                    PaulysAutos.com is a <span class="text-amber-400">player-run</span> vehicle marketplace operated by Pauly.
+                </p>
+                
+                <div class="bg-red-900/30 border border-red-500/50 rounded-xl p-4 mb-4">
+                    <p class="text-red-300 font-bold text-sm">
+                        This service is NOT endorsed by, affiliated with, or officially associated with PMA or any server administration.
+                    </p>
+                </div>
+                
+                <p class="text-gray-300 mb-4">By using this site, you acknowledge and agree:</p>
+                
+                <ul class="text-gray-300 text-sm space-y-2 mb-6">
+                    <li class="flex items-start gap-2">
+                        <span class="text-amber-400">•</span>
+                        <span>All transactions use <strong class="text-amber-400">in-game currency only</strong> — no real money</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-amber-400">•</span>
+                        <span>All communication must occur <strong class="text-amber-400">in-game</strong></span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-amber-400">•</span>
+                        <span>This is a <strong class="text-amber-400">roleplay (RP) service</strong> subject to server rules</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-amber-400">•</span>
+                        <span>PaulysAutos.com is <strong class="text-red-400">not responsible</strong> for any disputes</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-amber-400">•</span>
+                        <span>Vehicle listings and transactions are <strong class="text-amber-400">between players only</strong></span>
+                    </li>
+                </ul>
+                
+                <button onclick="acceptDisclaimer()" class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-4 px-6 rounded-xl font-black text-lg hover:opacity-90 transition shadow-lg">
+                    I Understand & Accept
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Celebration Banner Container (site-wide notifications for achievements) -->
     <div id="celebrationBannerContainer" class="hidden fixed top-0 left-0 right-0 z-50">
         <div id="celebrationBanner" class="bg-gradient-to-r from-amber-600 to-yellow-500 text-white py-3 px-4 shadow-lg">
@@ -236,7 +288,7 @@
         <div class="glass-effect rounded-2xl shadow-2xl p-10 max-w-lg w-full mx-4 max-h-screen overflow-y-auto border border-gray-700">
             <h2 id="modalTitle" class="text-3xl font-black bg-clip-text text-transparent mb-4 text-center"></h2>
             <p id="modalVehicleName" class="text-xl font-bold text-gray-200 mb-4 text-center"></p>
-            <p class="text-gray-400 mb-6 text-center font-medium">Text us in city! Copy the number and message below.</p>
+            <p class="text-gray-400 mb-6 text-center font-medium">Text us! Copy the number and message below.</p>
             
             <div class="mb-6">
                 <label class="block text-gray-300 font-bold mb-3">📱 Our Team's Number:</label>
@@ -253,7 +305,7 @@
             </div>
             
             <div id="modalAccent" class="p-4 rounded-xl mb-6 text-center border">
-                <p class="font-bold">⚡ Text in city for the fastest response!</p>
+                <p class="font-bold">⚡ Text us for the fastest response!</p>
                 <p class="text-sm mt-1">Our team typically responds within minutes.</p>
                 <p class="text-gray-400 text-xs mt-2">⏰ Please allow up to 24 hours for a response during busy periods.</p>
             </div>
@@ -273,7 +325,7 @@
             <div class="flex justify-between items-start mb-4">
                 <div>
                     <h2 class="text-2xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 bg-clip-text text-transparent flex items-center gap-2">📄 Vehicle Sale Contract</h2>
-                    <p class="text-gray-400 text-sm mt-1">Official agreement for city court records</p>
+                    <p class="text-gray-400 text-sm mt-1">Official agreement for your records</p>
                 </div>
                 <button onclick="closeModal('viewSaleContractModal')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
             </div>
@@ -359,7 +411,7 @@
                     Close
                 </button>
             </div>
-            <p class="text-gray-500 text-xs text-center">Copies phone number to clipboard • Text us in city to schedule</p>
+            <p class="text-gray-500 text-xs text-center">Copies phone number to clipboard • Text us to schedule</p>
         </div>
     </div>
 
@@ -532,7 +584,7 @@
                                 <span>✓ Gold border</span>
                                 <span>✓ Premium badge</span>
                             </div>
-                            <p class="text-orange-400 text-xs mt-2 font-semibold">⚠️ Weekly payment required - Please contact Pauly ASAP in-city to send the $10k payment</p>
+                            <p class="text-orange-400 text-xs mt-2 font-semibold">⚠️ Weekly payment required - Please contact Pauly ASAP to send the $10k payment</p>
                         </div>
                     </label>
                 </div>
@@ -642,7 +694,7 @@
                 
                 <!-- Instructions -->
                 <div class="bg-blue-900/30 border border-blue-600/50 rounded-xl p-4">
-                    <p class="text-blue-300 text-sm font-medium">📱 <strong>How to upgrade:</strong> Copy the message below and send it to Pauly in-city. Your upgrade will be processed within 24 hours after payment.</p>
+                    <p class="text-blue-300 text-sm font-medium">📱 <strong>How to upgrade:</strong> Copy the message below and send it to Pauly. Your upgrade will be processed within 24 hours after payment.</p>
                 </div>
                 
                 <div class="flex gap-4 pt-2">
@@ -1428,7 +1480,7 @@
                         </div>
                         <div>
                             <label class="block text-gray-300 font-semibold mb-2">Display Name</label>
-                            <input type="text" id="adminNewDisplayName" required maxlength="30" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-cyan-500 transition" placeholder="Their in-city name">
+                            <input type="text" id="adminNewDisplayName" required maxlength="30" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-cyan-500 transition" placeholder="Their name">
                         </div>
                         <div>
                             <label class="block text-gray-300 font-semibold mb-2">Starting Tier</label>
@@ -1568,7 +1620,7 @@
                     <div id="displayNameFieldWrapper" class="flex flex-col sm:flex-row gap-3 p-3 rounded-xl transition-all duration-500">
                         <div class="flex-1">
                             <label for="ownerUsername" class="block text-gray-300 font-semibold mb-2 text-sm">City Name <span id="cityNameRequired" class="hidden text-red-400">*Required</span></label>
-                            <input type="text" id="ownerUsername" maxlength="30" placeholder="Enter your in-city name..." class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
+                            <input type="text" id="ownerUsername" maxlength="30" placeholder="Enter your name..." class="w-full px-4 py-2.5 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition">
                         </div>
                         <div class="flex items-end">
                             <button onclick="saveUsername()" id="saveUsernameBtn" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-sm">
@@ -2074,7 +2126,7 @@
                             <svg class="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </div>
                         <h4 class="text-xl md:text-2xl font-bold mb-3 text-white">Lightning-Fast Responses</h4>
-                        <p class="text-gray-300 font-medium">Text us in city and get a reply in minutes, not days. We're always ready.</p>
+                        <p class="text-gray-300 font-medium">Text us and get a reply in minutes, not days. We're always ready.</p>
                     </div>
                     <div class="text-center p-6 md:p-8 glass-effect rounded-2xl shadow-lg transform hover:scale-105 transition">
                         <div class="gradient-bg w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
@@ -2098,7 +2150,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="max-w-3xl mx-auto">
                     <h3 class="text-4xl md:text-5xl font-black text-white mb-6 text-center">Get In Touch</h3>
-                    <p class="text-lg md:text-xl text-gray-400 text-center mb-10 md:mb-12 font-medium">Have questions? Text us in city for the fastest response!</p>
+                    <p class="text-lg md:text-xl text-gray-400 text-center mb-10 md:mb-12 font-medium">Have questions? Text us for the fastest response!</p>
                     <div class="bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-2xl p-6 md:p-10 border border-amber-500/30">
                         <div class="mb-8">
                             <label class="block text-amber-400 font-bold mb-3 text-lg">📱 Our Team's Number:</label>
@@ -2113,7 +2165,7 @@
                             <button onclick="copyToClipboard('contactMessage', this)" class="w-full mt-4 bg-gradient-to-r from-amber-500 to-yellow-600 text-black px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold hover:opacity-90 transition shadow-lg text-base md:text-lg">Copy Message</button>
                         </div>
                         <div class="bg-gradient-to-r from-gray-800 to-gray-900 p-5 md:p-6 rounded-xl text-center border border-amber-500/50">
-                            <p class="text-amber-400 font-black text-lg md:text-xl">⚡ Text in city for the fastest response!</p>
+                            <p class="text-amber-400 font-black text-lg md:text-xl">⚡ Text us for the fastest response!</p>
                             <p class="text-gray-300 font-medium mt-2">Our team typically responds within minutes.</p>
                             <p class="text-gray-500 text-sm mt-3">⏰ Please allow up to 24 hours for a response during busy periods.</p>
                         </div>
@@ -2178,7 +2230,7 @@
                         </li>
                         <li class="flex items-center space-x-3 mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:opacity-90 transition" onclick="openModal('contactModal')">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
-                            <span class="font-bold">Text in city for fastest response!</span>
+                            <span class="font-bold">Text us for fastest response!</span>
                         </li>
                     </ul>
                 </div>

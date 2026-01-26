@@ -49,6 +49,116 @@
     }
 })();
 
+// ==================== DISCLAIMER SYSTEM ====================
+// Must be accepted before browsing - persists for logged-in users in Firestore
+(function() {
+    'use strict';
+    
+    // Check if disclaimer was already accepted (localStorage for guests)
+    window.checkDisclaimerAccepted = function() {
+        return localStorage.getItem('paulysautos_disclaimer_accepted') === 'true';
+    };
+    
+    // Show disclaimer modal
+    window.showDisclaimerModal = function() {
+        const modal = document.getElementById('disclaimerModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+    
+    // Hide disclaimer modal
+    window.hideDisclaimerModal = function() {
+        const modal = document.getElementById('disclaimerModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    };
+    
+    // Accept disclaimer
+    window.acceptDisclaimer = async function() {
+        // Always save to localStorage (for guests and as backup)
+        localStorage.setItem('paulysautos_disclaimer_accepted', 'true');
+        
+        // If user is logged in, also save to Firestore
+        if (typeof auth !== 'undefined' && auth.currentUser) {
+            try {
+                await db.collection('users').doc(auth.currentUser.uid).set({
+                    disclaimerAccepted: true,
+                    disclaimerAcceptedAt: new Date().toISOString()
+                }, { merge: true });
+            } catch (e) {
+                console.warn('Could not save disclaimer acceptance to Firestore:', e);
+            }
+        }
+        
+        hideDisclaimerModal();
+    };
+    
+    // Check disclaimer on page load (before Firebase is ready)
+    window.initDisclaimerCheck = function() {
+        // If already accepted in localStorage, don't show
+        if (checkDisclaimerAccepted()) {
+            hideDisclaimerModal();
+            return;
+        }
+        
+        // Show the disclaimer
+        showDisclaimerModal();
+    };
+    
+    // Check disclaimer for logged-in users (called after auth state change)
+    window.checkDisclaimerForUser = async function(user) {
+        if (!user) {
+            // Not logged in - use localStorage check
+            if (!checkDisclaimerAccepted()) {
+                showDisclaimerModal();
+            }
+            return;
+        }
+        
+        // User is logged in - check Firestore first
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists && userDoc.data().disclaimerAccepted === true) {
+                // Already accepted in Firestore - also update localStorage
+                localStorage.setItem('paulysautos_disclaimer_accepted', 'true');
+                hideDisclaimerModal();
+                return;
+            }
+        } catch (e) {
+            console.warn('Could not check disclaimer in Firestore:', e);
+        }
+        
+        // Check localStorage as fallback
+        if (checkDisclaimerAccepted()) {
+            // Sync to Firestore
+            try {
+                await db.collection('users').doc(user.uid).set({
+                    disclaimerAccepted: true,
+                    disclaimerAcceptedAt: new Date().toISOString()
+                }, { merge: true });
+            } catch (e) {
+                console.warn('Could not sync disclaimer to Firestore:', e);
+            }
+            hideDisclaimerModal();
+            return;
+        }
+        
+        // Not accepted anywhere - show modal
+        showDisclaimerModal();
+    };
+    
+    // Run initial check when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDisclaimerCheck);
+    } else {
+        initDisclaimerCheck();
+    }
+})();
+
 // ==================== DATE HELPER ====================
 // Parse date string (YYYY-MM-DD) as local time, not UTC
 window.parseLocalDate = function(dateStr) {
@@ -295,7 +405,7 @@ window.viewVehicle = function(id, forcePublic = false) {
                         html += '<div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 border-2 border-amber-500 rounded-xl p-6 text-center max-w-md w-full">';
                         html += '<div class="text-amber-400 text-sm font-bold mb-2">🚗 VEHICLE PRICE</div>';
                         html += '<div class="text-amber-400 text-3xl md:text-4xl font-black">$' + buyPrice.toLocaleString() + '</div>';
-                        html += '<div class="text-amber-400/60 text-sm mt-2">+$25k LUX app city fee (not charged by PaulysAutos)</div>';
+                        html += '<div class="text-amber-400/60 text-sm mt-2">+$25k LUX processing fee (not charged by PaulysAutos)</div>';
                         html += '</div>';
                     } else {
                         html += '<div class="text-gray-400 text-center p-4">Price not set</div>';
@@ -932,7 +1042,7 @@ function renderVehicleStatsContent(id) {
                                 <li>• <strong>BRING WITNESSES</strong> - Have a trusted friend present during the transaction</li>
                             </ul>
                             <p class="text-red-300 font-bold mt-3 text-sm">
-                                🏛️ PaulysAutos.com is NOT responsible for any disputes. The contract generated is for your protection in city court.
+                                🏛️ PaulysAutos.com is NOT responsible for any disputes. The contract generated is for your records and protection.
                             </p>
                         </div>
                     </div>
@@ -1057,7 +1167,7 @@ function renderVehicleStatsContent(id) {
                     <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div id="value-buyPrice-${id}" class="text-3xl font-black">$${buyPrice > 0 ? buyPrice.toLocaleString() : '0'}</div>
-                <div class="text-xs text-amber-200 mt-2 opacity-80">+$25k LUX city fee</div>
+                <div class="text-xs text-amber-200 mt-2 opacity-80">+$25k LUX processing fee</div>
                 <div class="text-xs mt-1 opacity-70">Click to edit</div>
             </div>
             
@@ -1422,22 +1532,6 @@ window.startEditTile = function(field, vehicleId, type) {
                            field === 'buyerPhone' ? 'Enter buyer phone' : '';
         const phoneHandler = type === 'tel' ? 'oninput="this.value = this.value.replace(/\\D/g, \'\')" maxlength="10"' : '';
         
-        // Add minimum price info for buyPrice field
-        let minPriceNote = '';
-        if (field === 'buyPrice') {
-            const p = vehicles.find(prop => prop.id === vehicleId);
-            if (p) {
-                const minInfo = getMinimumBuyPrice(p);
-                minPriceNote = `
-                    <div class="bg-amber-900/50 border border-amber-500/50 rounded-lg p-2 mt-2 text-xs">
-                        <div class="text-amber-300 font-bold mb-1">📋 PMA Government Minimum</div>
-                        <div class="text-amber-200">Category: ${minInfo.category}</div>
-                        <div class="text-amber-200">Min Price: <span class="font-bold">$${minInfo.min.toLocaleString()}</span></div>
-                    </div>
-                `;
-            }
-        }
-        
         inputHtml = `
             <input type="${inputType}" 
                    id="input-${field}-${vehicleId}"
@@ -1446,7 +1540,6 @@ window.startEditTile = function(field, vehicleId, type) {
                    ${type === 'number' ? 'min="0"' : ''}
                    ${phoneHandler}
                    placeholder="${placeholder}">
-            ${minPriceNote}
         `;
     }
     
@@ -1944,7 +2037,7 @@ window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
                 <div class="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-4">
                     <div class="flex items-center gap-2 text-red-300">
                         <span class="text-xl">⚠️</span>
-                        <p class="text-sm"><strong>Weekly payment required</strong> - Please contact Pauly ASAP in-city to send the $10k payment</p>
+                        <p class="text-sm"><strong>Weekly payment required</strong> - Please contact Pauly ASAP to send the $10k payment</p>
                     </div>
                 </div>
     ` : '';
@@ -3791,6 +3884,11 @@ async function init() {
     
     // Listen for auth state changes (including on page load)
     auth.onAuthStateChanged(async (user) => {
+        // Check disclaimer acceptance (for both logged-in and logged-out users)
+        if (typeof checkDisclaimerForUser === 'function') {
+            await checkDisclaimerForUser(user);
+        }
+        
         if (user) {
             // User is signed in - restore owner session
             state.currentUser = 'owner';
@@ -4791,27 +4889,30 @@ window.closeSaleCompletionMessageModal = function() {
 };
 
 // ============================================================================
-// RENT-TO-OWN CONTRACT WIZARD
+// VEHICLE FINANCING CONTRACT WIZARD
 // ============================================================================
+// For vehicles over $750k LUX limit - buyer pays down payment in weekly installments,
+// then owner lists remaining amount (up to $750k) on LUX for final transfer.
+
+const LUX_MAX_LIMIT = 750000;
 
 // Store wizard state
-window.rtoWizardState = {
+window.financingWizardState = {
     vehicleId: null,
     step: 1,
     vehicle: null,
     buyer: {
         name: '',
+        phone: '',
         useExisting: true
     },
     seller: '',
     financial: {
-        purchasePrice: 0,
-        downPaymentPercent: 10,
-        downPayment: 0,
-        termMonths: 24,
-        finalPaymentBase: 1500000,
-        finalPaymentFee: 150000,
-        finalPaymentTotal: 1650000
+        salePrice: 0,
+        downPayment: 0, // Amount over LUX limit that must be paid first
+        luxAmount: 0,   // Amount to be paid on LUX (up to $750k)
+        termWeeks: 4,
+        weeklyPayment: 0
     }
 };
 
@@ -4830,46 +4931,8 @@ window.showRentToOwnWizard = async function(vehicleId) {
     const isElite = state.userTier === 'elite';
     
     if (!isAdmin && !isElite) {
-        // Show upgrade required modal
-        showRTOUpgradeRequired();
+        showFinancingUpgradeRequired();
         return;
-    }
-    
-    // Get the PROPERTY OWNER's display name using the same method as owner badge
-    let sellerName = '';
-    try {
-        const ownerInfo = await getVehicleOwnerWithTier(vehicleId);
-        sellerName = ownerInfo.display || ownerInfo.username || '';
-    } catch (e) {
-        console.warn('Could not get seller name from getVehicleOwnerWithTier:', e);
-    }
-    
-    // Fallback to VehicleDataService
-    if (!sellerName || sellerName === 'Unassigned') {
-        sellerName = VehicleDataService.getValue(vehicleId, 'ownerName', p.ownerName || '');
-    }
-    
-    // Get buyer name
-    const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p.buyerName || '');
-    
-    // Get vehicle description - stored in 'location' field in the database
-    // Try multiple sources to find the description
-    let vehicleDescription = '';
-    try {
-        // Try VehicleDataService first
-        vehicleDescription = VehicleDataService.getValue(vehicleId, 'location', '');
-        
-        // Fallback to vehicle object
-        if (!vehicleDescription) {
-            vehicleDescription = p.location || '';
-        }
-        
-        // Last fallback - try description field
-        if (!vehicleDescription) {
-            vehicleDescription = VehicleDataService.getValue(vehicleId, 'description', '') || p.description || '';
-        }
-    } catch (e) {
-        vehicleDescription = p.location || p.description || '';
     }
     
     // Get buy price
@@ -4880,63 +4943,125 @@ window.showRentToOwnWizard = async function(vehicleId) {
         buyPrice = parseInt(p.buyPrice) || 0;
     }
     
-    // Get PMA Government minimum final payment based on vehicle type
-    const minPriceInfo = getMinimumBuyPrice(p);
-    const finalPaymentBase = minPriceInfo.min;
-    const finalPaymentFee = Math.round(finalPaymentBase * 0.10);
-    const finalPaymentTotal = finalPaymentBase + finalPaymentFee;
+    // Check if financing is needed (only for vehicles over LUX limit)
+    if (buyPrice <= LUX_MAX_LIMIT) {
+        showFinancingNotNeeded(buyPrice);
+        return;
+    }
     
-    // Default values
-    const defaultDownPaymentPercent = 10;
-    const defaultDownPayment = Math.round(buyPrice * (defaultDownPaymentPercent / 100));
-    const defaultTermMonths = buyPrice <= 5000000 ? 12 : 24;
+    // Get the VEHICLE OWNER's display name
+    let sellerName = '';
+    try {
+        const ownerInfo = await getVehicleOwnerWithTier(vehicleId);
+        sellerName = ownerInfo.display || ownerInfo.username || '';
+    } catch (e) {
+        console.warn('Could not get seller name:', e);
+    }
+    
+    // Fallback to VehicleDataService
+    if (!sellerName || sellerName === 'Unassigned') {
+        sellerName = VehicleDataService.getValue(vehicleId, 'ownerName', p.ownerName || '');
+    }
+    
+    // Get buyer name if exists
+    const buyerName = VehicleDataService.getValue(vehicleId, 'buyerName', p.buyerName || '');
+    const buyerPhone = VehicleDataService.getValue(vehicleId, 'buyerPhone', p.buyerPhone || '');
+    
+    // Get vehicle description
+    const vehicleDescription = VehicleDataService.getValue(vehicleId, 'location', p.location || '') || 
+                               VehicleDataService.getValue(vehicleId, 'description', p.description || '');
+    
+    // Calculate financing amounts
+    const downPayment = buyPrice - LUX_MAX_LIMIT; // Amount over $750k
+    const luxAmount = LUX_MAX_LIMIT; // Will be transferred on LUX
+    const defaultTermWeeks = 4;
+    const weeklyPayment = Math.ceil(downPayment / defaultTermWeeks);
     
     // Initialize wizard state
-    window.rtoWizardState = {
+    window.financingWizardState = {
         vehicleId: vehicleId,
         step: 1,
         vehicle: { ...p, description: vehicleDescription },
         existingBuyer: buyerName,
+        existingBuyerPhone: buyerPhone,
         existingSeller: sellerName,
         buyer: {
             name: buyerName,
-            useExisting: true
+            phone: buyerPhone,
+            useExisting: !!buyerName
         },
         seller: sellerName,
         financial: {
-            purchasePrice: buyPrice,
-            downPaymentPercent: defaultDownPaymentPercent,
-            downPayment: defaultDownPayment,
-            termMonths: defaultTermMonths,
-            finalPaymentBase: finalPaymentBase,
-            finalPaymentFee: finalPaymentFee,
-            finalPaymentTotal: finalPaymentTotal,
-            vehicleCategory: minPriceInfo.category
+            salePrice: buyPrice,
+            downPayment: downPayment,
+            luxAmount: luxAmount,
+            termWeeks: defaultTermWeeks,
+            weeklyPayment: weeklyPayment
         }
     };
     
-    renderRTOWizardStep(1);
+    renderFinancingWizardStep(1);
 };
+
+/**
+ * Show message when financing is not needed (vehicle under $750k)
+ */
+function showFinancingNotNeeded(price) {
+    const modalHTML = `
+        <div id="financingNotNeededModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-900 rounded-2xl max-w-md w-full border border-green-500/50 shadow-2xl overflow-hidden">
+                <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-3">
+                        <span class="text-2xl">✅</span>
+                        Financing Not Required
+                    </h3>
+                    <button onclick="document.getElementById('financingNotNeededModal').remove()" class="bg-white/20 hover:bg-white/30 p-2 rounded-full transition">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="p-6 text-center">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h4 class="text-2xl font-bold text-white mb-2">Direct Sale Available!</h4>
+                    <p class="text-gray-400 mb-4">
+                        This vehicle is priced at <span class="text-green-400 font-bold">$${price.toLocaleString()}</span>, which is under the LUX transfer limit of $750,000.
+                    </p>
+                    <div class="bg-green-900/30 border border-green-500/30 rounded-xl p-4 mb-6">
+                        <p class="text-green-300 text-sm">
+                            <strong>No financing needed!</strong> The buyer can purchase this vehicle directly through LUX without any down payment arrangement.
+                        </p>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-4">
+                        Use the <strong>"Start Sale"</strong> button instead to generate a direct sale contract.
+                    </p>
+                    <button onclick="document.getElementById('financingNotNeededModal').remove()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-6 rounded-xl font-bold hover:opacity-90 transition">
+                        Got It
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
 
 /**
  * Show upgrade required modal for non-Elite users
  */
-function showRTOUpgradeRequired() {
+function showFinancingUpgradeRequired() {
     const modalHTML = `
-        <div id="rtoUpgradeModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div id="financingUpgradeModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div class="bg-gray-900 rounded-2xl max-w-md w-full border border-purple-500/50 shadow-2xl overflow-hidden">
                 <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 flex items-center justify-between">
                     <h3 class="text-xl font-bold text-white flex items-center gap-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                         Elite Feature
                     </h3>
-                    <button onclick="document.getElementById('rtoUpgradeModal').remove()" class="bg-white/20 hover:bg-white/30 p-2 rounded-full transition">
+                    <button onclick="document.getElementById('financingUpgradeModal').remove()" class="bg-white/20 hover:bg-white/30 p-2 rounded-full transition">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
                 <div class="p-6 text-center">
                     <div class="text-6xl mb-4">👑</div>
-                    <h4 class="text-2xl font-bold text-white mb-2">Financing Plan Contracts</h4>
+                    <h4 class="text-2xl font-bold text-white mb-2">Financing Contracts</h4>
                     <p class="text-gray-400 mb-6">
                         This premium feature is exclusively available to <span class="text-purple-400 font-bold">Elite</span> subscription members.
                     </p>
@@ -4944,12 +5069,12 @@ function showRTOUpgradeRequired() {
                         <div class="text-purple-300 font-bold mb-2">Elite Benefits Include:</div>
                         <ul class="text-gray-300 text-sm space-y-1 text-left">
                             <li>✓ Unlimited vehicle listings</li>
-                            <li>✓ Financing Plan contract generator</li>
+                            <li>✓ Financing contract generator</li>
                             <li>✓ Priority support</li>
                             <li>✓ Advanced analytics</li>
                         </ul>
                     </div>
-                    <button onclick="document.getElementById('rtoUpgradeModal').remove(); showUpgradeModal && showUpgradeModal();" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-6 rounded-xl font-bold hover:opacity-90 transition">
+                    <button onclick="document.getElementById('financingUpgradeModal').remove(); showUpgradeModal && showUpgradeModal();" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-6 rounded-xl font-bold hover:opacity-90 transition">
                         Upgrade to Elite
                     </button>
                 </div>
@@ -4960,88 +5085,14 @@ function showRTOUpgradeRequired() {
 }
 
 /**
- * Get PMA Government minimum final payment based on vehicle type
- * These are FINAL PAYMENT minimums, not buy prices
- * Apartments 600 storage - $700k
- * Hotel 800 Storage - $750k
- * Instance House 800-900 Storage - $800K
- * Hotel 1050 Storage - $900k
- * Instance House 1000+ - $1.2 Mil
- * Walk In House - $1.5m
- */
-function getMinimumBuyPrice(vehicle) {
-    const title = (vehicle.title || '').toLowerCase();
-    const type = (vehicle.type || '').toLowerCase();
-    const description = (vehicle.description || '').toLowerCase();
-    
-    // Get interiorType from vehicle - try VehicleDataService first, then vehicle object
-    let interiorType = '';
-    if (vehicle.id) {
-        interiorType = (VehicleDataService.getValue(vehicle.id, 'interiorType', vehicle.interiorType || '') || '').toLowerCase();
-    } else {
-        interiorType = (vehicle.interiorType || '').toLowerCase();
-    }
-    
-    // Get storage space - check multiple sources
-    let storageSpace = 0;
-    if (vehicle.id) {
-        storageSpace = parseInt(VehicleDataService.getValue(vehicle.id, 'storageSpace', vehicle.storageSpace || 0)) || 0;
-    } else {
-        storageSpace = parseInt(vehicle.storageSpace) || 0;
-    }
-    
-    // Also try to find storage in title/description
-    if (!storageSpace) {
-        const storageMatch = (title + ' ' + description).match(/(\d+)\s*storage/i);
-        if (storageMatch) {
-            storageSpace = parseInt(storageMatch[1]);
-        }
-    }
-    
-    
-    // Check for walk-in house first (highest tier) - $1.5M
-    // Case-insensitive check for any variation of "walk-in" or "walkin"
-    if (interiorType.includes('walk') || 
-        title.includes('walk in') || title.includes('walk-in') || title.includes('walkin') ||
-        description.includes('walk in') || description.includes('walk-in') || description.includes('walkin') ||
-        type.includes('walk')) {
-        return { min: 1500000, category: 'Walk-In House', storage: storageSpace ? storageSpace + ' storage' : 'N/A' };
-    }
-    
-    // Check for hotel
-    if (type === 'hotel' || title.includes('hotel')) {
-        if (storageSpace >= 1050) return { min: 900000, category: 'Hotel 1050 Storage', storage: storageSpace + ' storage' };
-        if (storageSpace >= 800) return { min: 750000, category: 'Hotel 800 Storage', storage: storageSpace + ' storage' };
-        return { min: 750000, category: 'Hotel', storage: storageSpace ? storageSpace + ' storage' : 'Unknown' };
-    }
-    
-    // Check for apartment
-    if (type === 'apartment' || title.includes('apartment') || title.includes('apt')) {
-        return { min: 700000, category: 'Apartment 600 Storage', storage: storageSpace ? storageSpace + ' storage' : '600 storage' };
-    }
-    
-    // Check for instance house (or default house type)
-    if (interiorType === 'instance' || type === 'instance house' || type === 'instance' || 
-        type === 'house' || title.includes('instance') || title.includes('house')) {
-        if (storageSpace >= 1000) return { min: 1200000, category: 'Instance House 1000+', storage: storageSpace + ' storage' };
-        if (storageSpace >= 800) return { min: 800000, category: 'Instance House 800-900', storage: storageSpace + ' storage' };
-        // Default instance house to 1000+ tier
-        return { min: 1200000, category: 'Instance House 1000+', storage: storageSpace ? storageSpace + ' storage' : 'Unknown' };
-    }
-    
-    // Default to walk-in house tier (highest/safest)
-    return { min: 1500000, category: 'Walk-In House (Default)', storage: storageSpace ? storageSpace + ' storage' : 'N/A' };
-}
-
-/**
  * Render the current wizard step
  */
-function renderRTOWizardStep(step) {
-    const state = window.rtoWizardState;
+function renderFinancingWizardStep(step) {
+    const state = window.financingWizardState;
     state.step = step;
     
     // Remove existing modal
-    const existingModal = document.getElementById('rtoWizardModal');
+    const existingModal = document.getElementById('financingWizardModal');
     if (existingModal) existingModal.remove();
     
     let content = '';
@@ -5067,26 +5118,26 @@ function renderRTOWizardStep(step) {
         
         content = `
             <div class="space-y-4">
-                <p class="text-gray-400 text-sm">Who are the parties for this rent-to-own agreement?</p>
+                <p class="text-gray-400 text-sm">Who are the parties for this financing agreement?</p>
                 
-                <!-- Option A: Use Current Buyer & Seller -->
-                <label class="block p-4 bg-gray-800 rounded-xl cursor-pointer border-2 ${state.buyer.useExisting ? 'border-amber-500' : 'border-transparent'} hover:border-amber-500 transition" onclick="selectRTOPartiesOption(true)">
+                <!-- Option A: Use Existing Buyer & Seller -->
+                <label class="block p-4 bg-gray-800 rounded-xl cursor-pointer border-2 ${state.buyer.useExisting ? 'border-amber-500' : 'border-transparent'} hover:border-amber-500 transition" onclick="selectFinancingPartiesOption(true)">
                     <div class="flex items-center gap-3">
                         <input type="radio" name="partiesSource" id="useExisting" ${state.buyer.useExisting ? 'checked' : ''} class="w-5 h-5 text-amber-500">
                         <div class="flex-1">
-                            <div class="text-white font-semibold">Use Current Buyer & Owner</div>
-                            <div class="text-gray-400 text-xs">Use the existing vehicle parties</div>
+                            <div class="text-white font-semibold">Use Existing Buyer & Owner</div>
+                            <div class="text-gray-400 text-xs">Use the parties already on file</div>
                         </div>
                     </div>
                     ${hasExisting ? `
                     <div class="mt-3 pl-8 grid grid-cols-2 gap-4">
                         <div class="bg-gray-700/50 rounded-lg p-3">
-                            <div class="text-gray-500 text-xs mb-1">Buyer/Tenant</div>
+                            <div class="text-gray-500 text-xs mb-1">Buyer</div>
                             <div class="text-green-400 font-semibold">👤 ${existingBuyer}</div>
                         </div>
                         <div class="bg-gray-700/50 rounded-lg p-3">
-                            <div class="text-gray-500 text-xs mb-1">Seller/Landlord</div>
-                            <div class="text-amber-400 font-semibold">👤 ${existingSeller}</div>
+                            <div class="text-gray-500 text-xs mb-1">Seller</div>
+                            <div class="text-amber-400 font-semibold">👑 ${existingSeller}</div>
                         </div>
                     </div>
                     ` : `
@@ -5097,7 +5148,7 @@ function renderRTOWizardStep(step) {
                 </label>
                 
                 <!-- Option B: Enter Manually -->
-                <label class="block p-4 bg-gray-800 rounded-xl cursor-pointer border-2 ${!state.buyer.useExisting ? 'border-amber-500' : 'border-transparent'} hover:border-amber-500 transition" onclick="selectRTOPartiesOption(false)">
+                <label class="block p-4 bg-gray-800 rounded-xl cursor-pointer border-2 ${!state.buyer.useExisting ? 'border-amber-500' : 'border-transparent'} hover:border-amber-500 transition" onclick="selectFinancingPartiesOption(false)">
                     <div class="flex items-center gap-3">
                         <input type="radio" name="partiesSource" id="enterManually" ${!state.buyer.useExisting ? 'checked' : ''} class="w-5 h-5 text-amber-500">
                         <div class="flex-1">
@@ -5107,146 +5158,118 @@ function renderRTOWizardStep(step) {
                     </div>
                 </label>
                 
-                <!-- Manual Entry Fields (shown when Option B selected) -->
+                <!-- Manual Entry Fields -->
                 <div id="manualPartyInputs" class="${state.buyer.useExisting ? 'hidden' : ''} space-y-3 mt-4">
                     <div>
-                        <label class="block text-gray-400 text-sm mb-2">Buyer/Tenant Name</label>
-                        <input type="text" id="rtoBuyerName" value="${state.buyer.name}" 
+                        <label class="block text-gray-400 text-sm mb-2">Buyer Name *</label>
+                        <input type="text" id="financingBuyerName" value="${state.buyer.name}" 
                                class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500"
-                               placeholder="Enter buyer's full name">
+                               placeholder="Buyer's name">
                     </div>
                     <div>
-                        <label class="block text-gray-400 text-sm mb-2">Seller/Landlord Name</label>
-                        <input type="text" id="rtoSellerName" value="${state.seller}" 
+                        <label class="block text-gray-400 text-sm mb-2">Buyer Phone *</label>
+                        <input type="text" id="financingBuyerPhone" value="${state.buyer.phone}" 
                                class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500"
-                               placeholder="Enter seller's full name">
+                               placeholder="Buyer's phone number">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Seller Name *</label>
+                        <input type="text" id="financingSellerName" value="${state.seller}" 
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500"
+                               placeholder="Seller's name">
                     </div>
                 </div>
             </div>
         `;
     } else if (step === 2) {
-        title = 'Step 2: Financial Terms';
+        title = 'Step 2: Payment Schedule';
         const f = state.financial;
-        
-        // Determine recommended term based on price
-        const recommendedTerm = f.purchasePrice <= 5000000 ? 12 : 24;
-        const termLabel = f.purchasePrice <= 5000000 ? '(≤$5M: 12 months recommended)' : '(>$5M: 24 months recommended)';
         
         content = `
             <div class="space-y-4">
-                <p class="text-gray-400 text-sm">Set the financial structure for this rent-to-own agreement.</p>
+                <p class="text-gray-400 text-sm">Set the weekly payment schedule for the down payment.</p>
                 
-                <!-- Purchase Price (auto-populated from Buy Price) -->
-                <div>
-                    <label class="block text-gray-400 text-sm mb-2">Total Purchase Price</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                        <input type="number" id="rtoPurchasePrice" value="${f.purchasePrice || ''}" 
-                               class="w-full pl-8 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500"
-                               placeholder="20,000,000" oninput="updateRTOCalculations()">
-                    </div>
-                    <p class="text-gray-500 text-xs mt-1">Auto-populated from Buy Price. Edit if needed.</p>
-                </div>
-                
-                <!-- Down Payment Slider with Manual Input -->
-                <div class="bg-gray-800/50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="text-gray-400 text-sm">Down Payment</label>
-                        <div class="text-right flex items-center gap-2">
-                            <span id="rtoDownPaymentPercent" class="text-amber-400 font-bold">${f.downPaymentPercent ?? 10}%</span>
-                            <span class="text-gray-500">=</span>
-                            <span class="text-gray-400">$</span>
-                            <input type="number" id="rtoDownPaymentManual" value="${f.downPayment || 0}" 
-                                   class="w-28 px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-green-400 font-bold text-right focus:ring-2 focus:ring-amber-500"
-                                   oninput="updateRTODownPaymentManual(this.value)">
-                        </div>
-                    </div>
-                    <input type="range" id="rtoDownPaymentSlider" value="${f.downPaymentPercent ?? 10}" min="0" max="99" step="1"
-                           class="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                           oninput="updateRTODownPayment(this.value)">
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>1%</span>
-                        <span>50%</span>
-                        <span>99%</span>
-                    </div>
-                </div>
-                
-                <!-- Term Length Slider -->
-                <div class="bg-gray-800/50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <div>
-                            <label class="text-gray-400 text-sm">Term Length</label>
-                            <p class="text-gray-500 text-xs">${termLabel}</p>
-                        </div>
-                        <span id="rtoTermMonthsDisplay" class="text-amber-400 font-bold text-lg">${f.termMonths} months</span>
-                    </div>
-                    <input type="range" id="rtoTermMonthsSlider" value="${f.termMonths}" min="6" max="48" step="1"
-                           class="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                           oninput="updateRTOTermMonths(this.value)">
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>6 mo</span>
-                        <span>24 mo</span>
-                        <span>48 mo</span>
-                    </div>
-                </div>
-                
-                <!-- Final Payment Section (PMA Government Minimum) -->
+                <!-- Sale Price Summary -->
                 <div class="bg-gradient-to-br from-amber-900/30 to-yellow-900/30 border border-amber-500/30 rounded-xl p-4">
-                    <h4 class="text-amber-400 font-bold mb-2 flex items-center gap-2">
-                        💰 Final Payment (Month <span id="rtoFinalMonth">${f.termMonths}</span>)
+                    <h4 class="text-amber-400 font-bold mb-3 flex items-center gap-2">
+                        💰 Sale Price Breakdown
                     </h4>
-                    <div class="bg-amber-900/40 border border-amber-600/50 rounded-lg p-2 mb-3">
-                        <div class="text-amber-300 text-xs font-bold">📋 PMA Government Minimum</div>
-                        <div class="text-amber-200 text-xs">Category: <span id="rtoPropertyCategory">${f.vehicleCategory || 'Detecting...'}</span></div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400 text-sm">Base Final Payment:</span>
-                            <span id="rtoFinalPaymentBase" class="text-white font-bold">$${(f.finalPaymentBase || 0).toLocaleString()}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-400">+ PMA Realtor Fee (10%):</span>
-                            <span id="rtoFinalFee" class="text-amber-400 font-semibold">$${(f.finalPaymentFee || 0).toLocaleString()}</span>
-                        </div>
-                        <div class="flex justify-between pt-2 border-t border-amber-500/30">
-                            <span class="text-white font-bold">Total Final Payment:</span>
-                            <span id="rtoFinalTotal" class="text-green-400 font-bold text-lg">$${(f.finalPaymentTotal || 0).toLocaleString()}</span>
-                        </div>
-                    </div>
-                    <p class="text-gray-500 text-xs mt-2">Final payment set by PMA Government regulations based on vehicle type.</p>
-                </div>
-                
-                <!-- Calculated Summary -->
-                <div id="rtoCalculationSummary" class="bg-gray-800 rounded-xl p-4">
-                    <h4 class="text-cyan-400 font-bold mb-3">📊 Monthly Payment Calculation</h4>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Purchase Price:</span>
-                            <span id="rtoCalcPurchase" class="text-white">$${(f.purchasePrice || 0).toLocaleString()}</span>
+                            <span class="text-gray-400">Total Sale Price:</span>
+                            <span class="text-white font-bold text-lg">$${f.salePrice.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between border-t border-amber-500/30 pt-2">
+                            <span class="text-gray-400">LUX Transfer Limit:</span>
+                            <span class="text-gray-400">$${LUX_MAX_LIMIT.toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-400">− Down Payment:</span>
-                            <span id="rtoCalcDown" class="text-red-400">−$${(f.downPayment || 0).toLocaleString()}</span>
+                            <span class="text-red-400 font-semibold">Amount Over Limit (Down Payment):</span>
+                            <span class="text-red-400 font-bold text-lg">$${f.downPayment.toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- How It Works -->
+                <div class="bg-blue-900/20 border border-blue-500/30 rounded-xl p-4">
+                    <h4 class="text-blue-400 font-bold mb-2 flex items-center gap-2">
+                        📋 How Financing Works
+                    </h4>
+                    <ol class="text-gray-300 text-sm space-y-2">
+                        <li class="flex gap-2"><span class="text-blue-400 font-bold">1.</span> Buyer pays <span class="text-red-400 font-bold">$${f.downPayment.toLocaleString()}</span> to seller in weekly installments</li>
+                        <li class="flex gap-2"><span class="text-blue-400 font-bold">2.</span> Once fully paid, seller lists vehicle on LUX</li>
+                        <li class="flex gap-2"><span class="text-blue-400 font-bold">3.</span> Buyer completes purchase on LUX for <span class="text-green-400 font-bold">$${f.luxAmount.toLocaleString()}</span></li>
+                    </ol>
+                </div>
+                
+                <!-- Weekly Payment Slider -->
+                <div class="bg-gray-800/50 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-gray-400 text-sm">Payment Term</label>
+                        <span id="financingTermDisplay" class="text-amber-400 font-bold text-lg">${f.termWeeks} weeks</span>
+                    </div>
+                    <input type="range" id="financingTermSlider" value="${f.termWeeks}" min="1" max="6" step="1"
+                           class="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                           oninput="updateFinancingTerm(this.value)">
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>1 week</span>
+                        <span>3 weeks</span>
+                        <span>6 weeks</span>
+                    </div>
+                </div>
+                
+                <!-- Calculated Weekly Payment -->
+                <div class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-xl p-4">
+                    <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
+                        📊 Weekly Payment Calculation
+                    </h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Down Payment Amount:</span>
+                            <span id="financingCalcDown" class="text-white">$${f.downPayment.toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-400">− Final Payment (PMA Min):</span>
-                            <span id="rtoCalcFinalMin" class="text-red-400">−$${(f.finalPaymentBase || 0).toLocaleString()}</span>
+                            <span class="text-gray-400">÷ <span id="financingCalcWeeks">${f.termWeeks}</span> weeks:</span>
+                            <span id="financingWeeklyPayment" class="text-green-400 font-bold text-xl">$${f.weeklyPayment.toLocaleString()}/week</span>
                         </div>
-                        <div class="flex justify-between pt-2 border-t border-gray-700">
-                            <span class="text-gray-400">= Remaining Balance to Finance:</span>
-                            <span id="rtoCalcFinance" class="text-white font-semibold">$0</span>
+                    </div>
+                </div>
+                
+                <!-- Final LUX Transfer -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-gray-400 text-sm">Final LUX Transfer:</span>
+                            <p class="text-gray-500 text-xs">After down payment is complete</p>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">÷ <span id="rtoCalcMonthsCount">${f.termMonths - 1}</span> months:</span>
-                            <span id="rtoMonthlyPayment" class="text-green-400 font-bold text-lg">$0/mo</span>
-                        </div>
+                        <span class="text-green-400 font-bold text-xl">$${f.luxAmount.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
         `;
     } else if (step === 3) {
         title = 'Step 3: Review Agreement';
-        const calc = calculateRTOTerms();
+        const f = state.financial;
         
         content = `
             <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
@@ -5266,70 +5289,76 @@ function renderRTOWizardStep(step) {
                     </h4>
                     <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span class="text-gray-400">Seller/Landlord:</span>
-                            <div class="text-white font-semibold">${state.seller}</div>
+                            <span class="text-gray-400">Seller:</span>
+                            <div class="text-white font-semibold">👑 ${state.seller}</div>
                         </div>
                         <div>
-                            <span class="text-gray-400">Buyer/Tenant:</span>
+                            <span class="text-gray-400">Buyer:</span>
                             <div class="text-white font-semibold">${state.buyer.name}</div>
+                            <div class="text-gray-500 text-xs">${state.buyer.phone}</div>
                         </div>
                     </div>
-                    <div class="text-gray-400 text-sm mt-2">Realtor/Brokerage: <span class="text-white">${state.seller} / PaulysAutos.com</span></div>
+                    <div class="text-gray-400 text-sm mt-2">Brokerage: <span class="text-white">${state.seller} / PaulysAutos.com</span></div>
                 </div>
                 
-                <!-- Financial Structure -->
+                <!-- Financial Summary -->
                 <div class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-xl p-4">
                     <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
-                        <span>💰</span> Financial Structure
+                        <span>💰</span> Financial Summary
                     </h4>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Total Purchase Price</span>
-                            <span class="text-white font-bold">$${calc.purchasePrice.toLocaleString()}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Down Payment (${calc.downPaymentPercent}%)</span>
-                            <span class="text-green-400 font-semibold">$${calc.downPayment.toLocaleString()}</span>
+                            <span class="text-gray-400">Total Sale Price</span>
+                            <span class="text-white font-bold">$${f.salePrice.toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between border-t border-gray-700 pt-2">
-                            <span class="text-gray-400">Amount to Finance</span>
-                            <span class="text-white font-bold">$${calc.remainingBalance.toLocaleString()}</span>
+                            <span class="text-red-400">Down Payment (paid to seller)</span>
+                            <span class="text-red-400 font-bold">$${f.downPayment.toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Term Length</span>
-                            <span class="text-white">${calc.termMonths} Months</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Monthly Payments (Months 1-${calc.termMonths - 1})</span>
-                            <span class="text-green-400 font-semibold">$${calc.monthlyPayment.toLocaleString()}</span>
+                            <span class="text-gray-400">Weekly Payments</span>
+                            <span class="text-green-400 font-semibold">$${f.weeklyPayment.toLocaleString()}/week × ${f.termWeeks} weeks</span>
                         </div>
                         <div class="flex justify-between border-t border-gray-700 pt-2">
-                            <span class="text-gray-400">Final Payment Base (PMA Min)</span>
-                            <span class="text-white">$${calc.finalPaymentBase.toLocaleString()}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">+ PMA Realtor Fee (10%)</span>
-                            <span class="text-amber-400">$${calc.finalPaymentFee.toLocaleString()}</span>
-                        </div>
-                        <div class="flex justify-between bg-amber-900/30 p-2 rounded-lg">
-                            <span class="text-amber-300 font-bold">= Total Final Payment (Month ${calc.termMonths})</span>
-                            <span class="text-amber-300 font-bold">$${calc.finalPaymentTotal.toLocaleString()}</span>
+                            <span class="text-green-400">Final LUX Transfer</span>
+                            <span class="text-green-400 font-bold">$${f.luxAmount.toLocaleString()}</span>
                         </div>
                     </div>
-                    <div class="mt-2 text-xs text-amber-400">📋 Vehicle Category: ${calc.vehicleCategory}</div>
+                </div>
+                
+                <!-- Payment Schedule Preview -->
+                <div class="bg-gray-800 rounded-xl p-4">
+                    <h4 class="text-cyan-400 font-bold mb-3">📅 Payment Schedule</h4>
+                    <div class="space-y-2 text-sm">
+                        ${Array.from({length: f.termWeeks}, (_, i) => {
+                            const weekNum = i + 1;
+                            const isLast = weekNum === f.termWeeks;
+                            const payment = isLast ? (f.downPayment - (f.weeklyPayment * (f.termWeeks - 1))) : f.weeklyPayment;
+                            return `
+                                <div class="flex justify-between items-center ${isLast ? 'border-t border-gray-700 pt-2' : ''}">
+                                    <span class="text-gray-400">Week ${weekNum}${isLast ? ' (Final)' : ''}:</span>
+                                    <span class="text-white font-semibold">$${payment.toLocaleString()}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                        <div class="flex justify-between items-center border-t border-green-500/30 pt-2 mt-2">
+                            <span class="text-green-400 font-bold">Then: LUX Transfer</span>
+                            <span class="text-green-400 font-bold">$${f.luxAmount.toLocaleString()}</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Agreement Date -->
                 <div class="bg-gray-800 rounded-xl p-4">
                     <label class="block text-gray-400 text-sm mb-2">Agreement Start Date</label>
-                    <input type="date" id="rtoStartDate" value="${new Date().toISOString().split('T')[0]}" 
+                    <input type="date" id="financingStartDate" value="${new Date().toISOString().split('T')[0]}" 
                            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500">
                 </div>
             </div>
         `;
     } else if (step === 4) {
         title = 'Contract Generated';
-        const contract = generateRTOContract();
+        const contract = generateFinancingContract();
         
         content = `
             <div class="space-y-4">
@@ -5339,7 +5368,7 @@ function renderRTOWizardStep(step) {
                 </div>
                 
                 <div class="bg-gray-800 rounded-xl p-4 max-h-[35vh] overflow-y-auto">
-                    <div id="rtoContractPreview" class="text-xs text-gray-300 whitespace-pre-wrap font-mono">
+                    <div id="financingContractPreview" class="text-xs text-gray-300 whitespace-pre-wrap font-mono">
                         ${contract.preview}
                     </div>
                 </div>
@@ -5350,18 +5379,18 @@ function renderRTOWizardStep(step) {
                 
                 <!-- Primary Actions -->
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="copyRTOContract()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                    <button onclick="copyFinancingContract()" class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         Copy Text
                     </button>
-                    <button onclick="downloadRTOContractImage()" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                    <button onclick="downloadFinancingContractImage()" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         Download Image
                     </button>
                 </div>
                 
                 <!-- Save Action -->
-                <button onclick="saveRTOContract()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                <button onclick="saveFinancingContract()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                     Save to Firestore & Close
                 </button>
@@ -5375,18 +5404,18 @@ function renderRTOWizardStep(step) {
     }
     
     const modalHTML = `
-        <div id="rtoWizardModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div id="financingWizardModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div class="bg-gray-900 rounded-2xl max-w-2xl w-full border border-amber-500/50 shadow-2xl overflow-hidden my-4">
-                <!-- Header with Close Button -->
+                <!-- Header -->
                 <div class="bg-gradient-to-r from-amber-600 to-yellow-600 px-6 py-4 flex items-center justify-between">
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 flex items-center gap-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Financing Plan Contract
+                            Financing Contract
                         </h3>
                         <p class="text-gray-900/70 text-sm mt-1">${state.vehicle.title}</p>
                     </div>
-                    <button onclick="closeRTOWizard()" class="bg-gray-900/30 hover:bg-gray-900/50 text-gray-900 p-2 rounded-full transition" title="Close">
+                    <button onclick="closeFinancingWizard()" class="bg-gray-900/30 hover:bg-gray-900/50 text-gray-900 p-2 rounded-full transition" title="Close">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
@@ -5399,27 +5428,30 @@ function renderRTOWizardStep(step) {
                     
                     <!-- Navigation -->
                     <div class="flex gap-3 mt-6 pt-4 border-t border-gray-700">
-                        ${step > 1 ? `
-                            <button onclick="renderRTOWizardStep(${step - 1})" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
+                        ${step > 1 && step < 4 ? `
+                            <button onclick="renderFinancingWizardStep(${step - 1})" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
                                 ← Back
                             </button>
                         ` : ''}
                         ${step < 3 ? `
-                            <button onclick="nextRTOStep()" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 px-4 rounded-xl font-bold transition hover:opacity-90">
+                            <button onclick="nextFinancingStep()" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 py-3 px-4 rounded-xl font-bold transition hover:opacity-90">
                                 Next →
                             </button>
                         ` : step === 3 ? `
-                            <button onclick="generateAndShowContract()" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
+                            <button onclick="generateAndShowFinancingContract()" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold transition hover:opacity-90 flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 Generate Contract
                             </button>
                         ` : `
-                            <button onclick="closeRTOWizard()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
+                            <button onclick="renderFinancingWizardStep(3)" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition">
+                                ← Back
+                            </button>
+                            <button onclick="closeFinancingWizard()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-3 px-4 rounded-xl font-bold transition">
                                 Close
                             </button>
                         `}
                         ${step === 1 ? `
-                            <button onclick="closeRTOWizard()" class="px-6 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-bold transition">
+                            <button onclick="closeFinancingWizard()" class="px-6 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-bold transition">
                                 Cancel
                             </button>
                         ` : ''}
@@ -5430,53 +5462,33 @@ function renderRTOWizardStep(step) {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Run calculations if on step 2
-    if (step === 2) {
-        setTimeout(updateRTOCalculations, 100);
-    }
 }
 
 /**
- * Select buyer option (existing buyer or manual entry)
+ * Select parties option
  */
-/**
- * Select parties option (use existing or manual entry)
- */
-window.selectRTOPartiesOption = function(useExisting) {
-    const state = window.rtoWizardState;
+window.selectFinancingPartiesOption = function(useExisting) {
+    const state = window.financingWizardState;
     state.buyer.useExisting = useExisting;
     
     const manualInputs = document.getElementById('manualPartyInputs');
-    const useExistingRadio = document.getElementById('useExisting');
-    const enterManuallyRadio = document.getElementById('enterManually');
+    const labels = document.querySelectorAll('label[onclick*="selectFinancingPartiesOption"]');
     
-    // Update visual selection
-    const labels = document.querySelectorAll('label[onclick*="selectRTOPartiesOption"]');
     labels.forEach(label => {
         label.classList.remove('border-amber-500');
         label.classList.add('border-transparent');
     });
     
     if (useExisting) {
-        if (useExistingRadio) {
-            useExistingRadio.checked = true;
-            useExistingRadio.closest('label')?.classList.add('border-amber-500');
-            useExistingRadio.closest('label')?.classList.remove('border-transparent');
-        }
-        if (enterManuallyRadio) enterManuallyRadio.checked = false;
+        document.getElementById('useExisting').checked = true;
+        document.getElementById('useExisting').closest('label')?.classList.add('border-amber-500');
         if (manualInputs) manualInputs.classList.add('hidden');
-        
-        // Use existing names
         state.buyer.name = state.existingBuyer || '';
+        state.buyer.phone = state.existingBuyerPhone || '';
         state.seller = state.existingSeller || '';
     } else {
-        if (useExistingRadio) useExistingRadio.checked = false;
-        if (enterManuallyRadio) {
-            enterManuallyRadio.checked = true;
-            enterManuallyRadio.closest('label')?.classList.add('border-amber-500');
-            enterManuallyRadio.closest('label')?.classList.remove('border-transparent');
-        }
+        document.getElementById('enterManually').checked = true;
+        document.getElementById('enterManually').closest('label')?.classList.add('border-amber-500');
         if (manualInputs) manualInputs.classList.remove('hidden');
     }
 };
@@ -5484,463 +5496,187 @@ window.selectRTOPartiesOption = function(useExisting) {
 /**
  * Move to next step with validation
  */
-window.nextRTOStep = function() {
-    const state = window.rtoWizardState;
+window.nextFinancingStep = function() {
+    const state = window.financingWizardState;
     
     if (state.step === 1) {
-        // Validate parties
-        let buyerName, sellerName;
+        let buyerName, buyerPhone, sellerName;
         
         if (state.buyer.useExisting) {
             buyerName = state.existingBuyer;
+            buyerPhone = state.existingBuyerPhone;
             sellerName = state.existingSeller;
         } else {
-            buyerName = document.getElementById('rtoBuyerName')?.value?.trim();
-            sellerName = document.getElementById('rtoSellerName')?.value?.trim();
+            buyerName = document.getElementById('financingBuyerName')?.value?.trim();
+            buyerPhone = document.getElementById('financingBuyerPhone')?.value?.trim();
+            sellerName = document.getElementById('financingSellerName')?.value?.trim();
         }
         
         if (!buyerName) {
-            showToast('Please enter or select a buyer name', 'error');
+            showToast('Please enter buyer name', 'error');
+            return;
+        }
+        if (!buyerPhone) {
+            showToast('Please enter buyer phone', 'error');
             return;
         }
         if (!sellerName) {
-            showToast('Please enter or select a seller name', 'error');
+            showToast('Please enter seller name', 'error');
             return;
         }
         
         state.buyer.name = buyerName;
+        state.buyer.phone = buyerPhone;
         state.seller = sellerName;
     } else if (state.step === 2) {
-        // Validate and save financial terms
-        const purchasePrice = parseInt(document.getElementById('rtoPurchasePrice')?.value) || 0;
-        const termMonths = parseInt(document.getElementById('rtoTermMonthsSlider')?.value) || 24;
-        
-        // Use manual input as source of truth for down payment (preserves exact dollar amount)
-        const manualDownPayment = document.getElementById('rtoDownPaymentManual');
-        let downPayment, downPaymentPercent;
-        
-        if (manualDownPayment && manualDownPayment.value !== '') {
-            downPayment = parseInt(manualDownPayment.value) || 0;
-            downPaymentPercent = purchasePrice > 0 ? (downPayment / purchasePrice) * 100 : 0;
-        } else {
-            // Fallback to slider if manual input is empty
-            downPaymentPercent = parseInt(document.getElementById('rtoDownPaymentSlider')?.value) ?? 10;
-            downPayment = Math.round(purchasePrice * (downPaymentPercent / 100));
-        }
-        
-        if (purchasePrice <= 0) {
-            showToast('Please enter a valid purchase price', 'error');
-            return;
-        }
-        if (termMonths < 6 || termMonths > 48) {
-            showToast('Term must be between 6 and 48 months', 'error');
-            return;
-        }
-        
-        // Calculate monthly payment from amount to finance
-        const amountToFinance = purchasePrice - downPayment;
-        // Final payment uses PMA Government minimum (already set in state.financial.finalPaymentBase)
-        const finalPaymentBase = state.financial.finalPaymentBase;
-        const finalPaymentFee = Math.round(finalPaymentBase * 0.10);
-        const finalPaymentTotal = finalPaymentBase + finalPaymentFee;
-        
-        // Monthly payment covers (Amount to Finance - Final Payment Base) over (termMonths - 1) months
-        const amountForMonthly = amountToFinance - finalPaymentBase;
-        const monthlyPayments = termMonths - 1;
-        const monthlyPayment = monthlyPayments > 0 ? Math.round(amountForMonthly / monthlyPayments) : 0;
-        
-        state.financial = {
-            ...state.financial,
-            purchasePrice,
-            downPaymentPercent,
-            downPayment,
-            termMonths,
-            amountToFinance,
-            monthlyPayment,
-            finalPaymentBase,
-            finalPaymentFee,
-            finalPaymentTotal
-        };
+        // Save term from slider
+        const termWeeks = parseInt(document.getElementById('financingTermSlider')?.value) || 4;
+        state.financial.termWeeks = termWeeks;
+        state.financial.weeklyPayment = Math.ceil(state.financial.downPayment / termWeeks);
     }
     
-    renderRTOWizardStep(state.step + 1);
+    renderFinancingWizardStep(state.step + 1);
 };
 
 /**
- * Update down payment when slider changes
+ * Update term when slider changes
  */
-window.updateRTODownPayment = function(percent) {
-    const purchasePrice = parseInt(document.getElementById('rtoPurchasePrice')?.value) || 0;
-    const downPayment = Math.round(purchasePrice * (percent / 100));
+window.updateFinancingTerm = function(weeks) {
+    const state = window.financingWizardState;
+    const termDisplay = document.getElementById('financingTermDisplay');
+    const weeksDisplay = document.getElementById('financingCalcWeeks');
+    const weeklyPayment = document.getElementById('financingWeeklyPayment');
     
-    const percentEl = document.getElementById('rtoDownPaymentPercent');
-    const amountEl = document.getElementById('rtoDownPaymentAmount');
+    const weeksInt = parseInt(weeks);
+    const payment = Math.ceil(state.financial.downPayment / weeksInt);
     
-    if (percentEl) percentEl.textContent = percent + '%';
+    if (termDisplay) termDisplay.textContent = weeksInt + ' weeks';
+    if (weeksDisplay) weeksDisplay.textContent = weeksInt;
+    if (weeklyPayment) weeklyPayment.textContent = '$' + payment.toLocaleString() + '/week';
     
-    // Update manual input field
-    const manualInput = document.getElementById('rtoDownPaymentManual');
-    if (manualInput) manualInput.value = downPayment;
-    
-    // Update state
-    if (window.rtoWizardState) {
-        window.rtoWizardState.financial.downPaymentPercent = parseInt(percent);
-        window.rtoWizardState.financial.downPayment = downPayment;
-    }
-    
-    updateRTOCalculations();
+    state.financial.termWeeks = weeksInt;
+    state.financial.weeklyPayment = payment;
 };
 
 /**
- * Update down payment when manual input changes
+ * Generate and show contract (step 3 → 4)
  */
-window.updateRTODownPaymentManual = function(amount) {
-    const purchasePrice = parseInt(document.getElementById('rtoPurchasePrice')?.value) || 0;
-    const downPayment = parseInt(amount) || 0;
-    
-    // Calculate percentage with decimals for accuracy
-    const exactPercent = purchasePrice > 0 ? (downPayment / purchasePrice) * 100 : 0;
-    const displayPercent = exactPercent % 1 === 0 ? exactPercent.toFixed(0) : exactPercent.toFixed(2);
-    const sliderPercent = Math.round(exactPercent);
-    
-    const percentEl = document.getElementById('rtoDownPaymentPercent');
-    const slider = document.getElementById('rtoDownPaymentSlider');
-    
-    if (percentEl) percentEl.textContent = displayPercent + '%';
-    if (slider) slider.value = Math.min(99, Math.max(0, sliderPercent));
-    
-    // Update state with exact percentage
-    if (window.rtoWizardState) {
-        window.rtoWizardState.financial.downPaymentPercent = exactPercent;
-        window.rtoWizardState.financial.downPayment = downPayment;
-    }
-    
-    updateRTOCalculations();
+window.generateAndShowFinancingContract = function() {
+    const state = window.financingWizardState;
+    state.startDate = document.getElementById('financingStartDate')?.value || new Date().toISOString().split('T')[0];
+    renderFinancingWizardStep(4);
 };
 
 /**
- * Update term months when slider changes
+ * Generate the financing contract
  */
-window.updateRTOTermMonths = function(months) {
-    const termDisplay = document.getElementById('rtoTermMonthsDisplay');
-    const finalMonth = document.getElementById('rtoFinalMonth');
-    const calcMonthsCount = document.getElementById('rtoCalcMonthsCount');
-    
-    if (termDisplay) termDisplay.textContent = months + ' months';
-    if (finalMonth) finalMonth.textContent = months;
-    if (calcMonthsCount) calcMonthsCount.textContent = (parseInt(months) - 1);
-    
-    // Update state
-    if (window.rtoWizardState) {
-        window.rtoWizardState.financial.termMonths = parseInt(months);
-    }
-    
-    updateRTOCalculations();
-};
-
-/**
- * Update calculations in real-time
- * Logic:
- * - Final Payment = PMA Government Minimum (based on vehicle type) + 10% PMA Realtor Fee
- * - Amount for Monthly = Purchase Price - Down Payment - Final Payment Base
- * - Monthly Payment = Amount for Monthly / (Term Months - 1)
- */
-window.updateRTOCalculations = function() {
-    const state = window.rtoWizardState;
-    if (!state) return;
-    
-    const purchasePrice = parseInt(document.getElementById('rtoPurchasePrice')?.value) || state.financial.purchasePrice || 0;
-    
-    // Get down payment from manual input field if available, else use stored values
-    const manualDownPayment = document.getElementById('rtoDownPaymentManual');
-    let downPayment, downPaymentPercent, displayPercent;
-    
-    if (manualDownPayment) {
-        downPayment = parseInt(manualDownPayment.value) || 0;
-        // Calculate exact percentage with decimals
-        const exactPercent = purchasePrice > 0 ? (downPayment / purchasePrice) * 100 : 0;
-        downPaymentPercent = exactPercent;
-        // Display with decimals if not a whole number
-        displayPercent = exactPercent % 1 === 0 ? exactPercent.toFixed(0) : exactPercent.toFixed(2);
-    } else {
-        // No manual input field (e.g., on Step 3) - use stored values from state
-        // IMPORTANT: Use dollar amount as source of truth, not percentage
-        // Use ?? instead of || because 0 is a valid value (0 || 10 = 10, but 0 ?? 10 = 0)
-        downPayment = state.financial.downPayment ?? 0;
-        downPaymentPercent = state.financial.downPaymentPercent ?? 10;
-        displayPercent = downPaymentPercent % 1 === 0 ? downPaymentPercent.toFixed(0) : downPaymentPercent.toFixed(2);
-    }
-    
-    const termMonths = parseInt(document.getElementById('rtoTermMonthsSlider')?.value) || state.financial.termMonths || 24;
-    
-    // Final payment uses PMA Government minimum (already stored in state)
-    const finalPaymentBase = state.financial.finalPaymentBase || 1500000;
-    const finalPaymentFee = Math.round(finalPaymentBase * 0.10);
-    const finalPaymentTotal = finalPaymentBase + finalPaymentFee;
-    
-    // Calculate amount for monthly payments (excluding final payment)
-    const amountToFinance = purchasePrice - downPayment;
-    const amountForMonthly = amountToFinance - finalPaymentBase;
-    const monthlyPayments = termMonths - 1;
-    const monthlyPayment = monthlyPayments > 0 ? Math.round(amountForMonthly / monthlyPayments) : 0;
-    
-    // Update down payment display with decimal percentage
-    const percentEl = document.getElementById('rtoDownPaymentPercent');
-    if (percentEl) percentEl.textContent = displayPercent + '%';
-    
-    // Update final payment display (PMA Government minimum - fixed)
-    const finalBaseEl = document.getElementById('rtoFinalPaymentBase');
-    const feeEl = document.getElementById('rtoFinalFee');
-    const totalEl = document.getElementById('rtoFinalTotal');
-    const finalMonthEl = document.getElementById('rtoFinalMonth');
-    if (finalBaseEl) finalBaseEl.textContent = '$' + finalPaymentBase.toLocaleString();
-    if (feeEl) feeEl.textContent = '$' + finalPaymentFee.toLocaleString();
-    if (totalEl) totalEl.textContent = '$' + finalPaymentTotal.toLocaleString();
-    if (finalMonthEl) finalMonthEl.textContent = termMonths;
-    
-    // Update calculation breakdown
-    const calcPurchase = document.getElementById('rtoCalcPurchase');
-    const calcDown = document.getElementById('rtoCalcDown');
-    const calcFinalMin = document.getElementById('rtoCalcFinalMin');
-    const calcFinance = document.getElementById('rtoCalcFinance');
-    const calcMonthsCount = document.getElementById('rtoCalcMonthsCount');
-    const monthlyEl = document.getElementById('rtoMonthlyPayment');
-    
-    if (calcPurchase) calcPurchase.textContent = '$' + purchasePrice.toLocaleString();
-    if (calcDown) calcDown.textContent = '−$' + downPayment.toLocaleString();
-    if (calcFinalMin) calcFinalMin.textContent = '−$' + finalPaymentBase.toLocaleString();
-    if (calcFinance) calcFinance.textContent = '$' + amountForMonthly.toLocaleString();
-    if (calcMonthsCount) calcMonthsCount.textContent = monthlyPayments;
-    if (monthlyEl) monthlyEl.textContent = '$' + monthlyPayment.toLocaleString() + '/mo';
-    
-    // Update state (preserve vehicleCategory)
-    state.financial = {
-        ...state.financial,
-        purchasePrice,
-        downPaymentPercent,
-        downPayment,
-        termMonths,
-        monthlyPayment,
-        amountToFinance,
-        amountForMonthly
-    };
-};
-
-/**
- * Calculate Financing terms for contract generation
- * Uses PMA Government minimum for final payment + 10% PMA Realtor Fee
- */
-function calculateRTOTerms() {
-    const state = window.rtoWizardState;
+function generateFinancingContract() {
+    const state = window.financingWizardState;
     const f = state.financial;
-    
-    const remainingBalance = f.purchasePrice - f.downPayment;
-    const finalPaymentBase = f.finalPaymentBase || 1500000;
-    const finalPaymentFee = Math.round(finalPaymentBase * 0.10);
-    const finalPaymentTotal = finalPaymentBase + finalPaymentFee;
-    
-    // Monthly payment covers (remaining - final) over (term - 1) months
-    const amountForMonthly = remainingBalance - finalPaymentBase;
-    const monthlyPayments = f.termMonths - 1;
-    const monthlyPayment = f.monthlyPayment || (monthlyPayments > 0 ? Math.round(amountForMonthly / monthlyPayments) : 0);
-    
-    // Format percentage for display (show decimals if not whole number)
-    const rawPercent = f.downPaymentPercent || 0;
-    const formattedPercent = rawPercent % 1 === 0 ? rawPercent.toFixed(0) : rawPercent.toFixed(2);
-    
-    return {
-        purchasePrice: f.purchasePrice,
-        downPayment: f.downPayment,
-        downPaymentPercent: formattedPercent,
-        downPaymentPercentRaw: rawPercent,
-        remainingBalance,
-        amountToFinance: remainingBalance,
-        amountForMonthly,
-        termMonths: f.termMonths,
-        monthlyPayment,
-        lastMonthlyPayment: monthlyPayment,
-        finalPaymentBase,
-        finalPaymentFee,
-        finalPaymentTotal,
-        vehicleCategory: f.vehicleCategory || 'Unknown',
-        realtorFeePercent: 10
-    };
-}
-
-/**
- * Generate the contract and show step 4
- */
-window.generateAndShowContract = function() {
-    // Save the start date
-    const startDate = document.getElementById('rtoStartDate')?.value;
-    window.rtoWizardState.startDate = startDate || new Date().toISOString().split('T')[0];
-    
-    renderRTOWizardStep(4);
-};
-
-/**
- * Generate the full Financing contract
- */
-function generateRTOContract() {
-    const state = window.rtoWizardState;
-    const calc = calculateRTOTerms();
     const startDate = new Date(state.startDate);
     
     // Generate document ID
     const dateStr = startDate.toISOString().split('T')[0].replace(/-/g, '');
     const sellerInitials = state.seller.split(' ').map(n => n[0]).join('').toUpperCase();
     const buyerInitials = state.buyer.name.split(' ').map(n => n[0]).join('').toUpperCase();
-    const documentId = `SA-RTO-${dateStr.substring(0, 4)}-${dateStr.substring(4, 8)}-${sellerInitials}-${buyerInitials}`;
+    const documentId = `PA-FIN-${dateStr.substring(0, 4)}-${dateStr.substring(4, 8)}-${sellerInitials}-${buyerInitials}`;
     
     // Generate payment schedule
-    // All monthly payments are equal, final payment has 10% realtor fee added
     let schedule = [];
-    let runningBalance = calc.amountToFinance;
-    
-    // Down payment entry
-    schedule.push({
-        num: 'Down Payment',
-        date: formatDateForContract(startDate),
-        amount: calc.downPayment,
-        type: `Down Payment (${calc.downPaymentPercent}%)`,
-        balance: runningBalance
-    });
-    
-    // Monthly payments
-    for (let i = 1; i <= calc.termMonths; i++) {
+    for (let i = 1; i <= f.termWeeks; i++) {
         const paymentDate = new Date(startDate);
-        paymentDate.setMonth(paymentDate.getMonth() + i);
-        
-        let amount, type;
-        if (i < calc.termMonths) {
-            // Regular monthly payment
-            amount = calc.monthlyPayment;
-            type = 'Monthly';
-            runningBalance -= amount;
-        } else {
-            // Final payment = monthly payment + 10% realtor fee
-            amount = calc.finalPaymentTotal;
-            type = `Final + 10% Fee`;
-            runningBalance = 0;
-        }
+        paymentDate.setDate(paymentDate.getDate() + (i * 7));
+        const isLast = i === f.termWeeks;
+        const payment = isLast ? (f.downPayment - (f.weeklyPayment * (f.termWeeks - 1))) : f.weeklyPayment;
         
         schedule.push({
-            num: i,
-            date: formatDateForContract(paymentDate),
-            amount: amount,
-            type: type,
-            balance: Math.max(0, runningBalance)
+            week: i,
+            date: paymentDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
+            amount: payment,
+            type: isLast ? 'Final Weekly' : 'Weekly'
         });
     }
     
-    // Build preview text - use location as fallback for description
-    const vehicleDesc = state.vehicle.description || state.vehicle.location || 'N/A';
+    const formattedStartDate = startDate.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    
     const preview = `
 ═══════════════════════════════════════════════════════════════
-                    RENT-TO-OWN AGREEMENT
-                     PaulysAutos.com
+                  VEHICLE FINANCING AGREEMENT
+                       PaulysAutos.com
 ═══════════════════════════════════════════════════════════════
 
-PROPERTY INFORMATION
+VEHICLE INFORMATION
 ────────────────────────────────────────────────────────────────
-Address: ${state.vehicle.title}
-Vehicle Description: ${vehicleDesc}
-Listing Type: Financing Plan
-Vehicle Category: ${calc.vehicleCategory}
+Vehicle: ${state.vehicle.title}
+Description: ${state.vehicle.description || 'N/A'}
+Transaction Type: Financing Plan
 
 PARTIES INVOLVED
 ────────────────────────────────────────────────────────────────
-Seller/Landlord: ${state.seller}
-Buyer/Tenant: ${state.buyer.name}
-Realtor/Brokerage: ${state.seller} / PaulysAutos.com
+Seller: 👑 ${state.seller}
+Buyer: ${state.buyer.name}
+Buyer Phone: ${state.buyer.phone}
+Brokerage: ${state.seller} / PaulysAutos.com
 
 FINANCIAL STRUCTURE
 ────────────────────────────────────────────────────────────────
 Item                              Amount
 ─────────────────────────────────────────────────────
-Total Purchase Price              $${calc.purchasePrice.toLocaleString()}
-Down Payment (${calc.downPaymentPercent}%)              $${calc.downPayment.toLocaleString()}
-Remaining Balance to Finance      $${calc.remainingBalance.toLocaleString()}
-Term Length                       ${calc.termMonths} Months
-Monthly Payments (×${calc.termMonths - 1})         $${calc.monthlyPayment.toLocaleString()}
-Final Payment Base (PMA Min)      $${calc.finalPaymentBase.toLocaleString()}
-+ PMA Realtor Fee (10%)           $${calc.finalPaymentFee.toLocaleString()}
-= Total Final Payment             $${calc.finalPaymentTotal.toLocaleString()}
+Total Sale Price                  $${f.salePrice.toLocaleString()}
+Down Payment (to Seller)          $${f.downPayment.toLocaleString()}
+Weekly Payment × ${f.termWeeks} weeks         $${f.weeklyPayment.toLocaleString()}/week
+Final LUX Transfer                $${f.luxAmount.toLocaleString()}
 
-COMPLETE PAYMENT SCHEDULE
+PAYMENT SCHEDULE
 ────────────────────────────────────────────────────────────────
-Agreement Start Date: ${formatDateForContract(startDate)}
+Agreement Start Date: ${formattedStartDate}
 
 ${schedule.map(p => 
-    `${String(p.num).padEnd(12)} ${p.date.padEnd(14)} $${p.amount.toLocaleString().padStart(12)} ${p.type.padEnd(20)} $${p.balance.toLocaleString()}`
+    `Week ${p.week}     ${p.date.padEnd(12)}     $${p.amount.toLocaleString().padStart(10)}     ${p.type}`
 ).join('\n')}
 
-FINAL PAYMENT BREAKDOWN
-────────────────────────────────────────────────────────────────
-• Base Final Payment (PMA Min): $${calc.finalPaymentBase.toLocaleString()}
-• PMA Realtor Fee (10%): $${calc.finalPaymentFee.toLocaleString()}
-• Total Final Payment: $${calc.finalPaymentTotal.toLocaleString()}
-• Vehicle Category: ${calc.vehicleCategory}
+THEN: LUX Transfer                           $${f.luxAmount.toLocaleString()}
 
 CONTRACT TERMS
 ────────────────────────────────────────────────────────────────
-Payment Terms:
-• Monthly payments of $${calc.monthlyPayment.toLocaleString()} due on the ${startDate.getDate()}${getOrdinalSuffix(startDate.getDate())} of each month
-• Final payment of $${calc.finalPaymentTotal.toLocaleString()} due on ${formatDateForContract(new Date(startDate.setMonth(startDate.getMonth() + calc.termMonths)))}
-• 3-day grace period before late fees apply
-
-Late Payment:
-• $50,000 late fee after 3 days
-• Default possible after 14 days late
-
-Default:
-• Two consecutive missed payments = default
-• Seller retains all previous payments as liquidated damages
-• Buyer must vacate within 72 hours of default notice
-
-Vehicle Maintenance:
-• Buyer responsible for all maintenance
-• No major modifications without seller consent
-
-Transfer of Ownership:
-• Full ownership transfers upon final payment completion
-• Title transfer within 7 days of final payment
-• PaulysAutos.com facilitates transfer
-
-Early Payoff:
-• Allowed without penalty
-• $${calc.finalPaymentFee.toLocaleString()} PMA Realtor Fee still applies upon transfer
+• Buyer pays weekly installments to Seller until down payment complete
+• Seller will NOT list vehicle on LUX until all weekly payments received
+• Once down payment is complete, Seller lists vehicle on LUX for $${f.luxAmount.toLocaleString()}
+• Buyer completes final purchase through LUX
+• Vehicle ownership transfers ONLY after LUX transaction completes
+• All payments are non-refundable
+• PaulysAutos.com is NOT responsible for any disputes
 
 DOCUMENT IDENTIFIERS
 ────────────────────────────────────────────────────────────────
-• Document ID: ${documentId}
-• Jurisdiction: State of San Andreas
-• Generated: ${new Date().toLocaleString()}
+Document ID: ${documentId}
+Jurisdiction: State of San Andreas
+Generated: ${new Date().toLocaleString()}
 
 ═══════════════════════════════════════════════════════════════
                     SIGNATURES REQUIRED
 ═══════════════════════════════════════════════════════════════
 
-Seller/Landlord: _________________________ Date: ___________
-                 ${state.seller}
+Seller: _________________________ Date: ___________
+        👑 ${state.seller}
 
-Buyer/Tenant:    _________________________ Date: ___________
-                 ${state.buyer.name}
+Buyer:  _________________________ Date: ___________
+        ${state.buyer.name}
 
-PaulysAutos.com: ____________________ Date: ___________
-                      Authorized Representative
+PaulysAutos.com: ________________ Date: ___________
+                 Authorized Representative
 
 ═══════════════════════════════════════════════════════════════
 `;
 
-    // Store for later use
-    window.rtoGeneratedContract = {
+    window.financingGeneratedContract = {
         documentId,
         preview,
+        schedule,
         data: {
             ...state,
-            calculations: calc,
-            schedule,
             generatedAt: new Date().toISOString()
         }
     };
@@ -5949,30 +5685,10 @@ PaulysAutos.com: ____________________ Date: ___________
 }
 
 /**
- * Format date for contract display
- */
-function formatDateForContract(date) {
-    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-}
-
-/**
- * Get ordinal suffix for day
- */
-function getOrdinalSuffix(day) {
-    if (day > 3 && day < 21) return 'th';
-    switch (day % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-    }
-}
-
-/**
  * Copy contract to clipboard
  */
-window.copyRTOContract = function() {
-    const contract = window.rtoGeneratedContract;
+window.copyFinancingContract = function() {
+    const contract = window.financingGeneratedContract;
     if (!contract) {
         showToast('No contract generated', 'error');
         return;
@@ -5989,28 +5705,16 @@ window.copyRTOContract = function() {
 /**
  * Save contract to Firestore
  */
-window.saveRTOContract = async function() {
-    const contract = window.rtoGeneratedContract;
+window.saveFinancingContract = async function() {
+    const contract = window.financingGeneratedContract;
     if (!contract) {
         showToast('No contract generated', 'error');
         return;
     }
     
     try {
-        const state = window.rtoWizardState;
-        const calc = contract.data.calculations;
-        
-        // Calculate initial remaining balance and expected monthly
-        const initialRemainingBalance = calc.purchasePrice - calc.downPayment;
-        const finalPaymentBase = calc.finalPaymentBase || 1500000;
-        const remainingMonths = calc.termMonths - 1; // -1 for final payment month
-        const amountForMonthly = initialRemainingBalance - finalPaymentBase;
-        const initialExpectedMonthly = remainingMonths > 0 ? Math.round(amountForMonthly / remainingMonths) : 0;
-        
-        // Auto-mark $0 deposit as paid
-        const isZeroDeposit = calc.downPayment === 0;
-        const depositPaidStatus = isZeroDeposit;
-        const depositPaidDate = isZeroDeposit ? state.startDate : null;
+        const state = window.financingWizardState;
+        const f = state.financial;
         
         // Save contract to Firestore
         await db.collection('financingContracts').doc(contract.documentId).set({
@@ -6020,75 +5724,54 @@ window.saveRTOContract = async function() {
             vehicleDescription: state.vehicle.description,
             seller: state.seller,
             buyer: state.buyer.name,
-            financial: state.financial,
-            calculations: calc,
-            schedule: contract.data.schedule,
+            buyerPhone: state.buyer.phone,
+            salePrice: f.salePrice,
+            downPayment: f.downPayment,
+            luxAmount: f.luxAmount,
+            termWeeks: f.termWeeks,
+            weeklyPayment: f.weeklyPayment,
+            schedule: contract.schedule,
             startDate: state.startDate,
-            currentPaymentNumber: 0, // Will be 1 after first monthly payment
-            totalPayments: calc.termMonths,
-            // Deposit tracking - auto-mark $0 deposit as paid
-            depositAmount: calc.downPayment,
-            depositPaid: depositPaidStatus,
-            depositPaidDate: depositPaidDate,
-            // Balance tracking for dynamic recalculation
-            remainingBalance: initialRemainingBalance,
-            expectedMonthlyPayment: initialExpectedMonthly,
-            finalPaymentBase: finalPaymentBase,
-            // Payment history array for tracking expected vs actual
-            rtoPaymentHistory: [],
+            currentWeek: 0,
+            totalWeeks: f.termWeeks,
+            downPaymentPaid: 0,
+            downPaymentComplete: false,
             status: 'active',
             createdBy: auth.currentUser?.email || 'unknown',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             contractText: contract.preview
         });
         
-        // Update vehicle with Financing info and clear daily/biweekly, set monthly to contract payment
-        const vehicleUpdates = {
-            // Clear daily and biweekly
-            dailyPrice: 0,
-            biweeklyPrice: 0,
-            weeklyPrice: 0,
-            // Set monthly to the contract's monthly payment
-            monthlyPrice: calc.monthlyPayment,
-            // Mark Financing active
+        // Update vehicle with financing info
+        await VehicleDataService.writeMultiple(state.vehicleId, {
             hasActiveFinancing: true,
             financingContractId: contract.documentId,
-            financingCurrentPayment: 0,
-            financingTotalPayments: calc.termMonths,
-            rtoBuyer: state.buyer.name,
-            rtoStartDate: state.startDate,
-            // Deposit tracking - auto-mark $0 deposit as paid
-            financingDownPayment: calc.downPayment,
-            financingDownPaymentPaid: depositPaidStatus,
-            financingDownPaymentPaidDate: depositPaidDate,
-            // Balance tracking for dynamic recalculation
-            rtoRemainingBalance: initialRemainingBalance,
-            rtoExpectedMonthly: initialExpectedMonthly,
-            rtoFinalPaymentBase: finalPaymentBase,
-            // Set payment frequency to monthly
-            paymentFrequency: 'monthly'
-        };
+            financingBuyer: state.buyer.name,
+            financingBuyerPhone: state.buyer.phone,
+            financingStartDate: state.startDate,
+            financingCurrentWeek: 0,
+            financingTotalWeeks: f.termWeeks,
+            financingDownPayment: f.downPayment,
+            financingDownPaymentPaid: 0,
+            financingLuxAmount: f.luxAmount,
+            financingWeeklyPayment: f.weeklyPayment
+        });
         
-        // Update vehicle via VehicleDataService (writes to settings/properties)
-        await VehicleDataService.writeMultiple(state.vehicleId, vehicleUpdates);
+        showToast('✅ Financing contract saved!', 'success');
         
-        const depositMsg = isZeroDeposit ? ' ($0 deposit auto-marked as waived)' : '';
-        showToast(`✅ Contract saved!${depositMsg} Vehicle updated to Financing monthly payments.`, 'success');
-        
-        // Award XP for creating Financing contract
+        // Award XP
         if (typeof GamificationService !== 'undefined' && GamificationService.awardXP) {
             const userId = auth.currentUser?.uid;
             if (userId) {
-                await GamificationService.awardXP(userId, 150, `Created rent-to-own contract: ${contract.documentId}`);
+                await GamificationService.awardXP(userId, 100, `Created financing contract: ${contract.documentId}`);
             }
         }
         
-        // Close the modal after a short delay and refresh the page
+        // Close modal and refresh
         setTimeout(() => {
-            closeRTOWizard();
-            // Refresh the vehicle stats page
-            if (typeof showPropertyStats === 'function') {
-                showPropertyStats(state.vehicleId);
+            closeFinancingWizard();
+            if (typeof renderVehicleStatsContent === 'function') {
+                renderVehicleStatsContent(state.vehicleId);
             }
         }, 1500);
         
@@ -6099,11 +5782,11 @@ window.saveRTOContract = async function() {
 };
 
 /**
- * Generate contract image with cursive signatures
+ * Download contract as PNG image
  */
-window.downloadRTOContractImage = async function() {
-    const contract = window.rtoGeneratedContract;
-    const state = window.rtoWizardState;
+window.downloadFinancingContractImage = async function() {
+    const contract = window.financingGeneratedContract;
+    const state = window.financingWizardState;
     if (!contract || !state) {
         showToast('No contract generated', 'error');
         return;
@@ -6111,23 +5794,17 @@ window.downloadRTOContractImage = async function() {
     
     showToast('🖼️ Generating contract image...', 'info');
     
-    const calc = contract.data.calculations;
+    const f = state.financial;
     const startDate = new Date(state.startDate);
     
-    // Create canvas - SQUARE format
+    // Create canvas
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
-    // Set canvas size to square
     const size = 1000;
     canvas.width = size;
     canvas.height = size;
     
-    // Background
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Add subtle texture/gradient
+    // Background gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, '#1a1a2e');
     gradient.addColorStop(1, '#16213e');
@@ -6136,7 +5813,9 @@ window.downloadRTOContractImage = async function() {
     
     let y = 50;
     const margin = 60;
-    const contentWidth = canvas.width - (margin * 2);
+    const goldColor = '#D4AF37';
+    const greenColor = '#4ade80';
+    const redColor = '#ef4444';
     
     // Helper functions
     const drawText = (text, x, fontSize, color, font = 'Arial') => {
@@ -6147,7 +5826,7 @@ window.downloadRTOContractImage = async function() {
     };
     
     const drawLine = () => {
-        ctx.strokeStyle = '#f59e0b';
+        ctx.strokeStyle = goldColor;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(margin, y);
@@ -6156,93 +5835,79 @@ window.downloadRTOContractImage = async function() {
         y += 12;
     };
     
-    const drawCursiveSignature = (name, x, signatureY) => {
-        ctx.font = 'italic 24px Georgia, serif';
-        ctx.fillStyle = '#3b82f6';
-        ctx.fillText(name, x, signatureY);
-    };
-    
     // === HEADER ===
     ctx.textAlign = 'center';
-    drawText('RENT-TO-OWN AGREEMENT', canvas.width / 2, 26, '#f59e0b', 'Arial Black');
+    drawText('🚗 VEHICLE FINANCING AGREEMENT', canvas.width / 2, 26, goldColor, 'Arial Black');
     drawText('PaulysAutos.com', canvas.width / 2, 18, '#fbbf24', 'Arial');
     y += 8;
     drawLine();
     
-    // === PROPERTY INFORMATION ===
+    // === VEHICLE INFO ===
     ctx.textAlign = 'left';
     y += 8;
-    drawText('PROPERTY INFORMATION', margin, 16, '#f59e0b', 'Arial Black');
-    drawText(`Address: ${state.vehicle.title}`, margin, 13, '#ffffff');
-    
-    // Description - use location field
-    const desc = state.vehicle.description || state.vehicle.location || 'N/A';
-    ctx.font = '11px Arial';
-    const words = desc.split(' ');
-    let line = 'Description: ';
-    for (let word of words) {
-        const testLine = line + word + ' ';
-        if (ctx.measureText(testLine).width > contentWidth) {
-            ctx.fillStyle = '#9ca3af';
-            ctx.fillText(line, margin, y);
-            y += 14;
-            line = word + ' ';
-        } else {
-            line = testLine;
-        }
-    }
-    ctx.fillStyle = '#9ca3af';
-    ctx.fillText(line, margin, y);
-    y += 16;
-    
-    drawText('Listing Type: Financing Plan', margin, 12, '#ffffff');
-    drawText(`Vehicle Category: ${calc.vehicleCategory}`, margin, 11, '#fbbf24');
+    drawText('VEHICLE INFORMATION', margin, 16, goldColor, 'Arial Black');
+    drawText(`Vehicle: ${state.vehicle.title}`, margin, 13, '#ffffff');
+    drawText('Transaction Type: Financing Plan', margin, 12, '#ffffff');
     y += 6;
     
-    // === PARTIES INVOLVED ===
+    // === PARTIES ===
     drawLine();
     y += 4;
-    drawText('PARTIES INVOLVED', margin, 16, '#f59e0b', 'Arial Black');
-    drawText(`Seller/Landlord: 👑 ${state.seller}`, margin, 12, '#ffffff');
-    drawText(`Buyer/Tenant: ${state.buyer.name}`, margin, 12, '#ffffff');
-    drawText(`Realtor/Brokerage: 👑 ${state.seller} / PaulysAutos.com`, margin, 12, '#ffffff');
+    drawText('PARTIES INVOLVED', margin, 16, goldColor, 'Arial Black');
+    drawText(`Seller: 👑 ${state.seller}`, margin, 12, '#ffffff');
+    drawText(`Buyer: ${state.buyer.name}`, margin, 12, '#ffffff');
+    drawText(`Buyer Phone: ${state.buyer.phone}`, margin, 12, '#9ca3af');
     y += 6;
     
-    // === FINANCIAL STRUCTURE ===
+    // === FINANCIAL ===
     drawLine();
     y += 4;
-    drawText('FINANCIAL STRUCTURE', margin, 16, '#f59e0b', 'Arial Black');
+    drawText('FINANCIAL STRUCTURE', margin, 16, goldColor, 'Arial Black');
     
-    const financialItems = [
-        ['Total Purchase Price', `$${calc.purchasePrice.toLocaleString()}`],
-        [`Down Payment (${calc.downPaymentPercent ?? 10}%)`, `$${calc.downPayment.toLocaleString()}`],
-        ['Remaining Balance to Finance', `$${calc.remainingBalance.toLocaleString()}`],
-        ['Term Length', `${calc.termMonths} Months`],
-        [`Monthly Payments (×${calc.termMonths - 1})`, `$${calc.monthlyPayment.toLocaleString()}`],
-        ['Final Payment Base (PMA Min)', `$${calc.finalPaymentBase.toLocaleString()}`],
-        ['+ PMA Realtor Fee (10%)', `$${calc.finalPaymentFee.toLocaleString()}`],
-        ['= Total Final Payment', `$${calc.finalPaymentTotal.toLocaleString()}`]
+    const items = [
+        ['Total Sale Price', `$${f.salePrice.toLocaleString()}`, '#ffffff'],
+        ['Down Payment (to Seller)', `$${f.downPayment.toLocaleString()}`, redColor],
+        [`Weekly Payment × ${f.termWeeks}`, `$${f.weeklyPayment.toLocaleString()}/week`, greenColor],
+        ['Final LUX Transfer', `$${f.luxAmount.toLocaleString()}`, greenColor]
     ];
     
-    financialItems.forEach(([label, value]) => {
+    items.forEach(([label, value, color]) => {
         ctx.font = '12px Arial';
         ctx.fillStyle = '#9ca3af';
         ctx.fillText(label, margin, y);
-        ctx.fillStyle = '#10b981';
+        ctx.fillStyle = color;
         ctx.fillText(value, margin + 280, y);
         y += 18;
     });
-    
     y += 6;
     
-    // === CONTRACT TERMS SUMMARY ===
+    // === PAYMENT SCHEDULE ===
     drawLine();
     y += 4;
-    drawText('KEY CONTRACT TERMS', margin, 16, '#f59e0b', 'Arial Black');
-    drawText(`• Monthly payments due on the ${startDate.getDate()}${getOrdinalSuffix(startDate.getDate())} of each month`, margin, 11, '#ffffff');
-    drawText('• 3-day grace period before $50,000 late fee', margin, 11, '#ffffff');
-    drawText('• Two consecutive missed payments = default', margin, 11, '#ffffff');
-    drawText('• Full ownership transfers upon final payment', margin, 11, '#ffffff');
+    drawText('PAYMENT SCHEDULE', margin, 16, goldColor, 'Arial Black');
+    
+    contract.schedule.forEach(p => {
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillText(`Week ${p.week}: ${p.date}`, margin, y);
+        ctx.fillStyle = greenColor;
+        ctx.fillText(`$${p.amount.toLocaleString()}`, margin + 250, y);
+        y += 16;
+    });
+    
+    ctx.font = '12px Arial';
+    ctx.fillStyle = greenColor;
+    ctx.fillText(`Then: LUX Transfer → $${f.luxAmount.toLocaleString()}`, margin, y);
+    y += 20;
+    
+    // === KEY TERMS ===
+    drawLine();
+    y += 4;
+    drawText('KEY TERMS', margin, 16, goldColor, 'Arial Black');
+    drawText('• Vehicle NOT listed on LUX until down payment complete', margin, 11, '#ffffff');
+    drawText('• Ownership transfers ONLY after LUX transaction', margin, 11, '#ffffff');
+    drawText('• All payments non-refundable', margin, 11, '#ffffff');
+    drawText('• PaulysAutos.com is NOT responsible for disputes', margin, 11, redColor);
     y += 10;
     
     // === DOCUMENT ID ===
@@ -6252,17 +5917,16 @@ window.downloadRTOContractImage = async function() {
     drawText(`Generated: ${new Date().toLocaleDateString()}`, margin, 10, '#6b7280');
     y += 12;
     
-    // === SIGNATURES SECTION ===
+    // === SIGNATURES ===
     drawLine();
     y += 8;
     ctx.textAlign = 'center';
-    drawText('SIGNATURES', canvas.width / 2, 18, '#f59e0b', 'Arial Black');
+    drawText('SIGNATURES', canvas.width / 2, 18, goldColor, 'Arial Black');
     ctx.textAlign = 'left';
     y += 12;
     
-    // Signature boxes - side by side
     const sigBoxWidth = 380;
-    const sigBoxHeight = 60;
+    const sigBoxHeight = 55;
     const sigSpacing = 20;
     
     // Seller signature
@@ -6271,18 +5935,12 @@ window.downloadRTOContractImage = async function() {
     ctx.strokeRect(margin, y, sigBoxWidth, sigBoxHeight);
     ctx.fillStyle = '#1f2937';
     ctx.fillRect(margin + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
-    
-    // Draw cursive signature for seller with crown
-    ctx.font = 'italic 22px Georgia, serif';
+    ctx.font = 'italic 20px Georgia, serif';
     ctx.fillStyle = '#3b82f6';
-    ctx.fillText('👑 ' + state.seller, margin + 15, y + 38);
-    
+    ctx.fillText('👑 ' + state.seller, margin + 15, y + 35);
     ctx.font = '10px Arial';
     ctx.fillStyle = '#9ca3af';
-    ctx.fillText('Seller/Landlord', margin, y + sigBoxHeight + 12);
-    ctx.fillText('👑 ' + state.seller, margin, y + sigBoxHeight + 24);
-    ctx.fillStyle = '#6b7280';
-    ctx.fillText(`Date: ${new Date().toLocaleDateString()}`, margin + 180, y + sigBoxHeight + 12);
+    ctx.fillText('Seller: ' + state.seller, margin, y + sigBoxHeight + 12);
     
     // Buyer signature
     const buyerX = margin + sigBoxWidth + sigSpacing;
@@ -6290,29 +5948,22 @@ window.downloadRTOContractImage = async function() {
     ctx.strokeRect(buyerX, y, sigBoxWidth, sigBoxHeight);
     ctx.fillStyle = '#1f2937';
     ctx.fillRect(buyerX + 1, y + 1, sigBoxWidth - 2, sigBoxHeight - 2);
-    
-    // Draw cursive signature for buyer
-    ctx.font = 'italic 22px Georgia, serif';
+    ctx.font = 'italic 20px Georgia, serif';
     ctx.fillStyle = '#3b82f6';
-    ctx.fillText(state.buyer.name, buyerX + 15, y + 38);
-    
+    ctx.fillText(state.buyer.name, buyerX + 15, y + 35);
     ctx.font = '10px Arial';
     ctx.fillStyle = '#9ca3af';
-    ctx.fillText('Buyer/Tenant', buyerX, y + sigBoxHeight + 12);
-    ctx.fillText(state.buyer.name, buyerX, y + sigBoxHeight + 24);
-    ctx.fillStyle = '#6b7280';
-    ctx.fillText(`Date: ${new Date().toLocaleDateString()}`, buyerX + 180, y + sigBoxHeight + 12);
+    ctx.fillText('Buyer: ' + state.buyer.name, buyerX, y + sigBoxHeight + 12);
     
-    y += sigBoxHeight + 45;
+    y += sigBoxHeight + 35;
     
     // Footer
     ctx.textAlign = 'center';
     ctx.font = '9px Arial';
     ctx.fillStyle = '#4b5563';
-    ctx.fillText('This document is a legally binding agreement in the State of San Andreas', canvas.width / 2, y);
-    ctx.fillText('© PaulysAutos.com - All Rights Reserved', canvas.width / 2, y + 12);
+    ctx.fillText('This document is for your records only. © PaulysAutos.com', canvas.width / 2, y);
     
-    // Convert to blob and download
+    // Download
     canvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -6327,14 +5978,21 @@ window.downloadRTOContractImage = async function() {
 };
 
 /**
- * Close the Financing wizard
+ * Close the financing wizard
  */
-window.closeRTOWizard = function() {
-    const modal = document.getElementById('rtoWizardModal');
+window.closeFinancingWizard = function() {
+    const modal = document.getElementById('financingWizardModal');
     if (modal) modal.remove();
-    window.rtoWizardState = null;
-    window.rtoGeneratedContract = null;
+    window.financingWizardState = null;
+    window.financingGeneratedContract = null;
 };
+
+// Legacy function names for backward compatibility
+window.closeRTOWizard = window.closeFinancingWizard;
+window.copyRTOContract = window.copyFinancingContract;
+window.saveRTOContract = window.saveFinancingContract;
+window.downloadRTOContractImage = window.downloadFinancingContractImage;
+
 
 /**
  * View an existing Financing contract
@@ -7330,9 +6988,11 @@ window.saveRTOPaymentEdit = async function(vehicleId, contractId, paymentIndex) 
         const newRemainingBalance = contract.remainingBalance - amountDiff;
         
         // Recalculate expected monthly for next payment
+        // Note: finalPaymentBase only exists for legacy RTO contracts from PaulysProperties migration
         const currentPaymentNumber = contract.currentPaymentNumber;
         const remainingMonths = (contract.totalPayments - 1) - currentPaymentNumber;
-        const amountForMonthly = newRemainingBalance - contract.finalPaymentBase;
+        const finalPaymentBase = contract.finalPaymentBase || 0;
+        const amountForMonthly = newRemainingBalance - finalPaymentBase;
         const newExpectedMonthly = remainingMonths > 0 ? Math.round(amountForMonthly / remainingMonths) : 0;
         
         // Update remaining balance after for this payment
@@ -7400,8 +7060,10 @@ window.deleteRTOPaymentEntry = async function(vehicleId, contractId, paymentInde
         const newPaymentNumber = contract.currentPaymentNumber - 1;
         
         // Recalculate expected monthly
+        // Note: finalPaymentBase only exists for legacy RTO contracts
         const remainingMonths = (contract.totalPayments - 1) - newPaymentNumber;
-        const amountForMonthly = newRemainingBalance - contract.finalPaymentBase;
+        const finalPaymentBase = contract.finalPaymentBase || 0;
+        const amountForMonthly = newRemainingBalance - finalPaymentBase;
         const newExpectedMonthly = remainingMonths > 0 ? Math.round(amountForMonthly / remainingMonths) : 0;
         
         // Renumber remaining payments

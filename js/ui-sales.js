@@ -1006,7 +1006,7 @@ function renderSaleWizardStep(step) {
                             <label class="block text-gray-400 text-sm mb-2">Buyer Name *</label>
                             <input type="text" id="saleBuyerNameInput" value="${state.buyer.name}" 
                                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-amber-500"
-                                   placeholder="Character name in city">
+                                   placeholder="Name">
                         </div>
                         <div>
                             <label class="block text-gray-400 text-sm mb-2">Buyer Phone *</label>
@@ -1123,7 +1123,7 @@ function renderSaleWizardStep(step) {
                         </div>
                         `}
                         <div class="flex justify-between bg-amber-900/30 p-2 rounded-lg mt-2">
-                            <span class="text-amber-300">+ City Fee (buyer pays)</span>
+                            <span class="text-amber-300">+ Processing Fee (buyer pays)</span>
                             <span class="text-amber-300 font-bold">$${breakdown.cityFee.toLocaleString()}</span>
                         </div>
                     </div>
@@ -1336,7 +1336,7 @@ window.updateSaleWizardBreakdown = function() {
                 </div>
             </div>
             <div class="mt-3 text-center text-gray-400 text-sm">
-                + City Fee: <span class="text-amber-400 font-bold">$${breakdown.cityFee.toLocaleString()}</span> (buyer pays at LUX)
+                + Processing Fee: <span class="text-amber-400 font-bold">$${breakdown.cityFee.toLocaleString()}</span> (buyer pays at LUX)
             </div>
         `;
     } else {
@@ -1351,7 +1351,7 @@ window.updateSaleWizardBreakdown = function() {
                     <div class="text-green-400 text-xl font-bold">$${breakdown.vehiclePrice.toLocaleString()}</div>
                 </div>
                 <div class="bg-gray-700/50 rounded-lg p-3">
-                    <div class="text-gray-400 text-xs">+ City Fee</div>
+                    <div class="text-gray-400 text-xs">+ Processing Fee</div>
                     <div class="text-amber-400 text-xl font-bold">$${breakdown.cityFee.toLocaleString()}</div>
                 </div>
             </div>
@@ -1430,7 +1430,7 @@ Item                              Amount
 Sale Price                        $${breakdown.vehiclePrice.toLocaleString()}
 ${breakdown.needsDownPayment ? `Cash Down Payment                 $${breakdown.downPayment.toLocaleString()}
 LUX Transaction                   $${breakdown.luxTransaction.toLocaleString()}` : `LUX Transaction                   $${breakdown.vehiclePrice.toLocaleString()}`}
-City Fee (buyer pays at LUX)      $${breakdown.cityFee.toLocaleString()}
+Processing Fee (buyer pays at LUX)      $${breakdown.cityFee.toLocaleString()}
 ─────────────────────────────────────────────────────
 Total Buyer Pays                  $${breakdown.totalWithFee.toLocaleString()}
 
@@ -1702,7 +1702,7 @@ window.downloadSaleContractImage = async function() {
         financialItems.push(['LUX Transaction', `$${breakdown.vehiclePrice.toLocaleString()}`]);
     }
     
-    financialItems.push(['City Fee (buyer pays)', `$${breakdown.cityFee.toLocaleString()}`]);
+    financialItems.push(['Processing Fee (buyer pays)', `$${breakdown.cityFee.toLocaleString()}`]);
     financialItems.push(['Total Buyer Pays', `$${breakdown.totalWithFee.toLocaleString()}`]);
     
     financialItems.forEach(([label, value], idx) => {
@@ -1893,7 +1893,7 @@ function generateSaleContractHTML(data) {
             `}
         </div>
         <div style="text-align: center; margin-top: 8px; font-size: 10px; color: #D4AF37;">
-            + City Fee: $${data.cityFee.toLocaleString()} (buyer pays at LUX)
+            + Processing Fee: $${data.cityFee.toLocaleString()} (buyer pays at LUX)
         </div>
     </div>
     
@@ -2507,7 +2507,7 @@ window.downloadContractAsPNG = async function() {
         y += 12;
         ctx.font = '8px Arial';
         ctx.fillStyle = '#374151';
-        ctx.fillText('PaulysAutos.com is NOT responsible for disputes. This document is for city court records only.', canvas.width / 2, y);
+        ctx.fillText('PaulysAutos.com is NOT responsible for disputes. This document is for your records only.', canvas.width / 2, y);
         
         // Convert to blob and download
         canvas.toBlob((blob) => {

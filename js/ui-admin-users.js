@@ -1597,7 +1597,7 @@ window.copyPremiumReminder = function(title, weeklyFee, nextDue) {
     }
     
     navigator.clipboard.writeText(message).then(() => {
-        showToast('📋 Reminder copied! Send via in-city text.', 'success');
+        showToast('📋 Reminder copied! Send via text.', 'success');
     }).catch(() => {
         const textarea = document.createElement('textarea');
         textarea.value = message;
@@ -1605,7 +1605,7 @@ window.copyPremiumReminder = function(title, weeklyFee, nextDue) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showToast('📋 Reminder copied! Send via in-city text.', 'success');
+        showToast('📋 Reminder copied! Send via text.', 'success');
     });
 };
 
