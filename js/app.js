@@ -586,11 +586,26 @@ function renderVehicleStatsContent(id) {
     const isPremiumTrial = VehicleDataService.getValue(id, 'isPremiumTrial', p.isPremiumTrial || false);
     const premiumStartDate = VehicleDataService.getValue(id, 'premiumStartDate', p.premiumStartDate || '');
     const premiumLastPayment = VehicleDataService.getValue(id, 'premiumLastPayment', p.premiumLastPayment || '');
+    const premiumExpiryDate = VehicleDataService.getValue(id, 'premiumExpiryDate', p.premiumExpiryDate || '');
+    const premiumSource = VehicleDataService.getValue(id, 'premiumSource', p.premiumSource || '');
+    const isLevel5Reward = premiumSource === 'level5_reward';
     
-    // Calculate premium next due date (weekly)
+    // Calculate Level 5 reward expiry countdown
+    let rewardDaysRemaining = null;
+    let rewardExpiryDisplay = '';
+    if (isPremium && isLevel5Reward && premiumExpiryDate) {
+        const expiryDate = new Date(premiumExpiryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        expiryDate.setHours(0, 0, 0, 0);
+        rewardDaysRemaining = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+        rewardExpiryDisplay = expiryDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    
+    // Calculate premium next due date (weekly) - for non-trial, non-reward premiums
     let premiumNextDue = '';
     let premiumDaysUntilDue = null;
-    if (isPremium && !isPremiumTrial && premiumLastPayment) {
+    if (isPremium && !isPremiumTrial && !isLevel5Reward && premiumLastPayment) {
         const lastDate = parseLocalDate(premiumLastPayment);
         const nextDate = new Date(lastDate);
         nextDate.setDate(nextDate.getDate() + 7); // Weekly premium fee
@@ -1216,7 +1231,18 @@ function renderVehicleStatsContent(id) {
                 <div class="text-xs text-amber-200 mt-2 opacity-70">Click to edit</div>
             </div>
             
-            <!-- Premium Last Payment (only for paid) -->
+            <!-- Premium Last Payment / Level 5 Reward Info -->
+            ${isLevel5Reward ? `
+            <!-- Level 5 Reward Info -->
+            <div class="stat-tile p-4 bg-gradient-to-br from-purple-600 to-pink-700 border-purple-500 rounded-xl border">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xl">🎁</span>
+                    <span class="text-purple-100 font-semibold">Level 5 Reward</span>
+                </div>
+                <div class="text-lg font-bold text-white">FREE</div>
+                <div class="text-xs text-purple-200 mt-2">7-day premium</div>
+            </div>
+            ` : `
             <div id="tile-premiumLastPayment-${id}"
                  class="stat-tile p-4 bg-gradient-to-br ${isPremiumTrial ? 'from-gray-600 to-gray-700 border-gray-500' : 'from-green-600 to-emerald-700 border-green-500'} rounded-xl border cursor-pointer"
                  onclick="${isPremiumTrial ? '' : `startEditTile('premiumLastPayment', ${id}, 'date')`}"
@@ -1231,8 +1257,23 @@ function renderVehicleStatsContent(id) {
                 </div>
                 <div class="text-xs ${isPremiumTrial ? 'text-gray-400' : 'text-green-200'} mt-2 opacity-70">${isPremiumTrial ? 'Free trial active' : 'Click to edit'}</div>
             </div>
+            `}
             
-            <!-- Premium Next Due (calculated) -->
+            <!-- Premium Next Due / Expiry Countdown -->
+            ${isLevel5Reward ? `
+            <div class="stat-tile p-4 bg-gradient-to-br ${rewardDaysRemaining !== null && rewardDaysRemaining <= 2 ? 'from-red-600 to-red-800 border-red-500' : 'from-purple-600 to-pink-700 border-purple-500'} rounded-xl border">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xl">⏰</span>
+                    <span class="${rewardDaysRemaining !== null && rewardDaysRemaining <= 2 ? 'text-red-100' : 'text-purple-100'} font-semibold">Expires</span>
+                </div>
+                <div class="text-lg font-bold text-white">
+                    ${rewardExpiryDisplay || '<span class="opacity-70">Unknown</span>'}
+                </div>
+                <div class="text-xs ${rewardDaysRemaining !== null && rewardDaysRemaining <= 2 ? 'text-red-200 font-bold' : 'text-purple-200'} mt-2">
+                    ${rewardDaysRemaining === 0 ? '⚠️ Expires today!' : rewardDaysRemaining === 1 ? '⚠️ Expires tomorrow!' : rewardDaysRemaining < 0 ? '🚨 Expired!' : rewardDaysRemaining + ' days remaining'}
+                </div>
+            </div>
+            ` : `
             <div class="stat-tile p-4 bg-gradient-to-br ${isPremiumTrial ? 'from-gray-600 to-gray-700 border-gray-500' : (premiumDaysUntilDue !== null && premiumDaysUntilDue <= 1 ? 'from-red-600 to-red-800 border-red-500' : 'from-orange-600 to-orange-800 border-orange-500')} rounded-xl border">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="text-xl">⏰</span>
@@ -1247,6 +1288,7 @@ function renderVehicleStatsContent(id) {
                 </div>
                 ` : '<div class="text-xs text-gray-400 mt-2">Auto-calculated weekly</div>'}
             </div>
+            `}
         </div>
         ` : ''}
         
@@ -2013,11 +2055,35 @@ window.togglePremiumStatus = async function(vehicleId) {
 };
 
 // Show modal to enable premium with trial option
-window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
+window.showPremiumEnableModal = async function(vehicleId, vehicleTitle) {
     const isAdmin = TierService.isMasterAdmin(auth.currentUser?.email);
     
-    // Free Trial section - only visible to admin
-    const freeTrialSection = isAdmin ? `
+    // Check if user has unused Level 5 reward
+    let hasFreePremiumReward = false;
+    if (auth.currentUser && window.currentUserData) {
+        hasFreePremiumReward = GamificationService.hasUnusedReward(window.currentUserData, 'free_premium_week');
+    }
+    
+    // Free reward section - shown to users with unused Level 5 reward
+    const freeRewardSection = hasFreePremiumReward ? `
+                <!-- Free Level 5 Reward -->
+                <div class="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-xl p-4 mb-4">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="useFreePremiumReward" checked class="w-5 h-5 mt-1 rounded border-purple-500 text-purple-500 focus:ring-purple-500 cursor-pointer">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">🎁</span>
+                                <span class="text-purple-300 font-bold">Use Your Level 5 Reward!</span>
+                            </div>
+                            <p class="text-purple-200/80 text-sm mt-1">You earned a <strong class="text-purple-300">FREE 7-day premium listing</strong> for reaching Level 5!</p>
+                            <p class="text-purple-400/60 text-xs mt-1">This reward will auto-expire after 7 days.</p>
+                        </div>
+                    </label>
+                </div>
+    ` : '';
+    
+    // Free Trial section - only visible to admin (and not if user has free reward)
+    const freeTrialSection = (isAdmin && !hasFreePremiumReward) ? `
                 <!-- Free Trial Checkbox - Admin Only -->
                 <div class="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-xl p-4 mb-4">
                     <label class="flex items-center gap-3 cursor-pointer">
@@ -2030,9 +2096,19 @@ window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
                 </div>
     ` : '';
     
-    // Payment notice for non-admin users
-    const paymentNotice = !isAdmin ? `
+    // Payment notice for non-admin users (only if not using free reward)
+    const paymentNotice = (!isAdmin && !hasFreePremiumReward) ? `
                 <div class="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-4">
+                    <div class="flex items-center gap-2 text-red-300">
+                        <span class="text-xl">⚠️</span>
+                        <p class="text-sm"><strong>Weekly payment required</strong> - Please contact Pauly ASAP to send the $10k payment</p>
+                    </div>
+                </div>
+    ` : '';
+    
+    // Payment notice with toggle (shown when free reward is available but unchecked)
+    const conditionalPaymentNotice = hasFreePremiumReward ? `
+                <div id="conditionalPaymentNotice" class="hidden bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-4">
                     <div class="flex items-center gap-2 text-red-300">
                         <span class="text-xl">⚠️</span>
                         <p class="text-sm"><strong>Weekly payment required</strong> - Please contact Pauly ASAP to send the $10k payment</p>
@@ -2050,7 +2126,7 @@ window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
                 
                 <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
                     <p class="text-gray-300 mb-2"><strong>Vehicle:</strong> ${vehicleTitle}</p>
-                    <p class="text-gray-300"><strong>Fee:</strong> <span class="text-amber-400 font-bold">$10,000/week</span></p>
+                    <p class="text-gray-300"><strong>Fee:</strong> <span class="text-amber-400 font-bold">${hasFreePremiumReward ? '<span class="line-through text-gray-500">$10,000/week</span> <span class="text-green-400">FREE (7 days)</span>' : '$10,000/week'}</span></p>
                 </div>
                 
                 <div class="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4">
@@ -2062,8 +2138,10 @@ window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
                     </ul>
                 </div>
                 
+                ${freeRewardSection}
                 ${freeTrialSection}
                 ${paymentNotice}
+                ${conditionalPaymentNotice}
                 
                 <!-- Buttons -->
                 <div class="flex gap-3">
@@ -2081,6 +2159,21 @@ window.showPremiumEnableModal = function(vehicleId, vehicleTitle) {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listener for checkbox toggle
+    if (hasFreePremiumReward) {
+        const checkbox = $('useFreePremiumReward');
+        const notice = $('conditionalPaymentNotice');
+        if (checkbox && notice) {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    hideElement(notice);
+                } else {
+                    showElement(notice);
+                }
+            });
+        }
+    }
 };
 
 window.closePremiumEnableModal = function() {
@@ -2093,23 +2186,42 @@ window.confirmPremiumEnable = async function(vehicleId) {
     if (!p) return;
     
     const isTrial = $('premiumTrialCheckbox')?.checked || false;
+    const useFreeReward = $('useFreePremiumReward')?.checked || false;
     const today = new Date().toISOString().split('T')[0];
     
     try {
         // Save premium status
         await VehicleDataService.write(vehicleId, 'isPremium', true);
-        await VehicleDataService.write(vehicleId, 'isPremiumTrial', isTrial);
+        await VehicleDataService.write(vehicleId, 'isPremiumTrial', isTrial || useFreeReward);
         await VehicleDataService.write(vehicleId, 'premiumUpdatedAt', new Date().toISOString());
         await VehicleDataService.write(vehicleId, 'premiumStartDate', today);
         
-        // If not trial, set last payment date to today
-        if (!isTrial) {
+        // If using Level 5 reward, set expiry date (7 days from now)
+        if (useFreeReward) {
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 7);
+            await VehicleDataService.write(vehicleId, 'premiumExpiryDate', expiryDate.toISOString());
+            await VehicleDataService.write(vehicleId, 'premiumSource', 'level5_reward');
+            
+            // Mark the reward as used
+            if (auth.currentUser) {
+                await GamificationService.useReward(auth.currentUser.uid, 'free_premium_week', vehicleId);
+                
+                // Update local user data to hide the reward banner
+                if (window.currentUserData?.gamification?.rewards?.free_premium_week) {
+                    window.currentUserData.gamification.rewards.free_premium_week.used = true;
+                }
+            }
+        }
+        
+        // If not trial and not free reward, set last payment date to today
+        if (!isTrial && !useFreeReward) {
             await VehicleDataService.write(vehicleId, 'premiumLastPayment', today);
         }
         
         // Update local vehicle
         p.isPremium = true;
-        p.isPremiumTrial = isTrial;
+        p.isPremiumTrial = isTrial || useFreeReward;
         
         // Create admin notification if NOT admin enabling it
         const currentUserEmail = auth.currentUser?.email?.toLowerCase();
@@ -2131,16 +2243,21 @@ window.confirmPremiumEnable = async function(vehicleId) {
         if (!TierService.isMasterAdmin(currentUserEmail)) {
             // Vehicle owner enabled premium - notify admin
             try {
+                const notificationMessage = useFreeReward 
+                    ? `${p.title} used Level 5 reward (free 7-day premium)`
+                    : `${p.title} enabled premium${isTrial ? ' (trial)' : ' - collect $10k/week'}`;
+                    
                 await db.collection('adminNotifications').add({
-                    type: 'premium_request',
+                    type: useFreeReward ? 'premium_reward_used' : 'premium_request',
                     vehicleId: vehicleId,
                     vehicleTitle: p.title,
                     ownerEmail: ownerEmail,
                     ownerDisplayName: ownerDisplayName,
                     isTrial: isTrial,
+                    isLevel5Reward: useFreeReward,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     dismissed: false,
-                    message: `${p.title} enabled premium${isTrial ? ' (trial)' : ' - collect $10k/week'}`
+                    message: notificationMessage
                 });
             } catch (e) {
                 console.error('[Premium] Failed to create admin notification:', e);
@@ -2156,7 +2273,9 @@ window.confirmPremiumEnable = async function(vehicleId) {
             renderVehicles(state.filteredVehicles);
         }
         
-        if (isTrial) {
+        if (useFreeReward) {
+            showToast('🎁 Level 5 Reward Used! Premium active for 7 days!', 'success');
+        } else if (isTrial) {
             showToast('🎁 Premium Trial Activated!', 'success');
         } else {
             showToast('👑 Premium Listing Activated!', 'success');

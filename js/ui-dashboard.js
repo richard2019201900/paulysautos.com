@@ -1095,11 +1095,14 @@ async function renderVehicles(list) {
                 </div>
                 <div class="flex items-center gap-3 text-sm text-gray-400 mb-2">
                     <span class="flex items-center gap-1">
-                        <span>🚗</span>
+                        <span class="text-gray-500 text-xs">Model:</span>
                         <span class="text-gray-300">${sanitize(p.title)}</span>
                     </span>
                     <span class="text-gray-600">|</span>
-                    <span class="text-amber-400 font-medium">${VehicleDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span>
+                    <span class="flex items-center gap-1">
+                        <span class="text-gray-500 text-xs">Plate:</span>
+                        <span class="text-amber-400 font-medium">${VehicleDataService.getValue(p.id, 'plate', p.plate) || 'N/A'}</span>
+                    </span>
                 </div>
                 <p id="owner-${p.id}" class="text-xs text-blue-400 mb-3 font-semibold">👤 Owner: Loading...</p>
                 
@@ -1126,7 +1129,16 @@ async function renderVehicles(list) {
                     </div>
                 </div>
                 
-                <!-- Price Display - Enhanced -->
+                <!-- Price Display - Enhanced (show sold price for sold vehicles) -->
+                ${isSold && (VehicleDataService.getValue(propId, 'soldPrice', p.soldPrice) || p.soldPrice) ? `
+                <div class="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-purple-500/30 rounded-xl p-3 mb-4 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5"></div>
+                    <div class="relative">
+                        <div class="text-purple-300 text-xs uppercase tracking-wider mb-1">Sold For</div>
+                        <div class="text-purple-400 text-2xl md:text-3xl font-black tracking-tight">$${(VehicleDataService.getValue(propId, 'soldPrice', p.soldPrice) || 0).toLocaleString()}</div>
+                    </div>
+                </div>
+                ` : `
                 <div class="bg-gradient-to-r from-green-900/40 to-emerald-900/40 border border-green-500/30 rounded-xl p-3 mb-4 text-center relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5"></div>
                     <div class="relative">
@@ -1134,6 +1146,7 @@ async function renderVehicles(list) {
                         <div class="text-green-500/60 text-[10px] uppercase tracking-wider mt-1">+$25k LUX processing fee</div>
                     </div>
                 </div>
+                `}
                 
                 <!-- Action Buttons - Stacked -->
                 <div class="space-y-2">

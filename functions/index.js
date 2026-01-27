@@ -335,3 +335,76 @@ function getLevelIcon(level) {
     };
     return icons[level] || '🚗';
 }
+
+// ==================== PREMIUM EXPIRY ====================
+/**
+ * Scheduled function to expire premium listings
+ * Runs daily at midnight PT to check for expired Level 5 reward premiums
+ */
+exports.expirePremiumListings = functions.pubsub
+    .schedule('0 0 * * *')
+    .timeZone('America/Los_Angeles')
+    .onRun(async (context) => {
+        console.log('[Premium Expiry] Running scheduled premium expiry check...');
+        
+        const now = new Date();
+        let expiredCount = 0;
+        
+        try {
+            // Query all vehicles with premium expiry dates
+            const vehiclesSnapshot = await db.collection('vehicles')
+                .where('isPremium', '==', true)
+                .where('premiumExpiryDate', '!=', null)
+                .get();
+            
+            for (const doc of vehiclesSnapshot.docs) {
+                const vehicle = doc.data();
+                const expiryDate = new Date(vehicle.premiumExpiryDate);
+                
+                if (expiryDate <= now) {
+                    // Premium has expired - disable it
+                    await doc.ref.update({
+                        isPremium: false,
+                        isPremiumTrial: false,
+                        premiumExpired: true,
+                        premiumExpiredAt: now.toISOString(),
+                        premiumExpiryDate: admin.firestore.FieldValue.delete()
+                    });
+                    
+                    expiredCount++;
+                    console.log(`[Premium Expiry] Expired premium for vehicle ${doc.id}: ${vehicle.title || 'Unknown'}`);
+                    
+                    // Create notification for owner about expiry and renewal option
+                    if (vehicle.ownerEmail) {
+                        try {
+                            const userSnapshot = await db.collection('users')
+                                .where('email', '==', vehicle.ownerEmail.toLowerCase())
+                                .limit(1)
+                                .get();
+                            
+                            if (!userSnapshot.empty) {
+                                const userDoc = userSnapshot.docs[0];
+                                await db.collection('userNotifications').add({
+                                    userId: userDoc.id,
+                                    type: 'premium_expired',
+                                    vehicleId: doc.id,
+                                    vehicleTitle: vehicle.title || 'Your vehicle',
+                                    message: `Your free premium listing for "${vehicle.title}" has expired. Want to keep selling faster? Renew premium for just $10k/week!`,
+                                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                                    read: false
+                                });
+                            }
+                        } catch (notifError) {
+                            console.error('[Premium Expiry] Error creating notification:', notifError);
+                        }
+                    }
+                }
+            }
+            
+            console.log(`[Premium Expiry] Completed. Expired ${expiredCount} premium listings.`);
+            return null;
+        } catch (error) {
+            console.error('[Premium Expiry] Error:', error);
+            throw error;
+        }
+    });

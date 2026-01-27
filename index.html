@@ -221,7 +221,7 @@
             </div>
             <div class="p-6">
                 <p class="text-white font-semibold mb-4">
-                    PaulysAutos.com is a <span class="text-amber-400">player-run</span> vehicle marketplace operated by Pauly.
+                    PaulysAutos.com is a <span class="text-amber-400">player-run</span> vehicle marketplace created and fully managed by <span class="text-amber-400">Pauly Amato</span>.
                 </p>
                 
                 <div class="bg-red-900/30 border border-red-500/50 rounded-xl p-4 mb-4">
@@ -483,7 +483,7 @@
                 <!-- Description (Main Display Title) -->
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2">Description *</label>
-                    <input type="text" id="newListingDescription" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. OG Bacalar, Fully Upgraded Luxury Convertible">
+                    <input type="text" id="newListingDescription" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="e.g. OG Dodge RAM TRX Donk">
                 </div>
                 
                 <!-- Model with Benny's tip -->
@@ -493,7 +493,7 @@
                         <span class="relative group">
                             <span class="text-amber-400 cursor-help text-sm">💡</span>
                             <span class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-amber-300 text-xs px-3 py-2 rounded-lg shadow-lg border border-amber-500/50 w-64 z-50">
-                                Copy & paste from Benny's app for best results! The model name helps buyers find your vehicle.
+                                Copy the model name directly from the Bennys app for best results!
                             </span>
                         </span>
                     </label>
@@ -597,13 +597,12 @@
                         <div class="flex items-start gap-2">
                             <span class="text-lg">💡</span>
                             <div class="text-xs">
-                                <p class="text-cyan-300 font-bold">Recommended: Use a Free Image Host</p>
-                                <p class="text-gray-300">Upload to <a href="https://fivemanage.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">fivemanage.com</a> (free, made for FiveM) and paste the link.</p>
-                                <p class="text-yellow-400 mt-1">⚠️ Discord links expire! Local files won't work.</p>
+                                <p class="text-cyan-300 font-bold">Recommended: Use an Image Hosting Service</p>
+                                <p class="text-gray-300">It's highly recommended you use an image hosting service such as <a href="https://fivemanage.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">Fivemanage</a> or <a href="https://gyazo.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">Gyazo</a> and paste the direct link.</p>
                             </div>
                         </div>
                     </div>
-                    <textarea id="newListingImages" rows="3" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="https://fivemanage.com/your-image.jpg&#10;https://example.com/image2.jpg"></textarea>
+                    <textarea id="newListingImages" rows="3" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-amber-500 transition" placeholder="https://fivemanage.com/your-image.png&#10;https://example.com/image2.png"></textarea>
                     <p class="text-gray-500 text-xs mt-1">Add image URLs for your vehicle photos</p>
                 </div>
                 
@@ -628,7 +627,19 @@
                 <div class="text-6xl mb-4">⚠️</div>
                 <h2 class="text-2xl font-black text-red-400 mb-4">Delete Vehicle?</h2>
                 <p class="text-gray-300 mb-2">Are you sure you want to delete:</p>
-                <p id="deleteVehicleName" class="text-white font-bold text-lg mb-6"></p>
+                <p id="deleteVehicleName" class="text-white font-bold text-lg mb-4"></p>
+                
+                <!-- Sale Warning -->
+                <div class="bg-amber-900/40 border border-amber-500/50 rounded-xl p-4 mb-4 text-left">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">💡</span>
+                        <div>
+                            <p class="text-amber-300 font-bold text-sm">Did you sell this vehicle?</p>
+                            <p class="text-amber-200/80 text-xs mt-1">Don't delete it! Use the <span class="text-green-400 font-bold">'Log Sale'</span> button instead so you continue ranking up on the leaderboard and earning free rewards.</p>
+                        </div>
+                    </div>
+                </div>
+                
                 <p class="text-gray-400 text-sm mb-6">This action cannot be undone. The vehicle will be permanently removed from your inventory and all listings.</p>
                 
                 <div class="flex gap-4">
@@ -727,11 +738,12 @@
                 <div id="levelUpNewLevel" class="text-5xl font-black text-white mb-2">Level 5</div>
                 <div id="levelUpNewTitle" class="text-xl text-amber-400 font-bold mb-6">Real Estate Tycoon</div>
                 
-                <div id="levelUpReward" class="hidden bg-amber-600/30 rounded-xl p-4 mb-6 border border-amber-500/50">
-                    <div class="flex items-center justify-center gap-2 text-white font-bold">
+                <div id="levelUpReward" class="hidden bg-gradient-to-r from-amber-900/50 to-yellow-900/50 rounded-xl p-4 mb-6 border border-amber-500/50">
+                    <div class="flex items-center justify-center gap-2 text-white font-bold mb-2">
                         <span class="text-2xl">🎁</span>
-                        <span>You unlocked a Free Premium Week!</span>
+                        <span>You unlocked a FREE Premium Week!</span>
                     </div>
+                    <p class="text-amber-200/80 text-sm text-center">Use it on any vehicle to feature it at the TOP of all listings for 7 days!</p>
                 </div>
                 
                 <button onclick="closeLevelUpModal()" class="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-lg">
@@ -775,16 +787,15 @@
                     <div class="flex items-start gap-3">
                         <span class="text-2xl">💡</span>
                         <div class="text-sm">
-                            <p class="text-cyan-300 font-bold mb-1">Recommended: Use a Free Image Host</p>
-                            <p class="text-gray-300">For best results, upload your images to <a href="https://fivemanage.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">fivemanage.com</a> (free, made for FiveM) and paste the direct link here.</p>
-                            <p class="text-yellow-400 mt-2 text-xs">⚠️ Discord links expire! Local file paths won't work for other users.</p>
+                            <p class="text-cyan-300 font-bold mb-1">Recommended: Use an Image Hosting Service</p>
+                            <p class="text-gray-300">It's highly recommended you use an image hosting service such as <a href="https://fivemanage.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">Fivemanage</a> or <a href="https://gyazo.com" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">Gyazo</a> and paste the direct link.</p>
                         </div>
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-gray-300 font-semibold mb-2">Image URLs (one per line)</label>
-                    <textarea id="newImageUrls" rows="5" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-green-500 transition" placeholder="https://fivemanage.com/your-image.jpg&#10;https://example.com/image2.jpg&#10;https://example.com/image3.jpg"></textarea>
+                    <textarea id="newImageUrls" rows="5" class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl bg-gray-700 text-white focus:ring-2 focus:ring-green-500 transition" placeholder="https://fivemanage.com/your-image.png&#10;https://example.com/image2.png&#10;https://example.com/image3.png"></textarea>
                     <p class="text-gray-500 text-xs mt-1">Paste multiple image URLs, one per line</p>
                 </div>
                 
@@ -1878,7 +1889,6 @@
                             <span>📊</span> Reports
                             <span class="bg-yellow-300 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">ELITE</span>
                         </button>
-                        <span class="text-sm text-amber-400 font-medium">💡 Click any value to edit</span>
                     </div>
                 </div>
                 <div class="overflow-x-auto rounded-xl border border-gray-700">
