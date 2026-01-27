@@ -71,6 +71,116 @@ exports.getLeaderboard = functions.https.onCall(async (data, context) => {
     }
 });
 
+// ==================== OWNER CONTACT ====================
+/**
+ * Get owner contact phone for a vehicle
+ * This function can be called by anyone (no auth required) to get the seller's phone
+ * It securely looks up the owner's phone from their user profile using ownerEmail
+ * 
+ * Called from client via: functions.httpsCallable('getOwnerContact')
+ * 
+ * @param {number|string} vehicleId - The vehicle ID to look up
+ * @returns {object} { success: boolean, phone?: string, ownerName?: string, error?: string }
+ */
+exports.getOwnerContact = functions.https.onCall(async (data, context) => {
+    const vehicleId = data.vehicleId;
+    
+    if (!vehicleId) {
+        return { success: false, error: 'Vehicle ID is required' };
+    }
+    
+    try {
+        // Get the vehicle document from settings/properties
+        const propsDoc = await db.collection('settings').doc('properties').get();
+        
+        if (!propsDoc.exists) {
+            console.error('[getOwnerContact] Properties document not found');
+            return { success: false, error: 'Vehicle data not found' };
+        }
+        
+        const vehicles = propsDoc.data();
+        const vehicle = vehicles[vehicleId] || vehicles[String(vehicleId)];
+        
+        if (!vehicle) {
+            console.error('[getOwnerContact] Vehicle not found:', vehicleId);
+            return { success: false, error: 'Vehicle not found' };
+        }
+        
+        // Check for agents first (they take priority)
+        if (vehicle.agents && Array.isArray(vehicle.agents) && vehicle.agents.length > 0) {
+            // Get agent contact info
+            const agentContacts = [];
+            for (const agentEmail of vehicle.agents) {
+                try {
+                    const agentSnapshot = await db.collection('users')
+                        .where('email', '==', agentEmail.toLowerCase())
+                        .limit(1)
+                        .get();
+                    
+                    if (!agentSnapshot.empty) {
+                        const agentData = agentSnapshot.docs[0].data();
+                        if (agentData.phone) {
+                            agentContacts.push({
+                                phone: agentData.phone,
+                                name: agentData.displayName || agentData.username || agentEmail.split('@')[0]
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[getOwnerContact] Error fetching agent:', agentEmail, e);
+                }
+            }
+            
+            if (agentContacts.length > 0) {
+                return { 
+                    success: true, 
+                    phone: agentContacts[0].phone,
+                    ownerName: agentContacts[0].name,
+                    agents: agentContacts,
+                    isAgent: true
+                };
+            }
+        }
+        
+        // No agents - get owner contact
+        const ownerEmail = vehicle.ownerEmail;
+        
+        if (!ownerEmail) {
+            console.warn('[getOwnerContact] No owner email for vehicle:', vehicleId);
+            return { success: false, error: 'Owner email not configured' };
+        }
+        
+        // Look up the owner's user document
+        const userSnapshot = await db.collection('users')
+            .where('email', '==', ownerEmail.toLowerCase())
+            .limit(1)
+            .get();
+        
+        if (userSnapshot.empty) {
+            console.warn('[getOwnerContact] Owner user doc not found:', ownerEmail);
+            return { success: false, error: 'Owner profile not found' };
+        }
+        
+        const userData = userSnapshot.docs[0].data();
+        
+        if (!userData.phone) {
+            console.warn('[getOwnerContact] Owner has no phone:', ownerEmail);
+            return { success: false, error: 'Owner phone not configured' };
+        }
+        
+        return {
+            success: true,
+            phone: userData.phone,
+            ownerName: userData.displayName || userData.username || ownerEmail.split('@')[0],
+            isAgent: false
+        };
+        
+    } catch (error) {
+        console.error('[getOwnerContact] Error:', error);
+        return { success: false, error: 'Failed to fetch contact info' };
+    }
+});
+
 // ==================== GAMIFICATION MIGRATION ====================
 /**
  * Migrate all users to gamification system

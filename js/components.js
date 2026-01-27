@@ -127,7 +127,6 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
     // For vehicles, type is always 'purchase' (no financing)
     const colors = ['amber', 'orange'];
     const defaultPhone = '2057028233'; // Pauly's number as fallback
-    let usedFallback = false; // Track if we had to use fallback
     
     const modalTitle = $('modalTitle');
     const modalVehicleName = $('modalVehicleName');
@@ -160,123 +159,109 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
         `;
     }
     
-    // Reset to default phone first
+    // Reset to default phone first (will be replaced by Cloud Function result)
     modalPhone.value = defaultPhone;
-    usedFallback = true; // Assume fallback until we find a better contact
     
-    // Check for assigned agents first
-    let agentContacts = [];
-    if (typeof getAgentContactsForProperty === 'function') {
-        try {
-            agentContacts = await getAgentContactsForProperty(vehicleId);
-        } catch (e) {
-        }
-    }
+    // Show loading state in accent area
+    accent.innerHTML = `
+        <div class="text-gray-300 text-sm">
+            <span class="animate-pulse">Loading seller contact...</span>
+        </div>
+    `;
     
-    // If agents are assigned, show their contact info
-    if (agentContacts.length > 0) {
-        usedFallback = false;
-        if (agentContacts.length === 1) {
-            // Single agent
-            modalPhone.value = agentContacts[0].phone.replace(/\D/g, '');
-        } else {
-            // Multiple agents - show all phones
-            const phonesHtml = agentContacts.map(a => 
-                `<div class="bg-gray-700 rounded-lg p-2 text-center">
-                    <div class="text-white font-bold">${a.username}</div>
-                    <div class="text-cyan-400 font-mono text-lg">${a.phone}</div>
-                </div>`
-            ).join('');
+    // Open modal immediately (phone will update when Cloud Function returns)
+    openModal('contactModal');
+    
+    // Use Cloud Function to securely get owner contact (works for all users)
+    try {
+        if (typeof firebase !== 'undefined' && firebase.functions) {
+            const getOwnerContact = firebase.functions().httpsCallable('getOwnerContact');
+            const result = await getOwnerContact({ vehicleId: vehicleId });
             
-            // Update the accent section to show multiple contacts
-            accent.innerHTML = `
-                <div class="text-gray-300 text-sm mb-3">
-                    <strong>🏢 Multiple Sales Agents</strong><br>
-                    This vehicle has ${agentContacts.length} agents. Text <strong>ALL</strong> of them for the quickest response!
-                </div>
-                <div class="grid grid-cols-${Math.min(agentContacts.length, 3)} gap-2">
-                    ${phonesHtml}
-                </div>
-            `;
-            
-            // Set the first agent's phone in the input
-            modalPhone.value = agentContacts[0].phone.replace(/\D/g, '');
-        }
-    } else {
-        // No agents - use owner contact (existing behavior)
-        try {
-            if (vehicleId && typeof db !== 'undefined') {
-                // Get vehicle data to find owner contact info
-                const propsDoc = await db.collection('settings').doc('properties').get();
-                if (propsDoc.exists) {
-                    const vehicles = propsDoc.data();
-                    const vehicle = vehicles[vehicleId] || vehicles[String(vehicleId)];
+            if (result.data.success) {
+                const phone = result.data.phone.replace(/\D/g, '');
+                const ownerName = result.data.ownerName || 'Seller';
+                
+                modalPhone.value = phone;
+                
+                // Check if multiple agents
+                if (result.data.agents && result.data.agents.length > 1) {
+                    const phonesHtml = result.data.agents.map(a => 
+                        `<div class="bg-gray-700 rounded-lg p-2 text-center">
+                            <div class="text-white font-bold">${a.name}</div>
+                            <div class="text-cyan-400 font-mono text-lg">${a.phone}</div>
+                        </div>`
+                    ).join('');
                     
-                    if (vehicle) {
-                        // Check ownerContactPhone first (synced from user profile)
-                        if (vehicle.ownerContactPhone) {
-                            modalPhone.value = vehicle.ownerContactPhone.replace(/\D/g, '');
-                            usedFallback = false;
-                        }
-                        // Then check legacy ownerPhone field
-                        else if (vehicle.ownerPhone) {
-                            modalPhone.value = vehicle.ownerPhone.replace(/\D/g, '');
-                            usedFallback = false;
-                        }
-                        // Finally try user doc (may fail for non-admins due to permissions)
-                        else if (vehicle.ownerEmail) {
-                            try {
-                                const usersSnapshot = await db.collection('users')
-                                    .where('email', '==', vehicle.ownerEmail.toLowerCase())
-                                    .limit(1)
-                                    .get();
-                                
-                                if (!usersSnapshot.empty) {
-                                    const userData = usersSnapshot.docs[0].data();
-                                    if (userData.phone) {
-                                        modalPhone.value = userData.phone.replace(/\D/g, '');
-                                        usedFallback = false;
-                                    }
-                                }
-                            } catch (permError) {
-                                // Permission denied - expected for non-admins
-                            }
-                        }
+                    accent.innerHTML = `
+                        <div class="text-gray-300 text-sm mb-3">
+                            <strong>🏢 Multiple Sales Agents</strong><br>
+                            This vehicle has ${result.data.agents.length} agents. Text <strong>ALL</strong> of them for the quickest response!
+                        </div>
+                        <div class="grid grid-cols-${Math.min(result.data.agents.length, 3)} gap-2">
+                            ${phonesHtml}
+                        </div>
+                    `;
+                } else {
+                    // Single contact (agent or owner)
+                    const contactLabel = result.data.isAgent ? '🏢 Sales Agent' : '👤 Seller';
+                    accent.innerHTML = `
+                        <div class="text-gray-300 text-sm">
+                            <strong>${contactLabel}:</strong> ${ownerName}
+                        </div>
+                    `;
+                }
+                
+                console.log('[Contact] Successfully loaded contact for vehicle', vehicleId);
+            } else {
+                // Cloud Function returned an error - use fallback
+                console.warn('[Contact] Cloud Function error:', result.data.error);
+                accent.innerHTML = `
+                    <div class="text-gray-300 text-sm">
+                        <strong>👤 Contact:</strong> Pauly Amato (Site Owner)
+                    </div>
+                    <div class="text-yellow-400 text-xs mt-1">
+                        ⚠️ Seller contact unavailable - routed to site owner
+                    </div>
+                `;
+                
+                // Create admin notification about missing contact
+                if (typeof db !== 'undefined') {
+                    try {
+                        await db.collection('adminNotifications').add({
+                            type: 'missing_contact',
+                            vehicleId: vehicleId,
+                            vehicleTitle: vehicleTitle,
+                            message: `Contact lookup failed: ${result.data.error}`,
+                            timestamp: new Date().toISOString(),
+                            resolved: false
+                        });
+                    } catch (e) {
+                        // Non-critical
                     }
                 }
             }
-        } catch (error) {
-            console.warn('[Contact] Could not fetch owner phone, using default:', error);
+        } else {
+            // Firebase functions not available - shouldn't happen in production
+            console.error('[Contact] Firebase functions not available');
+            accent.innerHTML = `
+                <div class="text-gray-300 text-sm">
+                    <strong>👤 Contact:</strong> Pauly Amato
+                </div>
+            `;
         }
+    } catch (error) {
+        console.error('[Contact] Error calling getOwnerContact:', error);
+        // Keep default phone, update accent to show fallback
+        accent.innerHTML = `
+            <div class="text-gray-300 text-sm">
+                <strong>👤 Contact:</strong> Pauly Amato (Site Owner)
+            </div>
+            <div class="text-yellow-400 text-xs mt-1">
+                ⚠️ Could not load seller contact
+            </div>
+        `;
     }
-    
-    // If we used the fallback, notify admin via activity log
-    if (usedFallback) {
-        console.warn('[Contact] FALLBACK USED: Vehicle', vehicleId, '(' + vehicleTitle + ') - Missing owner contact info');
-        
-        // Log to activity log if admin is logged in
-        if (typeof logActivity === 'function' && auth.currentUser) {
-            logActivity('contact_fallback', 'Fallback phone used for: ' + vehicleTitle + ' (ID: ' + vehicleId + ') - Owner contact info missing');
-        }
-        
-        // Also create an admin notification in Firestore
-        try {
-            if (typeof db !== 'undefined') {
-                await db.collection('adminNotifications').add({
-                    type: 'missing_contact',
-                    vehicleId: vehicleId,
-                    vehicleTitle: vehicleTitle,
-                    message: 'Vehicle is using fallback contact number - owner phone/agent not configured',
-                    timestamp: new Date().toISOString(),
-                    resolved: false
-                });
-            }
-        } catch (notifError) {
-            // Non-critical, just log it
-        }
-    }
-    
-    openModal('contactModal');
 };
 
 window.openRegisterContactModal = function() {
