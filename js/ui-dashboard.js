@@ -1143,7 +1143,6 @@ async function renderVehicles(list) {
                     <div class="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5"></div>
                     <div class="relative">
                         <div class="text-green-400 text-2xl md:text-3xl font-black tracking-tight">$${(VehicleDataService.getValue(p.id, 'buyPrice', p.buyPrice) || 0).toLocaleString()}</div>
-                        <div class="text-green-500/60 text-[10px] uppercase tracking-wider mt-1">+$25k LUX processing fee</div>
                     </div>
                 </div>
                 `}

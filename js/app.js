@@ -403,7 +403,6 @@ window.viewVehicle = function(id, forcePublic = false) {
                         html += '<div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 border-2 border-amber-500 rounded-xl p-6 text-center max-w-md w-full">';
                         html += '<div class="text-amber-400 text-sm font-bold mb-2">🚗 VEHICLE PRICE</div>';
                         html += '<div class="text-amber-400 text-3xl md:text-4xl font-black">$' + buyPrice.toLocaleString() + '</div>';
-                        html += '<div class="text-amber-400/60 text-sm mt-2">+$25k LUX processing fee (not charged by PaulysAutos)</div>';
                         html += '</div>';
                     } else {
                         html += '<div class="text-gray-400 text-center p-4">Price not set</div>';
@@ -965,82 +964,17 @@ function renderVehicleStatsContent(id) {
                     <div class="flex items-center gap-3 mb-4">
                         <span class="text-2xl">💰</span>
                         <div>
-                            <h4 class="text-white font-bold text-lg">Payment Breakdown</h4>
-                            <p class="text-gray-400 text-sm">LUX app max transaction: $750,000</p>
+                            <h4 class="text-white font-bold text-lg">Vehicle Price</h4>
+                            <p class="text-gray-400 text-sm">Listed sale price</p>
                         </div>
                     </div>
                     
-                    ${(() => {
-                        const LUX_MAX = 750000;
-                        const CITY_FEE = 25000;
-                        const totalWithFee = buyPrice + CITY_FEE;
-                        const needsDownPayment = buyPrice > LUX_MAX;
-                        const downPayment = needsDownPayment ? buyPrice - LUX_MAX : 0;
-                        const luxTransaction = needsDownPayment ? LUX_MAX : buyPrice;
-                        
-                        if (needsDownPayment) {
-                            return `
-                            <div class="bg-amber-900/30 border border-amber-500/50 rounded-lg p-4 mb-4">
-                                <div class="flex items-start gap-3 mb-3">
-                                    <span class="text-amber-400 text-xl">⚠️</span>
-                                    <div>
-                                        <p class="text-amber-300 font-bold">Down Payment Required</p>
-                                        <p class="text-amber-200/80 text-sm">This vehicle exceeds the $750k LUX transaction limit</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div class="bg-gray-700/50 rounded-lg p-4 text-center">
-                                    <div class="text-gray-400 text-sm mb-1">Vehicle Price</div>
-                                    <div class="text-white text-2xl font-black">$${buyPrice.toLocaleString()}</div>
-                                </div>
-                                <div class="bg-red-900/50 border border-red-500/50 rounded-lg p-4 text-center">
-                                    <div class="text-red-300 text-sm mb-1 font-bold">💵 DOWN PAYMENT</div>
-                                    <div class="text-red-400 text-2xl font-black">$${downPayment.toLocaleString()}</div>
-                                    <div class="text-red-300/70 text-xs mt-1">Cash before LUX transfer</div>
-                                </div>
-                                <div class="bg-green-900/50 border border-green-500/50 rounded-lg p-4 text-center">
-                                    <div class="text-green-300 text-sm mb-1">LUX Transaction</div>
-                                    <div class="text-green-400 text-2xl font-black">$${luxTransaction.toLocaleString()}</div>
-                                    <div class="text-green-300/70 text-xs mt-1">After down payment received</div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gray-700/30 rounded-lg p-3 text-center">
-                                <span class="text-gray-400 text-sm">+ City Sales Fee: </span>
-                                <span class="text-amber-400 font-bold">$${CITY_FEE.toLocaleString()}</span>
-                                <span class="text-gray-500 text-sm"> (paid by buyer at LUX)</span>
-                            </div>
-                            `;
-                        } else {
-                            return `
-                            <div class="bg-green-900/30 border border-green-500/50 rounded-lg p-4 mb-4">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-green-400 text-xl">✅</span>
-                                    <div>
-                                        <p class="text-green-300 font-bold">No Down Payment Needed</p>
-                                        <p class="text-green-200/80 text-sm">This vehicle can be sold in a single LUX transaction</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div class="bg-green-900/50 border border-green-500/50 rounded-lg p-4 text-center">
-                                    <div class="text-green-300 text-sm mb-1">LUX Transaction</div>
-                                    <div class="text-green-400 text-2xl font-black">$${buyPrice.toLocaleString()}</div>
-                                </div>
-                                <div class="bg-gray-700/50 rounded-lg p-4 text-center">
-                                    <div class="text-gray-400 text-sm mb-1">+ City Sales Fee</div>
-                                    <div class="text-amber-400 text-2xl font-black">$${CITY_FEE.toLocaleString()}</div>
-                                </div>
-                            </div>
-                            `;
-                        }
-                    })()}
+                    <div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 border-2 border-amber-500 rounded-xl p-6 text-center">
+                        <div class="text-amber-400 text-3xl md:text-4xl font-black">$${buyPrice.toLocaleString()}</div>
+                    </div>
                 </div>
                 
-                <!-- Trust Warning Banner -->
+                <!-- Trust Warning Banner (for high-value vehicles requiring down payment) -->
                 ${buyPrice > 750000 ? `
                 <div class="bg-gradient-to-r from-red-900/60 to-orange-900/60 border-2 border-red-500 rounded-xl p-5 mb-4">
                     <div class="flex items-start gap-4">
@@ -1050,7 +984,7 @@ function renderVehicleStatsContent(id) {
                             <ul class="text-red-200/90 text-sm space-y-2">
                                 <li>• <strong>VERIFY BUYER IDENTITY</strong> - Meet in person, confirm their character name matches their ID</li>
                                 <li>• <strong>GENERATE A CONTRACT</strong> - Always create a written agreement before accepting any cash</li>
-                                <li>• <strong>SCREENSHOT EVERYTHING</strong> - Document the cash handoff, contract signing, and LUX transfer</li>
+                                <li>• <strong>DOCUMENT EVERYTHING</strong> - Keep records of all cash handoffs and contract signings</li>
                                 <li>• <strong>USE PUBLIC LOCATIONS</strong> - Meet at Legion Square, MRPD, or other populated areas</li>
                                 <li>• <strong>BRING WITNESSES</strong> - Have a trusted friend present during the transaction</li>
                             </ul>
@@ -1089,7 +1023,7 @@ function renderVehicleStatsContent(id) {
                                     </div>
                                 </div>
                                 <div class="bg-gray-800/50 rounded-lg p-3">
-                                    <div class="text-gray-400 text-xs">LUX Remaining</div>
+                                    <div class="text-gray-400 text-xs">Final Transfer</div>
                                     <div class="text-cyan-400 font-bold">$${(pendingSale.luxAmount || 0).toLocaleString()}</div>
                                 </div>
                                 <div class="bg-gray-800/50 rounded-lg p-3">
@@ -1180,7 +1114,6 @@ function renderVehicleStatsContent(id) {
                     <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div id="value-buyPrice-${id}" class="text-3xl font-black">$${buyPrice > 0 ? buyPrice.toLocaleString() : '0'}</div>
-                <div class="text-xs text-amber-200 mt-2 opacity-80">+$25k LUX processing fee</div>
                 <div class="text-xs mt-1 opacity-70">Click to edit</div>
             </div>
             
@@ -5009,7 +4942,7 @@ window.closeSaleCompletionMessageModal = function() {
 // VEHICLE FINANCING CONTRACT WIZARD
 // ============================================================================
 // For vehicles over $750k LUX limit - buyer pays down payment in weekly installments,
-// then owner lists remaining amount (up to $750k) on LUX for final transfer.
+// then owner lists remaining amount (up to $750k) at the dealership for final transfer.
 
 const LUX_MAX_LIMIT = 750000;
 
@@ -5027,7 +4960,7 @@ window.financingWizardState = {
     financial: {
         salePrice: 0,
         downPayment: 0, // Amount over LUX limit that must be paid first
-        luxAmount: 0,   // Amount to be paid on LUX (up to $750k)
+        luxAmount: 0,   // Amount to be paid at the dealership (up to $750k)
         termWeeks: 4,
         weeklyPayment: 0
     }
@@ -5090,7 +5023,7 @@ window.showRentToOwnWizard = async function(vehicleId) {
     
     // Calculate financing amounts
     const downPayment = buyPrice - LUX_MAX_LIMIT; // Amount over $750k
-    const luxAmount = LUX_MAX_LIMIT; // Will be transferred on LUX
+    const luxAmount = LUX_MAX_LIMIT; // Will be transferred at the dealership
     const defaultTermWeeks = 4;
     const weeklyPayment = Math.ceil(downPayment / defaultTermWeeks);
     
@@ -5140,11 +5073,11 @@ function showFinancingNotNeeded(price) {
                     <div class="text-6xl mb-4">🎉</div>
                     <h4 class="text-2xl font-bold text-white mb-2">Direct Sale Available!</h4>
                     <p class="text-gray-400 mb-4">
-                        This vehicle is priced at <span class="text-green-400 font-bold">$${price.toLocaleString()}</span>, which is under the LUX transfer limit of $750,000.
+                        This vehicle is priced at <span class="text-green-400 font-bold">$${price.toLocaleString()}</span>, which is under the transfer limit of $750,000.
                     </p>
                     <div class="bg-green-900/30 border border-green-500/30 rounded-xl p-4 mb-6">
                         <p class="text-green-300 text-sm">
-                            <strong>No financing needed!</strong> The buyer can purchase this vehicle directly through LUX without any down payment arrangement.
+                            <strong>No financing needed!</strong> The buyer can purchase this vehicle directly at the dealership without any down payment arrangement.
                         </p>
                     </div>
                     <p class="text-gray-500 text-sm mb-4">
@@ -5317,7 +5250,7 @@ function renderFinancingWizardStep(step) {
                             <span class="text-white font-bold text-lg">$${f.salePrice.toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between border-t border-amber-500/30 pt-2">
-                            <span class="text-gray-400">LUX Transfer Limit:</span>
+                            <span class="text-gray-400">Transfer Limit:</span>
                             <span class="text-gray-400">$${LUX_MAX_LIMIT.toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between">
@@ -5334,8 +5267,8 @@ function renderFinancingWizardStep(step) {
                     </h4>
                     <ol class="text-gray-300 text-sm space-y-2">
                         <li class="flex gap-2"><span class="text-blue-400 font-bold">1.</span> Buyer pays <span class="text-red-400 font-bold">$${f.downPayment.toLocaleString()}</span> to seller in weekly installments</li>
-                        <li class="flex gap-2"><span class="text-blue-400 font-bold">2.</span> Once fully paid, seller lists vehicle on LUX</li>
-                        <li class="flex gap-2"><span class="text-blue-400 font-bold">3.</span> Buyer completes purchase on LUX for <span class="text-green-400 font-bold">$${f.luxAmount.toLocaleString()}</span></li>
+                        <li class="flex gap-2"><span class="text-blue-400 font-bold">2.</span> Once fully paid, seller lists vehicle at the dealership</li>
+                        <li class="flex gap-2"><span class="text-blue-400 font-bold">3.</span> Buyer completes purchase at the dealership for <span class="text-green-400 font-bold">$${f.luxAmount.toLocaleString()}</span></li>
                     </ol>
                 </div>
                 
@@ -5372,11 +5305,11 @@ function renderFinancingWizardStep(step) {
                     </div>
                 </div>
                 
-                <!-- Final LUX Transfer -->
+                <!-- Final Transfer -->
                 <div class="bg-gray-800 rounded-xl p-4">
                     <div class="flex justify-between items-center">
                         <div>
-                            <span class="text-gray-400 text-sm">Final LUX Transfer:</span>
+                            <span class="text-gray-400 text-sm">Final Transfer:</span>
                             <p class="text-gray-500 text-xs">After down payment is complete</p>
                         </div>
                         <span class="text-green-400 font-bold text-xl">$${f.luxAmount.toLocaleString()}</span>
@@ -5437,7 +5370,7 @@ function renderFinancingWizardStep(step) {
                             <span class="text-green-400 font-semibold">$${f.weeklyPayment.toLocaleString()}/week × ${f.termWeeks} weeks</span>
                         </div>
                         <div class="flex justify-between border-t border-gray-700 pt-2">
-                            <span class="text-green-400">Final LUX Transfer</span>
+                            <span class="text-green-400">Final Transfer</span>
                             <span class="text-green-400 font-bold">$${f.luxAmount.toLocaleString()}</span>
                         </div>
                     </div>
@@ -5459,7 +5392,7 @@ function renderFinancingWizardStep(step) {
                             `;
                         }).join('')}
                         <div class="flex justify-between items-center border-t border-green-500/30 pt-2 mt-2">
-                            <span class="text-green-400 font-bold">Then: LUX Transfer</span>
+                            <span class="text-green-400 font-bold">Then: Final Transfer</span>
                             <span class="text-green-400 font-bold">$${f.luxAmount.toLocaleString()}</span>
                         </div>
                     </div>
@@ -5744,7 +5677,7 @@ Item                              Amount
 Total Sale Price                  $${f.salePrice.toLocaleString()}
 Down Payment (to Seller)          $${f.downPayment.toLocaleString()}
 Weekly Payment × ${f.termWeeks} weeks         $${f.weeklyPayment.toLocaleString()}/week
-Final LUX Transfer                $${f.luxAmount.toLocaleString()}
+Final Transfer                $${f.luxAmount.toLocaleString()}
 
 PAYMENT SCHEDULE
 ────────────────────────────────────────────────────────────────
@@ -5754,15 +5687,15 @@ ${schedule.map(p =>
     `Week ${p.week}     ${p.date.padEnd(12)}     $${p.amount.toLocaleString().padStart(10)}     ${p.type}`
 ).join('\n')}
 
-THEN: LUX Transfer                           $${f.luxAmount.toLocaleString()}
+THEN: Final Transfer                           $${f.luxAmount.toLocaleString()}
 
 CONTRACT TERMS
 ────────────────────────────────────────────────────────────────
 • Buyer pays weekly installments to Seller until down payment complete
-• Seller will NOT list vehicle on LUX until all weekly payments received
-• Once down payment is complete, Seller lists vehicle on LUX for $${f.luxAmount.toLocaleString()}
-• Buyer completes final purchase through LUX
-• Vehicle ownership transfers ONLY after LUX transaction completes
+• Seller will NOT list vehicle at the dealership until all weekly payments received
+• Once down payment is complete, Seller lists vehicle at the dealership for $${f.luxAmount.toLocaleString()}
+• Buyer completes final purchase at the dealership
+• Vehicle ownership transfers ONLY after final transfer completes
 • All payments are non-refundable
 • PaulysAutos.com is NOT responsible for any disputes
 
@@ -5985,7 +5918,7 @@ window.downloadFinancingContractImage = async function() {
         ['Total Sale Price', `$${f.salePrice.toLocaleString()}`, '#ffffff'],
         ['Down Payment (to Seller)', `$${f.downPayment.toLocaleString()}`, redColor],
         [`Weekly Payment × ${f.termWeeks}`, `$${f.weeklyPayment.toLocaleString()}/week`, greenColor],
-        ['Final LUX Transfer', `$${f.luxAmount.toLocaleString()}`, greenColor]
+        ['Final Transfer', `$${f.luxAmount.toLocaleString()}`, greenColor]
     ];
     
     items.forEach(([label, value, color]) => {
@@ -6014,14 +5947,14 @@ window.downloadFinancingContractImage = async function() {
     
     ctx.font = '12px Arial';
     ctx.fillStyle = greenColor;
-    ctx.fillText(`Then: LUX Transfer → $${f.luxAmount.toLocaleString()}`, margin, y);
+    ctx.fillText(`Then: Final Transfer → $${f.luxAmount.toLocaleString()}`, margin, y);
     y += 20;
     
     // === KEY TERMS ===
     drawLine();
     y += 4;
     drawText('KEY TERMS', margin, 16, goldColor, 'Arial Black');
-    drawText('• Vehicle NOT listed on LUX until down payment complete', margin, 11, '#ffffff');
+    drawText('• Vehicle NOT listed at the dealership until down payment complete', margin, 11, '#ffffff');
     drawText('• Ownership transfers ONLY after LUX transaction', margin, 11, '#ffffff');
     drawText('• All payments non-refundable', margin, 11, '#ffffff');
     drawText('• PaulysAutos.com is NOT responsible for disputes', margin, 11, redColor);

@@ -203,25 +203,20 @@ window.loadUsername = async function() {
             
             // ============================================================
             // DISPLAY NAME HIERARCHY (single source of truth)
-            // Priority: displayName > firstName+lastName > email prefix
-            // NEVER use internal 'username' field for public display
+            // Priority: displayName > firstName+lastName > BLANK (for new users)
+            // NEVER auto-populate from email - user must enter their real name
             // ============================================================
             let displayNameToShow = '';
             
-            if (data.displayName && data.displayName.includes(' ')) {
-                // Best case: displayName looks like a real name
+            if (data.displayName && data.displayName.trim().length > 0) {
+                // User has already set a display name
                 displayNameToShow = data.displayName;
             } else if (data.firstName && data.lastName) {
                 displayNameToShow = data.firstName + ' ' + data.lastName;
-            } else if (data.displayName) {
-                // displayName exists but no space - use it anyway
-                displayNameToShow = data.displayName;
             } else if (data.firstName) {
                 displayNameToShow = data.firstName;
-            } else {
-                // Last resort: email prefix
-                displayNameToShow = user.email.split('@')[0];
             }
+            // If none of the above, leave blank - don't auto-populate from email
             
             // Populate the input field with the resolved display name
             const inputEl = $('ownerUsername');
@@ -433,15 +428,26 @@ window.saveUsername = async function() {
     // ============================================================
     // DISPLAY NAME SAVE LOGIC
     // This saves to 'displayName' field ONLY
-    // The 'username' field is internal and should not be used for display
+    // Auto-capitalizes first letter of each word
     // ============================================================
     
-    const newDisplayName = $('ownerUsername').value.trim();
+    let rawName = $('ownerUsername').value.trim();
+    
+    // Auto-capitalize first letter of each word
+    const newDisplayName = rawName
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    
+    // Update the input field with capitalized version
+    $('ownerUsername').value = newDisplayName;
+    
     const btn = $('saveUsernameBtn');
     const status = $('usernameStatus');
     
     if (!newDisplayName) {
-        status.textContent = 'Please enter a display name';
+        status.textContent = 'Please enter your first and last name';
         status.className = 'text-yellow-400 text-sm mt-3';
         showElement(status);
         return;

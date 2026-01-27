@@ -126,7 +126,6 @@ window.closeModal = function(id) {
 window.openContactModal = async function(type, vehicleTitle, vehicleId) {
     // For vehicles, type is always 'purchase' (no financing)
     const colors = ['amber', 'orange'];
-    const defaultPhone = '2057028233'; // Pauly's number as fallback
     
     const modalTitle = $('modalTitle');
     const modalVehicleName = $('modalVehicleName');
@@ -154,13 +153,14 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
         disclaimer.innerHTML = `
             <div class="text-xs text-gray-400 mt-2 space-y-1">
                 <div><strong>📋 Note:</strong> This website serves as a listing platform only. All transactions are between buyers and sellers.</div>
-                <div><strong>💰 Processing Fee:</strong> LUX charges an additional <span class="text-amber-400 font-bold">$25,000</span> when transferring vehicles. This fee is not charged by PaulysAutos.com.</div>
             </div>
         `;
     }
     
-    // Reset to default phone first (will be replaced by Cloud Function result)
-    modalPhone.value = defaultPhone;
+    // Show loading state - don't pre-populate with any phone number
+    modalPhone.value = '';
+    modalPhone.placeholder = 'Loading...';
+    modalPhone.disabled = true;
     
     // Show loading state in accent area
     accent.innerHTML = `
@@ -177,6 +177,10 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
         if (typeof firebase !== 'undefined' && firebase.functions) {
             const getOwnerContact = firebase.functions().httpsCallable('getOwnerContact');
             const result = await getOwnerContact({ vehicleId: vehicleId });
+            
+            // Re-enable the phone input
+            modalPhone.disabled = false;
+            modalPhone.placeholder = 'Phone number';
             
             if (result.data.success) {
                 const phone = result.data.phone.replace(/\D/g, '');
@@ -214,14 +218,16 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
                 
                 console.log('[Contact] Successfully loaded contact for vehicle', vehicleId);
             } else {
-                // Cloud Function returned an error - use fallback
+                // Cloud Function returned an error - show error, no fallback
                 console.warn('[Contact] Cloud Function error:', result.data.error);
+                modalPhone.value = '';
+                modalPhone.placeholder = 'Contact unavailable';
                 accent.innerHTML = `
-                    <div class="text-gray-300 text-sm">
-                        <strong>👤 Contact:</strong> Pauly Amato (Site Owner)
+                    <div class="text-red-400 text-sm">
+                        <strong>⚠️ Seller contact unavailable</strong>
                     </div>
-                    <div class="text-yellow-400 text-xs mt-1">
-                        ⚠️ Seller contact unavailable - routed to site owner
+                    <div class="text-gray-400 text-xs mt-1">
+                        The seller hasn't configured their contact info. Please try again later.
                     </div>
                 `;
                 
@@ -244,21 +250,26 @@ window.openContactModal = async function(type, vehicleTitle, vehicleId) {
         } else {
             // Firebase functions not available - shouldn't happen in production
             console.error('[Contact] Firebase functions not available');
+            modalPhone.disabled = false;
+            modalPhone.value = '';
+            modalPhone.placeholder = 'Service unavailable';
             accent.innerHTML = `
-                <div class="text-gray-300 text-sm">
-                    <strong>👤 Contact:</strong> Pauly Amato
+                <div class="text-red-400 text-sm">
+                    <strong>⚠️ Contact service unavailable</strong>
                 </div>
             `;
         }
     } catch (error) {
         console.error('[Contact] Error calling getOwnerContact:', error);
-        // Keep default phone, update accent to show fallback
+        modalPhone.disabled = false;
+        modalPhone.value = '';
+        modalPhone.placeholder = 'Error loading contact';
         accent.innerHTML = `
-            <div class="text-gray-300 text-sm">
-                <strong>👤 Contact:</strong> Pauly Amato (Site Owner)
+            <div class="text-red-400 text-sm">
+                <strong>⚠️ Could not load seller contact</strong>
             </div>
-            <div class="text-yellow-400 text-xs mt-1">
-                ⚠️ Could not load seller contact
+            <div class="text-gray-400 text-xs mt-1">
+                Please try again or contact support.
             </div>
         `;
     }

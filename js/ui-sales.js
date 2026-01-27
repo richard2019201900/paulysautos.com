@@ -978,7 +978,7 @@ function renderSaleWizardStep(step) {
                             <ul class="text-red-200/90 text-sm space-y-1">
                                 <li>• Only proceed if you TRUST this buyer</li>
                                 <li>• VERIFY their identity in person</li>
-                                <li>• SCREENSHOT all transactions</li>
+                                <li>• DOCUMENT all transactions</li>
                             </ul>
                         </div>
                     </div>
