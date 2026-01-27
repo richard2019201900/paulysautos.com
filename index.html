@@ -211,11 +211,8 @@
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-gray-100">
     <!-- Disclaimer Modal - Must be accepted before browsing -->
-    <div id="disclaimerModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="display: none;">
-        <!-- Solid blocking overlay - no transparency -->
-        <div class="absolute inset-0 bg-gray-900" style="background-color: #111827;"></div>
-        <!-- Modal content -->
-        <div class="relative bg-gray-900 rounded-2xl max-w-lg w-full border-2 border-amber-500/50 shadow-2xl overflow-hidden">
+    <div id="disclaimerModal" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center hidden" role="dialog" aria-modal="true">
+        <div class="bg-gray-900 rounded-2xl max-w-lg w-full mx-4 border-2 border-amber-500/50 shadow-2xl overflow-hidden">
             <div class="bg-gradient-to-r from-amber-600 to-yellow-600 px-6 py-4">
                 <h2 class="text-xl font-black text-gray-900 flex items-center gap-3">
                     <span class="text-2xl">⚠️</span>
