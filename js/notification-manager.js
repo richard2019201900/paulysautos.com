@@ -236,6 +236,18 @@
             state.notifications = state.notifications.filter(n => n.id !== oldest.id);
         }
         
+        // Flash screen for real-time notifications (not missed/historical)
+        if (!notification.isMissed && typeof flashScreen === 'function') {
+            // Different flash colors based on notification type
+            if (notification.isPremium) {
+                flashScreen('amber'); // Gold flash for premium listings
+            } else if (notification.type === 'listing') {
+                flashScreen('cyan'); // Cyan flash for new listings
+            } else if (notification.type === 'user') {
+                flashScreen('green'); // Green flash for new users
+            }
+        }
+        
         refreshUI();
     }
     

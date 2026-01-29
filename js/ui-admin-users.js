@@ -1684,6 +1684,16 @@ window.confirmPremiumPayment = async function(vehicleId) {
         return;
     }
     
+    // Get vehicle title and owner info for confirmation message
+    const prop = vehicles.find(p => p.id === vehicleId);
+    const vehicleTitle = prop?.description || prop?.title || `Vehicle #${vehicleId}`;
+    const ownerName = prop?.ownerDisplayName || prop?.ownerEmail?.split('@')[0] || 'there';
+    
+    // Calculate next due date (7 days from payment date)
+    const nextDueDate = new Date(dateStr + 'T12:00:00');
+    nextDueDate.setDate(nextDueDate.getDate() + 7);
+    const nextDueDateFormatted = nextDueDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    
     try {
         // Use VehicleDataService to write to the correct location (settings/properties)
         await VehicleDataService.write(vehicleId, 'premiumLastPayment', dateStr);
@@ -1692,7 +1702,40 @@ window.confirmPremiumPayment = async function(vehicleId) {
         
         // Format date for display
         const displayDate = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        showToast(`💰 Premium payment recorded: ${displayDate}. Next due in 7 days.`, 'success');
+        
+        // Generate confirmation message template
+        const confirmationMessage = `Hey ${ownerName}! 👋 Thanks for the $10k premium payment for your ${vehicleTitle} listing! 💰✅ Your next payment is due on ${nextDueDateFormatted}. Let me know if you have any questions!`;
+        
+        // Show success modal with copy option
+        const successHTML = `
+            <div id="paymentSuccessModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                <div class="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-green-600/50 relative" onclick="event.stopPropagation()">
+                    <div class="text-center mb-4">
+                        <div class="text-5xl mb-3">✅</div>
+                        <h3 class="text-xl font-bold text-green-400">Payment Recorded!</h3>
+                        <p class="text-gray-400 text-sm mt-1">Next due: ${nextDueDateFormatted}</p>
+                    </div>
+                    
+                    <div class="bg-gray-900/50 rounded-xl p-4 mb-4">
+                        <label class="block text-gray-400 text-xs mb-2 uppercase tracking-wide">Confirmation Message</label>
+                        <p class="text-gray-300 text-sm">${confirmationMessage}</p>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="copyPremiumConfirmation('${confirmationMessage.replace(/'/g, "\\'")}')" 
+                                class="flex-1 bg-gradient-to-r from-cyan-600 to-blue-700 text-white py-3 rounded-xl font-bold hover:opacity-90 transition flex items-center justify-center gap-2">
+                            📋 Copy Message
+                        </button>
+                        <button onclick="closePaymentSuccessModal()" 
+                                class="flex-1 bg-gray-700 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+                            Done
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', successHTML);
         
         // Re-render admin users list to update the display
         if (window.adminUsersData && typeof renderAdminUsersList === 'function') {
@@ -1703,6 +1746,29 @@ window.confirmPremiumPayment = async function(vehicleId) {
         console.error('[Premium] Error recording payment:', error);
         showToast('Error recording payment: ' + error.message, 'error');
     }
+};
+
+window.closePaymentSuccessModal = function() {
+    const modal = $('paymentSuccessModal');
+    if (modal) modal.remove();
+};
+
+window.copyPremiumConfirmation = function(message) {
+    navigator.clipboard.writeText(message).then(() => {
+        showToast('Confirmation copied to clipboard!', 'success');
+        closePaymentSuccessModal();
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = message;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Confirmation copied to clipboard!', 'success');
+        closePaymentSuccessModal();
+    });
 };
 
 window.exportUsersCSV = function() {
